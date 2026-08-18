@@ -136,12 +136,8 @@ main#years{flex:1 1 auto; min-height:0; overflow:hidden}
 .carousel.dragging{cursor:grabbing}
 .card{
   position:absolute;
-  /* height-driven so the cards grow to fill whatever vertical room the
-     viewport allows — always as large as they can be without causing scroll */
-  height:96%;
-  width:auto;
-  aspect-ratio:2/3;
-  max-width:44vw;
+  /* width/height are set explicitly in px by layout() in JS, not derived
+     here — see that function for why aspect-ratio + max-width isn't safe */
   border-radius:5px;
   overflow:hidden;
   background:var(--card-bg);
@@ -734,20 +730,25 @@ years.forEach(y=>{
 
   function layout(){
     const st = carousels[y];
-    /* Cards are sized off the carousel's real pixel height, set explicitly in
-       JS rather than via CSS height:96% on an absolutely-positioned element.
-       Safari doesn't reliably resolve a percentage height through this many
-       nested flex containers down onto an abspos descendant (Chrome does) —
-       it silently falls back to sizing the card from width instead, which
-       combined with aspect-ratio produces a visibly stretched/elongated card.
-       An inline pixel height sidesteps that resolution question entirely. */
-    const wrapH = carouselEl.getBoundingClientRect().height;
-    if(wrapH > 0){
-      const cardH = wrapH * 0.96;
-      st.cardEls.forEach(el => { el.style.height = cardH + 'px'; });
+    /* Both dimensions are computed here and set explicitly in px — not left to
+       CSS height:96% + aspect-ratio + max-width. Two real cross-browser bugs
+       lived in that combo: (1) Safari doesn't reliably resolve a percentage
+       height through this many nested flex containers onto an abspos
+       descendant, and (2) once max-width:44vw becomes the binding constraint
+       (any narrow phone), aspect-ratio and an explicit height stop agreeing
+       on which one has to give — browsers are allowed to just break the
+       ratio there, and did. Doing the 2:3 math ourselves removes both. */
+    const wrapRect = carouselEl.getBoundingClientRect();
+    let sizedCardW = st.cardEls[0] ? st.cardEls[0].getBoundingClientRect().width : 190;
+    if(wrapRect.height > 0 && wrapRect.width > 0){
+      let h = wrapRect.height * 0.96;
+      let w = h * (2/3);
+      const maxW = wrapRect.width * 0.44;   // leave room either side for the fan
+      if(w > maxW){ w = maxW; h = w * (3/2); }
+      st.cardEls.forEach(el => { el.style.width = w + 'px'; el.style.height = h + 'px'; });
+      sizedCardW = w;
     }
-    const cardW = st.cardEls[0] ? st.cardEls[0].getBoundingClientRect().width : 190;
-    const step = Math.max(34, cardW * 0.36);
+    const step = Math.max(34, sizedCardW * 0.36);
     st.cardEls.forEach((el, i)=>{
       const offset = i - st.active;
       const abs = Math.abs(offset);
