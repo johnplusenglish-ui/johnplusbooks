@@ -237,6 +237,64 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   color:var(--yr-color); text-decoration:none; border-bottom:1px solid currentColor; padding-bottom:1px;
 }
 
+/* ---------- now panel ----------
+   The site was otherwise entirely past tense: a complete record of what the
+   club HAS read and no way to tell what it's reading right now. This is its
+   own tab rather than a banner above the carousels on purpose — the year
+   sections are height:100% and their card sizing measures the leftover
+   vertical space, so anything stacked above them would eat into the covers
+   on every year at once. A sibling section costs them nothing. */
+.now-section{justify-content:center; overflow-y:auto}
+.now-inner{width:100%; max-width:940px; margin:auto; padding:.5rem 0 1rem}
+.now-kicker{
+  font-size:.72rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--yr-color); margin-bottom:1.1rem;
+}
+.now-grid{display:flex; gap:2.4rem; align-items:center}
+.now-cover{
+  flex:none; width:220px; padding:0; border:none; background:none;
+  border-radius:5px; overflow:hidden; box-shadow:var(--shadow-hi);
+  cursor:zoom-in; transition:transform .25s cubic-bezier(.22,1,.36,1);
+}
+.now-cover:hover{transform:translateY(-4px)}
+.now-cover img{display:block; width:100%; aspect-ratio:2/3; object-fit:cover; background:#eee}
+.now-info{min-width:0}
+.now-period{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--yr-color)}
+.now-title{font-size:2rem; font-weight:800; letter-spacing:-.02em; margin:.3rem 0 .2rem; line-height:1.1}
+.now-author{font-size:1rem; color:var(--ink-soft); font-style:italic}
+.now-sub{font-size:.8rem; color:var(--ink-soft); margin-top:.4rem}
+.now-teaser{font-size:.92rem; line-height:1.6; color:var(--ink); margin:1rem 0 0; max-width:52ch}
+.now-meta-row{display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; margin-top:1.2rem}
+.now-pill{
+  display:inline-block; padding:.42rem .85rem; border-radius:999px;
+  background:color-mix(in srgb, var(--yr-color) 12%, transparent);
+  color:var(--yr-color); font-size:.78rem; font-weight:700;
+}
+.now-date{font-size:.8rem; color:var(--ink-soft)}
+.now-open{
+  margin-top:1.2rem; padding:.6rem 1.1rem; border-radius:999px;
+  border:1px solid var(--yr-color); background:none; color:var(--yr-color);
+  font-family:inherit; font-size:.82rem; font-weight:600; cursor:pointer;
+  transition:background .15s, color .15s;
+}
+.now-open:hover{background:var(--yr-color); color:#fff}
+.now-next{
+  display:flex; align-items:center; gap:.9rem;
+  margin-top:2rem; padding-top:1.4rem; border-top:1px solid var(--line);
+}
+.now-next-label{
+  font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-soft);
+}
+.now-next img{width:34px; height:51px; object-fit:cover; border-radius:3px; background:#eee}
+.now-next-title{font-size:.88rem; font-weight:700}
+.now-next-title span{font-weight:400; font-style:italic; color:var(--ink-soft)}
+@media (max-width:760px){
+  .now-grid{flex-direction:column; align-items:flex-start; gap:1.4rem}
+  .now-cover{width:150px}
+  .now-title{font-size:1.5rem}
+}
+
 /* ---------- export modal ---------- */
 .modal-backdrop{
   position:fixed; inset:0; z-index:520;
@@ -361,6 +419,42 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   display:block; margin-top:.3rem;
   font-size:.75rem; font-style:normal; font-weight:600; color:var(--ink-soft);
 }
+/* ---------- club notes (one line per member, alongside their star rating) ---------- */
+.m-notes{display:none; margin-top:1.6rem; flex-direction:column; gap:.9rem}
+.m-notes[data-ready="true"]{display:flex}
+.notes-head{
+  font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
+}
+.notes-list{display:flex; flex-direction:column; gap:.85rem}
+.notes-list:empty{display:none}
+.club-note{display:flex; flex-direction:column; gap:.2rem}
+.club-note .cn-text{font-size:.92rem; line-height:1.5; color:var(--ink)}
+.club-note .cn-by{font-size:.74rem; font-weight:600; color:var(--ink-soft)}
+.club-note .cn-by .cn-score{color:var(--yr-color)}
+.club-note[data-mine="true"] .cn-by::after{content:' · yours'; font-weight:400; opacity:.7}
+.notes-empty{font-size:.85rem; color:var(--ink-soft); font-style:italic}
+.note-form{display:flex; flex-direction:column; gap:.5rem; margin-top:.2rem}
+.note-form input, .note-form textarea{
+  font-family:inherit; font-size:.88rem; color:var(--ink);
+  border:1px solid var(--line); border-radius:7px; padding:.55rem .7rem;
+  background:var(--card-bg); resize:none; width:100%;
+}
+.note-form input:focus, .note-form textarea:focus{outline:none; border-color:var(--yr-color)}
+.note-form input{max-width:220px}
+.note-actions{display:flex; align-items:center; gap:.7rem; flex-wrap:wrap}
+.note-count{font-size:.72rem; color:var(--ink-soft); margin-right:auto}
+.note-state{font-size:.72rem; font-weight:600; color:var(--ink-soft); opacity:0; transition:opacity .2s}
+.note-state[data-show="true"]{opacity:1}
+.note-state[data-error="true"]{color:#c0392b}
+.note-save{
+  padding:.45rem .9rem; border-radius:999px; border:1px solid var(--yr-color);
+  background:var(--yr-color); color:#fff;
+  font-family:inherit; font-size:.78rem; font-weight:600; cursor:pointer;
+  transition:opacity .15s;
+}
+.note-save[disabled]{opacity:.4; cursor:not-allowed}
+.note-hint{font-size:.76rem; color:var(--ink-soft); font-style:italic}
+
 .m-link{
   display:inline-block; margin-top:1.4rem; font-size:.8rem; font-weight:600;
   color:var(--yr-color); text-decoration:none; border-bottom:1px solid currentColor; padding-bottom:1px;
@@ -372,6 +466,8 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   .book-info{text-align:center}
   .m-teaser{text-align:left}
   .m-blurbs{text-align:left}
+  .m-notes{text-align:left}
+  .note-form input{max-width:none}
 }
 
 /* ---------- edit popover ---------- */
@@ -446,6 +542,20 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
         <div class="m-genres" id="mGenres"></div>
         <p class="m-teaser" id="mTeaser"></p>
         <div class="m-blurbs" id="mBlurbs"></div>
+        <div class="m-notes" id="mNotes">
+          <div class="notes-head">What the club said</div>
+          <div class="notes-list" id="notesList"></div>
+          <div class="note-form" id="noteForm">
+            <input type="text" id="noteName" maxlength="40" placeholder="Your name (optional)" autocomplete="name">
+            <textarea id="noteText" maxlength="280" rows="2" placeholder="One line on what you thought…"></textarea>
+            <div class="note-actions">
+              <span class="note-count" id="noteCount">0/280</span>
+              <span class="note-state" id="noteState"></span>
+              <button type="button" class="note-save" id="noteSave">Save note</button>
+            </div>
+          </div>
+          <div class="note-hint" id="noteHint">Rate the book above to leave a note.</div>
+        </div>
         <a class="m-link" id="mLink" target="_blank" rel="noopener">View on Goodreads &#8599;</a>
       </div>
     </div>
@@ -465,6 +575,20 @@ const DATA = [{"year": 2021, "period": "January", "title": "The Devotion of Susp
 
 const YEAR_COLORS = {
   2021:'#3159d1', 2022:'#1592a8', 2023:'#7d3fc4', 2024:'#4f9d6e', 2025:'#c97a2b', 2026:'#a3324a'
+};
+
+/* ---------- what the club is reading right now ----------
+   Edit this each month. Everything else on the Now tab derives from DATA, so
+   normally the only field that needs touching is `discussion`.
+     title      — null uses the most recently added pick in DATA (the usual case)
+     discussion — 'YYYY-MM-DDTHH:MM' in local time, or null to hide the countdown
+     nextTitle  — the following pick once it's announced, or null
+     note       — an optional one-liner shown under the countdown */
+const NOW = {
+  title: null,
+  discussion: null,
+  nextTitle: null,
+  note: ''
 };
 
 /* Plot teasers + real, sourced review quotes, keyed by title.
@@ -511,28 +635,60 @@ function setStarFill(rowEl, fraction){
 }
 
 let ratingsCache = {};             // bookSlug -> { sum, count, mine }
+let notesCache = {};               // bookSlug -> [{ name, text, rating, at, mine }] newest first
 let currentModalSlug = null;       // which book the open modal's rating row talks to
 let currentModalBook = null;
 
+/* A note lives on the same row as its author's rating: same (book_slug, voter_id)
+   primary key, so one person gets one rating and one note per book and a return
+   visit edits both rather than piling up duplicates. That's also why a rating is
+   required before a note — `rating` is NOT NULL, and "here's a score, here's why"
+   is the shape the club actually wants anyway. */
+const NAME_KEY = 'jpbooks-display-name';
+const NOTE_MAX = 280;
+const RATING_COLS = 'book_slug,voter_id,rating';
+const NOTE_COLS   = RATING_COLS + ',comment,display_name,updated_at';
+/* Flips to false if the comment/display_name columns aren't in the table yet, so
+   the site can ship ahead of the migration without the notes request taking the
+   ratings down with it. */
+let notesAvailable = true;
+
 async function loadRatings(){
   if(!RATINGS_ENABLED) return;
+  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings?select=book_slug,voter_id,rating`, {
-      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
-    });
-    if(!res.ok) return;
+    let res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings?select=${NOTE_COLS}`, { headers });
+    if(!res.ok){
+      // most likely the notes columns don't exist yet — fall back to ratings alone
+      notesAvailable = false;
+      res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings?select=${RATING_COLS}`, { headers });
+      if(!res.ok) return;
+    }
     const rows = await res.json();
     const me = getVoterId();
-    const next = {};
+    const next = {}, nextNotes = {};
     rows.forEach(r=>{
       const s = next[r.book_slug] || (next[r.book_slug] = {sum:0, count:0, mine:0});
       s.sum += Number(r.rating); s.count += 1;
-      if(r.voter_id === me) s.mine = Number(r.rating);
+      const isMine = r.voter_id === me;
+      if(isMine) s.mine = Number(r.rating);
+      const text = (r.comment || '').trim();
+      if(text){
+        (nextNotes[r.book_slug] || (nextNotes[r.book_slug] = [])).push({
+          name: (r.display_name || '').trim() || 'Anonymous',
+          text, rating: Number(r.rating), at: r.updated_at || '', mine: isMine
+        });
+      }
     });
+    Object.values(nextNotes).forEach(list => list.sort((a,b)=> (b.at||'').localeCompare(a.at||'')));
     ratingsCache = next;
+    notesCache = nextNotes;
   } catch(e){ /* offline, or not configured yet — the widget just stays hidden this visit */ }
   // a modal may already be open and waiting on this fetch to resolve
-  if(currentModalBook) renderRatingUI(currentModalBook, currentModalSlug);
+  if(currentModalBook){
+    renderRatingUI(currentModalBook, currentModalSlug);
+    renderNotesUI(currentModalSlug);
+  }
 }
 
 function aggFor(bslug){
@@ -583,6 +739,7 @@ async function commitRating(value){
   if(ok){
     note.dataset.error = 'false';
     note.textContent = 'Saved';
+    renderNotesUI(slug);   // first rating on this book unlocks the note form
     clearTimeout(commitRating._t);
     commitRating._t = setTimeout(()=>{ note.dataset.show = 'false'; }, 1800);
   } else {
@@ -625,6 +782,116 @@ async function submitRatingRemote(bookSlug, value, attempt){
   }
 }
 
+/* Notes are typed by anonymous visitors and rendered back to every other
+   visitor, so every field goes through here before it touches innerHTML. */
+function escHTML(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderNotesUI(bslug){
+  const wrap = document.getElementById('mNotes');
+  if(!RATINGS_ENABLED || !notesAvailable || !bslug){ wrap.dataset.ready = 'false'; return; }
+  wrap.dataset.ready = 'true';
+
+  const list = notesCache[bslug] || [];
+  document.getElementById('notesList').innerHTML = list.map(n=>`
+    <div class="club-note" data-mine="${n.mine ? 'true' : 'false'}">
+      <div class="cn-text">${escHTML(n.text)}</div>
+      <div class="cn-by">${escHTML(n.name)} <span class="cn-score">${n.rating.toFixed(1)}</span></div>
+    </div>`).join('');
+
+  const mine = list.find(n=>n.mine);
+  const nameEl = document.getElementById('noteName');
+  const textEl = document.getElementById('noteText');
+  const savedName = localStorage.getItem(NAME_KEY) || '';
+  nameEl.value = (mine && mine.name !== 'Anonymous') ? mine.name : savedName;
+  textEl.value = mine ? mine.text : '';
+  updateNoteCount();
+
+  // a note rides on a rating row, so there has to be a rating first
+  const rated = !!aggFor(bslug).mine;
+  document.getElementById('noteForm').style.display = rated ? 'flex' : 'none';
+  document.getElementById('noteHint').style.display = rated ? 'none' : 'block';
+  document.getElementById('noteSave').textContent = mine ? 'Update note' : 'Save note';
+
+  const state = document.getElementById('noteState');
+  state.dataset.show = 'false';
+  state.dataset.error = 'false';
+}
+
+function updateNoteCount(){
+  const len = document.getElementById('noteText').value.length;
+  document.getElementById('noteCount').textContent = `${len}/${NOTE_MAX}`;
+}
+
+async function commitNote(){
+  if(!currentModalSlug) return;
+  const slug = currentModalSlug;
+  const agg = aggFor(slug);
+  if(!agg.mine) return;                     // no rating row to attach the note to yet
+
+  const state = document.getElementById('noteState');
+  const btn = document.getElementById('noteSave');
+  const text = document.getElementById('noteText').value.trim().slice(0, NOTE_MAX);
+  const name = document.getElementById('noteName').value.trim().slice(0, 40);
+  localStorage.setItem(NAME_KEY, name);
+
+  /* Same honesty rule the star rating had to learn: never say "Saved" until the
+     POST has actually come back, or a visitor who taps and immediately refreshes
+     gets told it worked while the request dies with the page. */
+  btn.disabled = true;
+  state.dataset.error = 'false';
+  state.dataset.show = 'true';
+  state.textContent = 'Saving…';
+
+  const ok = await submitNoteRemote(slug, agg.mine, text, name);
+  btn.disabled = false;
+  if(currentModalSlug !== slug) return;     // moved on to another book mid-flight
+
+  if(ok){
+    const rest = (notesCache[slug] || []).filter(n=>!n.mine);
+    if(text) rest.unshift({ name: name || 'Anonymous', text, rating: agg.mine, at: new Date().toISOString(), mine: true });
+    notesCache[slug] = rest;
+    renderNotesUI(slug);                    // this resets the state line, so set it after
+    state.dataset.show = 'true';
+    state.textContent = text ? 'Saved' : 'Note removed';
+    clearTimeout(commitNote._t);
+    commitNote._t = setTimeout(()=>{ state.dataset.show = 'false'; }, 1800);
+  } else {
+    state.dataset.error = 'true';
+    state.textContent = 'Not saved — try again';
+  }
+}
+
+async function submitNoteRemote(bookSlug, rating, text, name, attempt){
+  if(!RATINGS_ENABLED) return true;
+  attempt = attempt || 1;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({
+        book_slug: bookSlug, voter_id: getVoterId(), rating,
+        comment: text || null, display_name: name || null
+      })
+    });
+    if(!res.ok){
+      console.error('note save failed', res.status, await res.text().catch(()=>''));
+      return false;
+    }
+    return true;
+  } catch(e){
+    console.error('note save failed (network)', e);
+    if(attempt < 2) return submitNoteRemote(bookSlug, rating, text, name, attempt + 1);
+    return false;
+  }
+}
+
 function ratingValueFromEvent(rowEl, e){
   const r = rowEl.getBoundingClientRect();
   const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -648,8 +915,22 @@ function coverFor(b){
 
 const years = [...new Set(DATA.map(b=>b.year))].sort((a,b)=>b-a);
 
-// ---- topbar year nav (tabs, newest year first) ----
+// ---- topbar year nav (Now first, then years newest → oldest) ----
 const yearNav = document.getElementById('yearNav');
+const nowBook  = (NOW.title && DATA.find(b=>!b.break && b.title === NOW.title))
+              || DATA.filter(b=>!b.break).slice(-1)[0];
+const nowNext  = NOW.nextTitle ? DATA.find(b=>!b.break && b.title === NOW.nextTitle) : null;
+
+if(nowBook){
+  const nowBtn = document.createElement('button');
+  nowBtn.type = 'button';
+  nowBtn.textContent = 'Now';
+  nowBtn.dataset.year = 'now';
+  nowBtn.style.setProperty('--yr-color', YEAR_COLORS[nowBook.year] || '#333');
+  nowBtn.addEventListener('click', ()=> showYear('now'));
+  yearNav.appendChild(nowBtn);
+}
+
 years.forEach(y=>{
   const btn = document.createElement('button');
   btn.type = 'button';
@@ -660,8 +941,11 @@ years.forEach(y=>{
   yearNav.appendChild(btn);
 });
 function showYear(y){
-  document.querySelectorAll('.year-section').forEach(s=> s.classList.toggle('active', s.id === 'y'+y));
-  [...yearNav.children].forEach(btn=> btn.dataset.active = (+btn.dataset.year === y));
+  // y is a year number for the carousels and the string 'now' for the Now tab,
+  // so both sides of these comparisons are normalised to strings
+  const key = String(y);
+  document.querySelectorAll('.year-section').forEach(s=> s.classList.toggle('active', s.id === 'y'+key));
+  [...yearNav.children].forEach(btn=> btn.dataset.active = (btn.dataset.year === key));
   // every year's layout() ran once already, but only while its section was
   // still display:none during construction — .carousel had zero height
   // then, so the explicit-pixel-height card sizing above was a no-op. Now
@@ -677,6 +961,67 @@ const ICON_PENCIL = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" strok
 
 const yearsRoot = document.getElementById('years');
 const carousels = {}; // year -> {active, items, els}
+
+/* ---------- Now tab ---------- */
+function countdownFor(iso){
+  if(!iso) return null;
+  const when = new Date(iso);
+  if(isNaN(when)) return null;
+  const midnight = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  // counted in whole calendar days, so "tomorrow" means tomorrow's date, not 24 hours
+  const days = Math.round((midnight(when) - midnight(new Date())) / 86400000);
+  const label = days > 1  ? `Discussion in ${days} days`
+              : days === 1 ? 'Discussion tomorrow'
+              : days === 0 ? 'Discussion today'
+              : 'Last discussed';
+  const hasTime = when.getHours() || when.getMinutes();
+  const date = when.toLocaleDateString(undefined, {weekday:'long', day:'numeric', month:'long'})
+             + (hasTime ? ', ' + when.toLocaleTimeString(undefined, {hour:'2-digit', minute:'2-digit'}) : '');
+  return { label, date };
+}
+
+if(nowBook){
+  const info = BOOKINFO[nowBook.title] || {};
+  const cd = countdownFor(NOW.discussion);
+  const cover = coverFor(nowBook);
+  const nextCover = nowNext ? coverFor(nowNext) : null;
+
+  const sec = document.createElement('section');
+  sec.className = 'year-section now-section';
+  sec.id = 'ynow';
+  sec.style.setProperty('--yr-color', YEAR_COLORS[nowBook.year] || '#333');
+  sec.innerHTML = `
+    <div class="now-inner">
+      <div class="now-kicker">Currently reading</div>
+      <div class="now-grid">
+        <button class="now-cover" type="button" id="nowCover" aria-label="Open ${escHTML(nowBook.title)}">
+          ${cover ? `<img src="${cover}" alt="${escHTML(nowBook.title)} cover">` : ''}
+        </button>
+        <div class="now-info">
+          <div class="now-period">${nowBook.period} ${nowBook.year}</div>
+          <h2 class="now-title">${escHTML(nowBook.title)}</h2>
+          <div class="now-author">${escHTML(nowBook.author)}</div>
+          <div class="now-sub">${escHTML(nowBook.country || '')}${nowBook.published ? ' · first published ' + nowBook.published : ''}</div>
+          ${info.teaser ? `<p class="now-teaser">${escHTML(info.teaser)}</p>` : ''}
+          ${(cd || NOW.note) ? `<div class="now-meta-row">
+            ${cd ? `<span class="now-pill">${cd.label}</span><span class="now-date">${cd.date}</span>` : ''}
+            ${NOW.note ? `<span class="now-date">${escHTML(NOW.note)}</span>` : ''}
+          </div>` : ''}
+          <button class="now-open" type="button" id="nowOpen">Read more</button>
+        </div>
+      </div>
+      ${nowNext ? `<div class="now-next">
+        <span class="now-next-label">Next up</span>
+        ${nextCover ? `<img src="${nextCover}" alt="">` : ''}
+        <span class="now-next-title">${escHTML(nowNext.title)} <span>${escHTML(nowNext.author)}</span></span>
+      </div>` : ''}
+    </div>`;
+  yearsRoot.appendChild(sec);
+
+  const openNow = ()=> openBookModal(nowBook, nowBook.year);
+  sec.querySelector('#nowCover').addEventListener('click', openNow);
+  sec.querySelector('#nowOpen').addEventListener('click', openNow);
+}
 
 years.forEach(y=>{
   /* The newest year is the one still in progress, so it opens on the most
@@ -930,8 +1275,8 @@ window.addEventListener('resize', ()=>{
   resizeTimer = setTimeout(()=>{ years.forEach(y=> carousels[y].layout()); }, 120);
 });
 
-// open on the most recent year, tabs run newest → oldest
-showYear(years[0]);
+// land on what the club is reading right now; the years sit behind it
+showYear(nowBook ? 'now' : years[0]);
 
 // ---- book modal ----
 const bookModal   = document.getElementById('bookModal');
@@ -978,6 +1323,7 @@ function openBookModal(b, y){
   currentModalBook = b;
   currentModalSlug = slug(b);
   renderRatingUI(b, currentModalSlug);
+  renderNotesUI(currentModalSlug);
 
   lastFocused = document.activeElement;
   bookModal.dataset.show = 'true';
@@ -1006,6 +1352,13 @@ ratingInputEl.addEventListener('mouseleave', ()=>{
   setStarFill(ratingInputEl, (aggFor(currentModalSlug).mine || 0) / 5);
 });
 ratingInputEl.addEventListener('click', (e)=> commitRating(ratingValueFromEvent(ratingInputEl, e)));
+
+// ---- club notes ----
+document.getElementById('noteText').addEventListener('input', updateNoteCount);
+document.getElementById('noteSave').addEventListener('click', commitNote);
+document.getElementById('noteText').addEventListener('keydown', (e)=>{
+  if((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); commitNote(); }
+});
 ratingInputEl.addEventListener('keydown', (e)=>{
   if(!currentModalSlug) return;
   const mine = aggFor(currentModalSlug).mine || 0;
