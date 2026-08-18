@@ -762,7 +762,7 @@ years.forEach(y=>{
 
   carousels[y] = { items, cardEls, active: 0, dotsEl, detailEl, carouselEl };
 
-  function layout(){
+  function sizeCards(){
     const st = carousels[y];
     /* Both dimensions are computed here and set explicitly in px — not left to
        CSS height:96% + aspect-ratio + max-width. Two real cross-browser bugs
@@ -784,22 +784,35 @@ years.forEach(y=>{
        space is left to sit below the whole block instead, which reads as
        normal empty space rather than a gap inside a group that should look
        attached. */
+    /* Only called on year-switch and resize, NOT on every setActive — .book-
+       detail's rendered height varies by book (title/author length changes
+       how many lines it wraps to), and it sits in the same flex column as
+       .carousel-wrap. Re-measuring on every active-book change was reading
+       that leftover-space ceiling against the PREVIOUS book's detail height
+       (render() rewrites .book-detail AFTER this ran), so card size lagged
+       one book behind and looked like it randomly grew/shrank while paging
+       through a year. Measuring once per year-view removes that feedback
+       loop entirely — card size is now stable no matter which book is active. */
     carouselWrapEl.style.flex = '';
     carouselWrapEl.style.height = '';
     const wrapRect = carouselEl.getBoundingClientRect();
-    let sizedCardW = st.cardEls[0] ? st.cardEls[0].getBoundingClientRect().width : 190;
     if(wrapRect.height > 0 && wrapRect.width > 0){
       let h = wrapRect.height * 0.96;
       let w = h * (2/3);
       const maxW = wrapRect.width * 0.44;   // leave room either side for the fan
       if(w > maxW){ w = maxW; h = w * (3/2); }
       st.cardEls.forEach(el => { el.style.width = w + 'px'; el.style.height = h + 'px'; });
-      sizedCardW = w;
+      st.sizedCardW = w;
       const boxH = h + 20;
       carouselWrapEl.style.flex = `0 0 ${boxH}px`;
       carouselWrapEl.style.height = boxH + 'px';
+    } else if(!st.sizedCardW){
+      st.sizedCardW = st.cardEls[0] ? st.cardEls[0].getBoundingClientRect().width : 190;
     }
-    const step = Math.max(34, sizedCardW * 0.36);
+  }
+  function render(){
+    const st = carousels[y];
+    const step = Math.max(34, st.sizedCardW * 0.36);
     st.cardEls.forEach((el, i)=>{
       const offset = i - st.active;
       const abs = Math.abs(offset);
@@ -831,7 +844,9 @@ years.forEach(y=>{
       `;
     }
   }
+  function layout(){ sizeCards(); render(); }
   carousels[y].layout = layout;
+  carousels[y].render = render;
   layout();
 
   cardEls.forEach((el,i)=>{
@@ -895,7 +910,7 @@ years.forEach(y=>{
 function setActive(y, i){
   const st = carousels[y];
   st.active = Math.max(0, Math.min(st.items.length-1, i));
-  st.layout();
+  st.render();
 }
 function shift(y, dir){
   const st = carousels[y];
