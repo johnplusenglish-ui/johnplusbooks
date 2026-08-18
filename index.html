@@ -61,10 +61,26 @@ a{color:inherit}
   background:var(--bg);
   border-bottom:1px solid var(--line);
 }
-.brand{display:flex; align-items:baseline; gap:.5rem; font-weight:800; font-size:1.1rem; letter-spacing:-.01em; white-space:nowrap}
+.brand{
+  display:flex; align-items:baseline; gap:.5rem;
+  font-family:inherit; font-weight:800; font-size:1.1rem; letter-spacing:-.01em; white-space:nowrap;
+  appearance:none; background:none; border:none; padding:0; color:inherit; cursor:pointer;
+}
+.brand .brand-name{transition:opacity .15s}
+.brand:hover .brand-name{opacity:.7}
 .brand small{font-weight:500; font-size:.68rem; color:var(--ink-soft); letter-spacing:.08em; text-transform:uppercase}
 .brand-42{color:#1592a8}
-.year-nav{display:flex; gap:.4rem; overflow-x:auto; scrollbar-width:none; flex:1}
+/* overflow-x:auto also turns the vertical axis into a scroll box (a `visible`
+   value on one axis computes to `auto` when the other isn't visible), and the
+   pills used to stretch flush to that clip edge — exactly 0px of tolerance, so
+   on a high-DPI phone the bottom hairline of the rounded border was cut off.
+   Centre them and keep real room above/below; the negative margin cancels the
+   padding again so the topbar's height is unchanged. */
+.year-nav{
+  display:flex; align-items:center; gap:.4rem; flex:1;
+  overflow-x:auto; scrollbar-width:none;
+  padding-block:.3rem; margin-block:-.3rem;
+}
 .year-nav::-webkit-scrollbar{display:none}
 .year-nav button{
   flex:none;
@@ -492,7 +508,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 <body>
 
 <header class="topbar">
-  <div class="brand"><span class="brand-name">book<span class="brand-42">42</span></span> <small>reading diary</small></div>
+  <button type="button" class="brand" id="brandHome" aria-label="Back to what we're reading now"><span class="brand-name">book<span class="brand-42">42</span></span> <small>reading diary</small></button>
   <nav class="year-nav" id="yearNav"></nav>
   <a class="tg-link" href="https://t.me/book42channel" target="_blank" rel="noopener"
      title="Book42 on Telegram" aria-label="Book42 on Telegram">
@@ -1475,6 +1491,14 @@ function openFromHash(){
   setActive(b.year, st.items.indexOf(b));
   openBookModal(b, b.year);
 }
+// the wordmark is the way back to the front of the site
+document.getElementById('brandHome').addEventListener('click', ()=>{
+  if(bookModal.dataset.show === 'true') closeBookModal();
+  // drop any #book deep link, or openFromHash would immediately reopen that book
+  if(location.hash) history.replaceState(null, '', location.pathname + location.search);
+  showYear(nowBook ? 'now' : years[0]);
+});
+
 openFromHash();
 window.addEventListener('hashchange', openFromHash);
 </script>
