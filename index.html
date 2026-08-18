@@ -680,6 +680,7 @@ years.forEach(y=>{
   yearsRoot.appendChild(section);
 
   const carouselEl = section.querySelector('.carousel');
+  const carouselWrapEl = section.querySelector('.carousel-wrap');
   const dotsEl = section.querySelector('.dots');
   const detailEl = section.querySelector('.book-detail');
 
@@ -738,6 +739,20 @@ years.forEach(y=>{
        (any narrow phone), aspect-ratio and an explicit height stop agreeing
        on which one has to give — browsers are allowed to just break the
        ratio there, and did. Doing the 2:3 math ourselves removes both. */
+    /* .carousel-wrap normally flex-grows to claim all leftover vertical room
+       (that's how cards get to be as large as the screen allows) — but on a
+       narrow phone the card's WIDTH is the tighter constraint, so the card
+       ends up shorter than that box, and centering it inside a box far
+       taller than it needs leaves a dead gap between the card and the
+       controls right below (click for more / dots / arrows). Fix: measure
+       against the flex-grown ceiling first (clearing any previous lock so
+       resize/year-switch always re-measures the true max), then lock the
+       wrap down to hug the card's actual computed height. Any real leftover
+       space is left to sit below the whole block instead, which reads as
+       normal empty space rather than a gap inside a group that should look
+       attached. */
+    carouselWrapEl.style.flex = '';
+    carouselWrapEl.style.height = '';
     const wrapRect = carouselEl.getBoundingClientRect();
     let sizedCardW = st.cardEls[0] ? st.cardEls[0].getBoundingClientRect().width : 190;
     if(wrapRect.height > 0 && wrapRect.width > 0){
@@ -747,6 +762,9 @@ years.forEach(y=>{
       if(w > maxW){ w = maxW; h = w * (3/2); }
       st.cardEls.forEach(el => { el.style.width = w + 'px'; el.style.height = h + 'px'; });
       sizedCardW = w;
+      const boxH = h + 20;
+      carouselWrapEl.style.flex = `0 0 ${boxH}px`;
+      carouselWrapEl.style.height = boxH + 'px';
     }
     const step = Math.max(34, sizedCardW * 0.36);
     st.cardEls.forEach((el, i)=>{
