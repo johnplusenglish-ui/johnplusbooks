@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book42 — the reading diary</title>
+<meta name="description" content="Every monthly pick from Book42, our Telegram book club, since 2021 — a year-by-year gallery.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://covers.openlibrary.org">
+<style>
+:root{
+  --bg:#fbf9f5;
+  --card-bg:#ffffff;
+  --ink:#1b1b1f;
+  --ink-soft:#5a5a63;
+  --line:#e7e3da;
+  --accent:#3159d1;
+  --radius:20px;
+  --shadow-lo:0 1px 2px rgba(20,20,30,.06);
+  --shadow-md:0 12px 30px -12px rgba(20,20,30,.22);
+  --shadow-hi:0 24px 60px -18px rgba(20,20,30,.32);
+}
+*{box-sizing:border-box}
+html, body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Outfit',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:flex; flex-direction:column;
+  overflow:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit}
+
+/* ---------- topbar ---------- */
+.topbar{
+  flex:none;
+  display:flex; align-items:center; gap:1.25rem;
+  padding:.9rem 1.5rem;
+  background:var(--bg);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex; align-items:baseline; gap:.5rem; font-weight:800; font-size:1.1rem; letter-spacing:-.01em; white-space:nowrap}
+.brand small{font-weight:500; font-size:.68rem; color:var(--ink-soft); letter-spacing:.08em; text-transform:uppercase}
+.year-nav{display:flex; gap:.4rem; overflow-x:auto; scrollbar-width:none; flex:1}
+.year-nav::-webkit-scrollbar{display:none}
+.year-nav button{
+  flex:none;
+  appearance:none; font:inherit;
+  font-size:.85rem; font-weight:600;
+  padding:.42rem .85rem;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:transparent;
+  cursor:pointer;
+  color:var(--ink-soft);
+  transition:background .15s, color .15s, border-color .15s;
+}
+.year-nav button[data-active="true"]{
+  background:var(--yr-color, var(--accent));
+  border-color:var(--yr-color, var(--accent));
+  color:#fff;
+}
+.editmode-btn{
+  flex:none;
+  font-size:.75rem; font-weight:600;
+  padding:.42rem .8rem;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:transparent;
+  cursor:pointer;
+  color:var(--ink-soft);
+}
+.editmode-btn[data-on="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+.tg-link{
+  flex:none;
+  display:inline-flex; align-items:center; gap:.42rem;
+  font-size:.78rem; font-weight:600;
+  padding:.42rem .8rem;
+  border-radius:999px;
+  border:1px solid var(--line);
+  color:var(--ink-soft);
+  text-decoration:none;
+  white-space:nowrap;
+  transition:color .15s, border-color .15s, background .15s;
+}
+.tg-link:hover{
+  color:#229ED9;
+  border-color:#229ED9;
+  background:color-mix(in srgb, #229ED9 7%, transparent);
+}
+.tg-link svg{width:15px; height:15px; fill:currentColor; flex:none}
+
+/* ---------- year section (one full-height panel per year, swapped via tabs) ---------- */
+main#years{flex:1 1 auto; min-height:0; overflow:hidden}
+.year-section{display:none; flex-direction:column; height:100%; padding:1rem 1.5rem 1.25rem; min-height:0}
+.year-section.active{display:flex}
+.year-head{flex:none; max-width:1180px; width:100%; margin:0 auto; display:flex; align-items:baseline; gap:1rem; margin-bottom:.6rem}
+.year-head .num{font-size:clamp(2rem,5vw,3.2rem); font-weight:900; letter-spacing:-.03em; color:var(--yr-color); line-height:1}
+.year-head .meta{font-size:.85rem; color:var(--ink-soft); font-weight:500}
+.year-head .meta b{color:var(--ink); font-weight:700}
+
+/* ---------- carousel ---------- */
+.carousel-wrap{position:relative; flex:1 1 auto; min-height:0; display:flex}
+.carousel{
+  position:relative;
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  touch-action:pan-y;
+  user-select:none;
+  cursor:grab;
+  outline:none;
+}
+.carousel.dragging{cursor:grabbing}
+.card{
+  position:absolute;
+  /* height-driven so the cards grow to fill whatever vertical room the
+     viewport allows — always as large as they can be without causing scroll */
+  height:96%;
+  width:auto;
+  aspect-ratio:2/3;
+  max-width:44vw;
+  border-radius:5px;
+  overflow:hidden;
+  background:var(--card-bg);
+  box-shadow:var(--shadow-md);
+  transition:transform .38s cubic-bezier(.22,1,.36,1), opacity .38s ease, box-shadow .38s ease;
+  will-change:transform;
+  cursor:pointer;
+}
+.card.is-active{box-shadow:var(--shadow-hi); cursor:zoom-in}
+.card.is-active.is-break{cursor:default}
+.card .cover-img{width:100%; height:100%; object-fit:cover; background:#eee}
+.card .placeholder{
+  width:100%; height:100%;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding:1.1rem;
+  background:linear-gradient(160deg, color-mix(in srgb, var(--yr-color) 70%, #111) 0%, color-mix(in srgb, var(--yr-color) 35%, #111) 100%);
+  color:#fff;
+}
+.card .placeholder .p-icon{opacity:.5; margin-bottom:auto}
+.card .placeholder .p-title{font-weight:800; font-size:1rem; line-height:1.25}
+.card .placeholder .p-author{font-size:.78rem; opacity:.8; margin-top:.3rem}
+.card .badge{
+  position:absolute; top:.6rem; left:.6rem;
+  font-size:.62rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  background:rgba(255,255,255,.92); color:var(--ink);
+  padding:.32rem .6rem; border-radius:999px;
+}
+.card .nf-badge{
+  position:absolute; top:.6rem; right:.6rem;
+  font-size:.62rem; font-weight:700;
+  background:rgba(20,20,25,.75); color:#fff;
+  padding:.32rem .55rem; border-radius:999px;
+}
+.card .gradient{
+  position:absolute; inset:auto 0 0 0; height:55%;
+  background:linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,0));
+  pointer-events:none;
+}
+.card .card-foot{
+  position:absolute; left:0; right:0; bottom:0; padding:.85rem;
+  color:#fff;
+}
+.card .card-foot .t{font-weight:700; font-size:.85rem; line-height:1.2}
+.card .card-foot .a{font-size:.72rem; opacity:.85; margin-top:.15rem; font-style:italic}
+.card.is-break{cursor:default}
+.card .edit-btn{
+  position:absolute; bottom:.6rem; right:.6rem;
+  width:26px; height:26px; border-radius:50%;
+  background:rgba(255,255,255,.92); border:none;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer;
+  opacity:0; transition:opacity .15s;
+}
+body.edit-mode .card.is-active .edit-btn{opacity:1}
+.card .edit-btn svg{width:13px; height:13px; stroke:var(--ink)}
+
+.carousel-nav{
+  flex:none;
+  display:flex; align-items:center; justify-content:center; gap:1rem;
+  margin-top:.4rem;
+}
+.nav-btn{
+  width:38px; height:38px; border-radius:50%;
+  border:1px solid var(--line); background:var(--card-bg);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:border-color .15s, transform .1s;
+}
+.nav-btn:hover{border-color:var(--yr-color)}
+.nav-btn:active{transform:scale(.92)}
+.nav-btn svg{width:16px; height:16px; stroke:var(--ink)}
+.dots{display:flex; gap:.4rem; flex-wrap:wrap; max-width:220px; justify-content:center}
+.dot{width:6px; height:6px; border-radius:50%; background:var(--line); cursor:pointer; transition:background .15s, transform .15s}
+.dot[data-active="true"]{background:var(--yr-color); transform:scale(1.5)}
+
+/* ---------- detail panel ---------- */
+.book-detail{
+  flex:none;
+  max-width:640px; width:100%; margin:.5rem auto 0; padding:0 1.5rem;
+  text-align:center;
+}
+.book-detail .d-period{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--yr-color)}
+.book-detail h3{font-size:1.25rem; font-weight:800; letter-spacing:-.01em; margin:.3rem 0 .15rem}
+.book-detail .d-author{font-size:.9rem; color:var(--ink-soft); font-style:italic}
+.book-detail .d-sub{font-size:.78rem; color:var(--ink-soft); margin-top:.35rem}
+.book-detail .d-link{
+  display:inline-block; margin-top:.5rem; font-size:.76rem; font-weight:600;
+  color:var(--yr-color); text-decoration:none; border-bottom:1px solid currentColor; padding-bottom:1px;
+}
+
+/* ---------- export modal ---------- */
+.modal-backdrop{
+  position:fixed; inset:0; z-index:520;
+  background:rgba(20,20,25,.45);
+  display:none; align-items:center; justify-content:center; padding:1.5rem;
+}
+.modal-backdrop[data-show="true"]{display:flex}
+.modal-box{background:#fff; border-radius:16px; padding:1.4rem; width:100%; max-width:480px; box-shadow:var(--shadow-hi)}
+.modal-box .modal-title{font-weight:700; font-size:.95rem; margin-bottom:.6rem}
+.modal-box textarea{
+  width:100%; height:140px; font-family:monospace; font-size:.72rem;
+  padding:.7rem; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink);
+  resize:vertical;
+}
+.modal-actions{display:flex; gap:.5rem; margin-top:.7rem; justify-content:flex-end}
+.modal-actions button{
+  font-size:.75rem; font-weight:600; padding:.5rem 1rem;
+  border-radius:8px; border:1px solid var(--line); background:var(--card-bg); cursor:pointer;
+}
+.modal-actions button.primary{background:var(--ink); color:#fff; border-color:var(--ink)}
+
+/* ---------- book detail modal ---------- */
+.book-modal{
+  /* must clear the carousel cards, which carry inline z-index up to 100 */
+  position:fixed; inset:0; z-index:500;
+  background:rgba(18,18,24,.55);
+  backdrop-filter:blur(3px);
+  display:none; align-items:center; justify-content:center;
+  padding:1.5rem;
+  opacity:0; transition:opacity .18s ease;
+}
+.book-modal[data-show="true"]{display:flex; opacity:1}
+.book-panel{
+  position:relative;
+  background:var(--card-bg);
+  border-radius:10px;
+  width:100%; max-width:840px;
+  max-height:88vh;
+  overflow-y:auto;
+  box-shadow:var(--shadow-hi);
+  padding:2rem;
+  transform:translateY(8px) scale(.985);
+  transition:transform .22s cubic-bezier(.22,1,.36,1);
+}
+.book-modal[data-show="true"] .book-panel{transform:none}
+.book-close{
+  position:absolute; top:.9rem; right:.9rem;
+  width:34px; height:34px; border-radius:50%;
+  border:1px solid var(--line); background:var(--card-bg);
+  font-size:1.15rem; line-height:1; color:var(--ink-soft);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.book-close:hover{background:var(--bg)}
+.book-grid{display:flex; gap:2rem; align-items:flex-start}
+.book-grid .m-cover{
+  flex:none; width:230px; aspect-ratio:2/3;
+  border-radius:5px; overflow:hidden; background:#eee;
+  box-shadow:var(--shadow-md);
+}
+.book-grid .m-cover img{width:100%; height:100%; object-fit:cover}
+.book-info{flex:1 1 auto; min-width:0}
+.book-info .m-period{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--yr-color)}
+.book-info h2{font-size:1.7rem; font-weight:900; letter-spacing:-.015em; line-height:1.15; margin:.35rem 0 .25rem}
+.book-info .m-author{font-size:1rem; color:var(--ink-soft); font-style:italic}
+.book-info .m-sub{font-size:.8rem; color:var(--ink-soft); margin-top:.45rem}
+.m-genres{display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.85rem}
+.m-genres:empty{display:none}
+.genre-tag{
+  font-size:.7rem; font-weight:600; letter-spacing:.01em;
+  color:var(--yr-color);
+  background:color-mix(in srgb, var(--yr-color) 9%, var(--card-bg));
+  padding:.28rem .6rem; border-radius:4px;
+}
+/* non-fiction rides in the same row as the genres, but neutral so it reads
+   as a different kind of label rather than another genre */
+.genre-tag.is-nf{
+  color:var(--ink-soft);
+  background:var(--bg);
+  box-shadow:inset 0 0 0 1px var(--line);
+}
+
+.m-teaser{
+  margin:1.1rem 0 0;
+  font-size:.95rem; line-height:1.6; color:var(--ink);
+  padding-left:.9rem; border-left:2px solid var(--yr-color);
+}
+.m-teaser:empty{display:none}
+
+.m-blurbs{margin-top:1.5rem; display:flex; flex-direction:column; gap:.9rem}
+.m-blurbs .blurbs-head{
+  font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
+}
+.blurb{margin:0}
+.blurb q{font-size:.92rem; line-height:1.5; color:var(--ink); font-style:italic; quotes:'"' '"'}
+.blurb cite{
+  display:block; margin-top:.3rem;
+  font-size:.75rem; font-style:normal; font-weight:600; color:var(--ink-soft);
+}
+.m-link{
+  display:inline-block; margin-top:1.4rem; font-size:.8rem; font-weight:600;
+  color:var(--yr-color); text-decoration:none; border-bottom:1px solid currentColor; padding-bottom:1px;
+}
+@media (max-width:680px){
+  .book-panel{padding:1.4rem}
+  .book-grid{flex-direction:column; gap:1.2rem; align-items:center}
+  .book-grid .m-cover{width:170px}
+  .book-info{text-align:center}
+  .m-teaser{text-align:left}
+  .m-blurbs{text-align:left}
+}
+
+/* ---------- edit popover ---------- */
+.edit-pop{
+  position:absolute; z-index:540; width:220px;
+  background:#fff; border-radius:12px; box-shadow:var(--shadow-hi);
+  padding:.8rem; font-size:.75rem; display:none;
+}
+.edit-pop[data-show="true"]{display:block}
+.edit-pop input{width:100%; font-size:.75rem; padding:.4rem .5rem; border-radius:6px; border:1px solid var(--line); margin-bottom:.4rem}
+.edit-pop .row{display:flex; gap:.4rem}
+.edit-pop button{flex:1; font-size:.7rem; font-weight:600; padding:.4rem; border-radius:6px; border:1px solid var(--line); background:var(--bg); cursor:pointer}
+.edit-pop button.primary{background:var(--ink); color:#fff; border-color:var(--ink)}
+
+@media (max-width:560px){
+  .brand small{display:none}
+  .tg-link span{display:none}          /* icon only once space is tight */
+  .tg-link{padding:.42rem .55rem}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">book42 <small>reading diary</small></div>
+  <nav class="year-nav" id="yearNav"></nav>
+  <a class="tg-link" href="https://t.me/book42channel" target="_blank" rel="noopener"
+     title="Book42 on Telegram" aria-label="Book42 on Telegram">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
+    <span>Telegram</span>
+  </a>
+  <button class="editmode-btn" id="exportBtn" type="button" style="display:none">Export edits</button>
+  <button class="editmode-btn" id="editModeBtn" type="button">Edit covers</button>
+</header>
+
+<main id="years"></main>
+
+<div class="modal-backdrop" id="exportBackdrop">
+  <div class="modal-box">
+    <div class="modal-title">Your cover edits — paste this back to me to make permanent</div>
+    <textarea id="exportText" readonly></textarea>
+    <div class="modal-actions">
+      <button type="button" id="closeExportBtn">Close</button>
+      <button type="button" class="primary" id="copyBtn">Copy</button>
+    </div>
+  </div>
+</div>
+
+<div class="book-modal" id="bookModal" aria-hidden="true">
+  <div class="book-panel" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <button class="book-close" id="bookClose" type="button" aria-label="Close">&times;</button>
+    <div class="book-grid">
+      <div class="m-cover"><img id="mCover" alt=""></div>
+      <div class="book-info">
+        <div class="m-period" id="mPeriod"></div>
+        <h2 id="mTitle"></h2>
+        <div class="m-author" id="mAuthor"></div>
+        <div class="m-sub" id="mSub"></div>
+        <div class="m-genres" id="mGenres"></div>
+        <p class="m-teaser" id="mTeaser"></p>
+        <div class="m-blurbs" id="mBlurbs"></div>
+        <a class="m-link" id="mLink" target="_blank" rel="noopener">View on Goodreads &#8599;</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="edit-pop" id="editPop">
+  <input type="text" id="editUrl" placeholder="Paste image URL…">
+  <div class="row">
+    <button type="button" id="editReset">Reset</button>
+    <button type="button" class="primary" id="editApply">Use</button>
+  </div>
+</div>
+
+<script>
+const DATA = [{"year": 2021, "period": "January", "title": "The Devotion of Suspect X", "author": "Keigo Higashino", "country": "Japanese author", "published": 2005, "cover": "https://covers.openlibrary.org/b/id/6677764-L.jpg"}, {"year": 2021, "period": "February", "title": "Replay", "author": "Ken Grimwood", "country": "American author", "published": 1986, "cover": "https://covers.openlibrary.org/b/id/432217-L.jpg"}, {"year": 2021, "period": "March", "title": "My Sweet Orange Tree", "author": "José Mauro de Vasconcelos", "country": "Brazilian writer", "published": 1968, "cover": "https://covers.openlibrary.org/b/id/10413035-L.jpg"}, {"year": 2021, "period": "April", "title": "Brave New World", "author": "Aldous Huxley", "country": "English writer and philosopher", "published": 1932, "cover": "https://covers.openlibrary.org/b/id/8231823-L.jpg"}, {"year": 2021, "period": "May", "title": "Force of Nature", "author": "Jane Harper", "country": "British-Australian writer", "published": 2017, "cover": "https://covers.openlibrary.org/b/id/10180351-L.jpg"}, {"year": 2021, "period": "June", "title": "The Murder of Roger Ackroyd", "author": "Agatha Christie", "country": "British author", "published": 1926, "cover": "https://covers.openlibrary.org/b/id/13151356-L.jpg"}, {"year": 2021, "period": "July", "title": "Flowers for Algernon", "author": "Daniel Keyes", "country": "American writer", "published": 1966, "cover": "https://covers.openlibrary.org/b/id/12947700-L.jpg"}, {"year": 2021, "period": "August", "title": "The Princess Bride", "author": "William Goldman", "country": "American novelist and playwright", "published": 1973, "cover": "https://covers.openlibrary.org/b/id/9284881-L.jpg"}, {"year": 2021, "period": "September", "title": "A Thousand Splendid Suns", "author": "Khaled Hosseini", "country": "Afghan-American novelist", "published": 2007, "cover": "https://covers.openlibrary.org/b/id/8579790-L.jpg"}, {"year": 2021, "period": "October", "title": "I'm Not Scared", "author": "Niccolò Ammaniti", "country": "Italian writer", "published": 2001, "cover": "https://covers.openlibrary.org/b/id/1057681-L.jpg"}, {"year": 2021, "period": "November", "title": "Man's Search for Meaning", "author": "Viktor E. Frankl", "country": "Austrian neurologist and psychologist", "published": 1946, "nonfiction": true, "cover": "https://covers.openlibrary.org/b/id/8516506-L.jpg"}, {"year": 2021, "period": "December", "title": "Guards! Guards!", "author": "Terry Pratchett", "country": "English author, humorist, and satirist", "published": 1989, "cover": "https://covers.openlibrary.org/b/id/13095550-L.jpg"}, {"year": 2022, "period": "January", "title": "A Gentleman in Moscow", "author": "Amor Towles", "country": "American novelist", "published": 2016, "cover": "https://covers.openlibrary.org/b/id/11326818-L.jpg"}, {"year": 2022, "period": "February", "title": "Contact", "author": "Carl Sagan", "country": "American astronomer and planetary scientist", "published": 1985, "cover": "https://covers.openlibrary.org/b/id/4143957-L.jpg"}, {"year": 2022, "period": "March", "title": "My Brilliant Friend", "author": "Elena Ferrante", "country": "Italian novelist", "published": 2011, "cover": "https://covers.openlibrary.org/b/id/13772133-L.jpg"}, {"year": 2022, "period": "April", "title": "The House in the Cerulean Sea", "author": "T.J. Klune", "country": "American writer", "published": 2020, "cover": "https://covers.openlibrary.org/b/id/9312772-L.jpg"}, {"year": 2022, "period": "May", "title": "The Story of a New Name", "author": "Elena Ferrante", "country": "Italian novelist", "published": 2012, "cover": "https://covers.openlibrary.org/b/id/13518415-L.jpg"}, {"year": 2022, "period": "May", "title": "The Pleasures of Reading in an Age of Distraction", "author": "Alan Jacobs", "country": "American literary critic", "published": 2011, "nonfiction": true, "cover": "https://covers.openlibrary.org/b/id/6932835-L.jpg"}, {"year": 2022, "period": "June", "title": "Billy Summers", "author": "Stephen King", "country": "American author", "published": 2021, "cover": "https://covers.openlibrary.org/b/id/14654070-L.jpg"}, {"year": 2022, "period": "July", "title": "Moby-Dick", "author": "Herman Melville", "country": "American novelist", "published": 1851, "cover": "https://covers.openlibrary.org/b/id/10544254-L.jpg"}, {"year": 2022, "period": "August", "title": "Beach Read", "author": "Emily Henry", "country": "American author", "published": 2020, "cover": "https://covers.openlibrary.org/b/id/9426296-L.jpg"}, {"year": 2022, "period": "September", "title": "The Silent Patient", "author": "Alex Michaelides", "country": "British-Cypriot author and screenwriter", "published": 2019, "cover": "https://covers.openlibrary.org/b/id/9407338-L.jpg"}, {"year": 2022, "period": "October", "title": "Rock Paper Scissors", "author": "Alice Feeney", "country": "British novelist", "published": 2021, "cover": "https://covers.openlibrary.org/b/id/10826952-L.jpg"}, {"year": 2022, "period": "November", "title": "Rebecca", "author": "Daphne du Maurier", "country": "English novelist, biographer and playwright", "published": 1938, "cover": "https://covers.openlibrary.org/b/id/8238729-L.jpg"}, {"year": 2022, "period": "December", "title": "The Book Thief", "author": "Markus Zusak", "country": "Australian writer", "published": 2005, "cover": "https://covers.openlibrary.org/b/id/8153054-L.jpg"}, {"year": 2023, "period": "January", "title": "Call For The Dead", "author": "John le Carré", "country": "British author", "published": 1961, "cover": "https://covers.openlibrary.org/b/id/570844-L.jpg"}, {"year": 2023, "period": "February", "title": "The First Fifteen Lives of Harry August", "author": "Claire North", "country": "British author", "published": 2014, "cover": "https://covers.openlibrary.org/b/id/8424640-L.jpg"}, {"year": 2023, "period": "March", "title": "One Hundred Years of Solitude", "author": "Gabriel García Márquez", "country": "Colombian writer and journalist", "published": 1967, "cover": "https://covers.openlibrary.org/b/id/10666982-L.jpg"}, {"year": 2023, "period": "March", "title": "The Wind-Up Bird Chronicle", "author": "Haruki Murakami", "country": "Japanese writer", "published": 1994, "cover": "https://covers.openlibrary.org/b/id/630454-L.jpg"}, {"year": 2023, "period": "April", "title": "East of Eden", "author": "John Steinbeck", "country": "American writer", "published": 1952, "cover": "https://covers.openlibrary.org/b/id/11386937-L.jpg"}, {"year": 2023, "period": "April", "title": "Of Mice and Men", "author": "John Steinbeck", "country": "American writer", "published": 1937, "cover": "https://covers.openlibrary.org/b/id/14319003-L.jpg"}, {"year": 2023, "period": "May", "title": "The Seven Husbands of Evelyn Hugo", "author": "Taylor Jenkins Reid", "country": "American author", "published": 2017, "cover": "https://covers.openlibrary.org/b/id/8354226-L.jpg"}, {"year": 2023, "period": "May", "title": "The Boy, the Mole, the Fox and the Horse", "author": "Charlie Mackesy", "country": "British artist and illustrator", "published": 2019, "cover": "https://covers.openlibrary.org/b/id/10523448-L.jpg"}, {"year": 2023, "period": "June", "title": "Happy Place", "author": "Emily Henry", "country": "American author", "published": 2023, "cover": "https://covers.openlibrary.org/b/id/13233403-L.jpg"}, {"year": 2023, "period": "July", "title": "The Bitch", "author": "Pilar Quintana", "country": "Colombian writer", "published": 2017, "cover": "https://covers.openlibrary.org/b/id/8221294-L.jpg"}, {"year": 2023, "period": "August", "title": "The Paper Menagerie and Other Stories", "author": "Ken Liu", "country": "American writer", "published": 2016, "cover": "https://covers.openlibrary.org/b/id/8529206-L.jpg"}, {"year": 2023, "period": "September", "title": "A Man Called Ove", "author": "Fredrik Backman", "country": "Swedish author", "published": 2012, "cover": "https://covers.openlibrary.org/b/id/7437001-L.jpg"}, {"year": 2023, "period": "October", "title": "We Have Always Lived in the Castle", "author": "Shirley Jackson", "country": "American writer", "published": 1962, "cover": "https://covers.openlibrary.org/b/id/11545332-L.jpg"}, {"year": 2023, "period": "November", "title": "How to Know a Person", "author": "David Brooks", "country": "Canadian-American author", "published": 2023, "nonfiction": true, "cover": "https://covers.openlibrary.org/b/id/14445297-L.jpg"}, {"year": 2023, "period": "December", "title": "The Secret History", "author": "Donna Tartt", "country": "American novelist and essayist", "published": 1992, "cover": "https://covers.openlibrary.org/b/id/744854-L.jpg"}, {"year": 2024, "period": "January", "title": "The Stranger", "author": "Albert Camus", "country": "French philosopher and author", "published": 1942, "cover": "https://covers.openlibrary.org/b/id/15070895-L.jpg"}, {"year": 2024, "period": "January", "title": "The Remains of the Day", "author": "Kazuo Ishiguro", "country": "Japanese-British novelist and screenwriter", "published": 1989, "cover": "https://covers.openlibrary.org/b/id/95742-L.jpg"}, {"year": 2024, "period": "February", "title": "Solaris", "author": "Stanisław Lem", "country": "Polish writer", "published": 1961, "cover": "https://covers.openlibrary.org/b/id/12313764-L.jpg"}, {"year": 2024, "period": "March", "title": "Piranesi", "author": "Susanna Clarke", "country": "English writer", "published": 2020, "cover": "https://covers.openlibrary.org/b/id/10226290-L.jpg"}, {"year": 2024, "period": "April", "title": "The Nightingale", "author": "Kristin Hannah", "country": "American writer", "published": 2015, "cover": "https://covers.openlibrary.org/b/id/8314147-L.jpg"}, {"year": 2024, "period": "May", "title": "Spring Snow", "author": "Yukio Mishima", "country": "Japanese author and poet", "published": 1969, "cover": "https://covers.openlibrary.org/b/id/6953677-L.jpg"}, {"year": 2024, "period": "June–August", "title": null, "break": true, "note": "Summer break"}, {"year": 2024, "period": "September", "title": "I Who Have Never Known Men", "author": "Jacqueline Harpman", "country": "Belgian writer", "published": 1995, "cover": "https://covers.openlibrary.org/b/id/7487522-L.jpg"}, {"year": 2024, "period": "October", "title": "Journey by Moonlight", "author": "Antal Szerb", "country": "Hungarian writer", "published": 1937, "cover": "https://covers.openlibrary.org/b/id/947244-L.jpg"}, {"year": 2024, "period": "November", "title": "The Mountains Sing", "author": "Nguyễn Phan Quế Mai", "country": "Vietnamese poet", "published": 2020, "cover": "https://covers.openlibrary.org/b/id/9319261-L.jpg"}, {"year": 2024, "period": "December", "title": "Circe", "author": "Madeline Miller", "country": "American novelist and author", "published": 2018, "cover": "https://covers.openlibrary.org/b/id/8739376-L.jpg"}, {"year": 2025, "period": "Quarter 1", "title": "The Count of Monte Cristo", "author": "Alexandre Dumas", "country": "French author", "published": 1844, "cover": "https://covers.openlibrary.org/b/id/14557288-L.jpg"}, {"year": 2025, "period": "Quarter 2", "title": "Wuthering Heights", "author": "Emily Brontë", "country": "English novelist", "published": 1847, "cover": "https://covers.openlibrary.org/b/id/12818862-L.jpg"}, {"year": 2025, "period": "October", "title": "The Tokyo Zodiac Murders", "author": "Soji Shimada", "country": "Japanese author", "published": 1981, "cover": "https://covers.openlibrary.org/b/id/1045308-L.jpg"}, {"year": 2025, "period": "December", "title": "Stoner", "author": "John Williams", "country": "American novelist", "published": 1965, "cover": "https://covers.openlibrary.org/b/id/8310729-L.jpg"}, {"year": 2026, "period": "January", "title": "The Dispossessed", "author": "Ursula K. Le Guin", "country": "American author", "published": 1974, "cover": "https://covers.openlibrary.org/b/id/6979680-L.jpg"}, {"year": 2026, "period": "September", "title": "The Song of Achilles", "author": "Madeline Miller", "country": "American novelist and author", "published": 2011, "cover": "https://covers.openlibrary.org/b/id/7098465-L.jpg"}];
+
+const YEAR_COLORS = {
+  2021:'#3159d1', 2022:'#1592a8', 2023:'#7d3fc4', 2024:'#4f9d6e', 2025:'#c97a2b', 2026:'#a3324a'
+};
+
+/* Plot teasers + real, sourced review quotes, keyed by title.
+   Every blurb here was found on a real page; `url` is where it was seen.
+   A book missing from this map simply shows no teaser/blurbs. */
+const BOOKINFO = {"The Devotion of Suspect X":{"teaser":"Yasuko's quiet Tokyo life shatters when her violent ex-husband turns up at her door. Her reclusive neighbour, a mathematics genius, offers to make the problem disappear.","blurbs":[{"quote":"Intricate and beguiling...if you like riddles inside enigmas, it will please you no end","attribution":"The Guardian","url":"https://www.waterstones.com/book/the-devotion-of-suspect-x/keigo-higashino/9780349123745"},{"quote":"The plot is taut and intriguing...Agatha Christie would be mightily impressed","attribution":"Financial Times","url":"https://www.waterstones.com/book/the-devotion-of-suspect-x/keigo-higashino/9780349123745"},{"quote":"...cold logic battles warm hearts throughout this elegant proof of the wages of sin","attribution":"Publishers Weekly","url":"https://www.publishersweekly.com/9780312375065"}],"genres":["Crime","Mystery","Japanese Fiction"]},"Replay":{"teaser":"Jeff Winston dies of a heart attack at forty-three and wakes up eighteen again, in his college dorm, with every memory intact. Then it happens again.","blurbs":[{"quote":"This is one of the most elegant and moving time travels stories ever written","attribution":"Ernest Cline, author of Ready Player One","url":"https://store.gollancz.co.uk/products/replay"},{"quote":"Powerful ... compelling ... superb!","attribution":"Atlanta Journal","url":"https://store.gollancz.co.uk/products/replay"},{"quote":"Ken Grimwood's Replay is one of the freshest, most engaging novels","attribution":"Dean Koontz","url":"https://store.gollancz.co.uk/products/replay"}],"genres":["Science Fiction","Time Loop"]},"My Sweet Orange Tree":{"teaser":"Zezé is a mischievous, fiercely imaginative small boy in a poor Rio de Janeiro neighbourhood, who confides in a little orange tree. Then he meets a real friend.","blurbs":[{"quote":"Tender, joyful… It will suit thoughtful readers of 10-plus down to the ground","attribution":"The Guardian","url":"https://pushkinpress.com/book/my-sweet-orange-tree/"},{"quote":"Written with immense tenderness, My Sweet Orange Tree eschews simple nostalgia…","attribution":"The Irish Times","url":"https://pushkinpress.com/book/my-sweet-orange-tree/"},{"quote":"This is a story full of sorrowful tenderness. Little Zezé is so likeable","attribution":"Cao Wenxuan, winner of the Hans Christian Andersen Prize","url":"https://pushkinpress.com/book/my-sweet-orange-tree/"}],"genres":["Coming of Age","Literary Fiction","Brazilian"]},"Brave New World":{"teaser":"In a future World State, humans are bred in bottles, conditioned for contentment and kept docile by a drug called soma. One man begins to feel out of step.","blurbs":[{"quote":"A masterpiece of speculation... As vibrant, fresh, and somehow shocking…","attribution":"Margaret Atwood","url":"https://www.penguin.co.uk/books/56119/brave-new-world-by-aldous-huxley/9780099518471"},{"quote":"A grave warning... Provoking, stimulating, shocking and dazzling","attribution":"The Observer","url":"https://www.penguin.co.uk/books/56119/brave-new-world-by-aldous-huxley/9780099518471"},{"quote":"The most accomplished novel Huxley has yet written","attribution":"Rebecca West","url":"https://en.wikipedia.org/wiki/Brave_New_World"}],"genres":["Dystopia","Science Fiction","Classic"]},"Force of Nature":{"teaser":"Five colleagues set out on a corporate hiking retreat deep in the Australian bush. Only four walk out. Federal agent Aaron Falk has his own reason to care.","blurbs":[{"quote":"Jane Harper, the new Queen of Crime...Even more impressive than The Dry","attribution":"The Sunday Times","url":"https://www.waterstones.com/book/force-of-nature/jane-harper/9780349142128"},{"quote":"Powerful, intriguing and recommended...Harper is wonderful at evoking fear and unease","attribution":"The Times","url":"https://www.waterstones.com/book/force-of-nature/jane-harper/9780349142128"},{"quote":"Harper once again shows herself to be a storytelling force to be reckoned with","attribution":"Publishers Weekly","url":"https://www.publishersweekly.com/9781250105639"}],"genres":["Crime","Thriller"]},"The Murder of Roger Ackroyd":{"teaser":"In a quiet English village, a wealthy man is found stabbed in his study only hours after learning a dangerous secret. Hercule Poirot, retired next door, investigates.","blurbs":[{"quote":"A classic – the book has worthily earned its fame.","attribution":"Irish Independent","url":"https://www.waterstones.com/book/the-murder-of-roger-ackroyd/agatha-christie/9780007527526"},{"quote":"One of the landmarks of detective literature.","attribution":"H.R.F. Keating, Crime & Mystery: The 100 Best Books","url":"https://www.waterstones.com/book/the-murder-of-roger-ackroyd/agatha-christie/9780007527526"},{"quote":"Miss Christie is not only an expert technician and a remarkably good story-teller...","attribution":"The New York Times Book Review","url":"https://en.wikipedia.org/wiki/The_Murder_of_Roger_Ackroyd"}],"genres":["Crime","Golden Age Mystery","Classic"]},"Flowers for Algernon":{"teaser":"Charlie Gordon, a gentle bakery worker with an IQ of 68, volunteers for experimental surgery to make him clever. His own progress reports tell the story.","blurbs":[{"quote":"A masterpiece of poignant brilliance . . . heartbreaking, and utterly, completely brilliant","attribution":"The Guardian","url":"https://www.orionbooks.co.uk/titles/daniel-keyes/flowers-for-algernon-2/9781857989380/"},{"quote":"Strikingly original","attribution":"Publishers Weekly","url":"https://www.orionbooks.co.uk/titles/daniel-keyes/flowers-for-algernon-2/9781857989380/"},{"quote":"Heartbreaking and beautiful. Required reading, as far as I am concerned","attribution":"Wil Wheaton","url":"https://www.orionbooks.co.uk/titles/daniel-keyes/flowers-for-algernon-2/9781857989380/"}],"genres":["Science Fiction","Literary Fiction","Classic"]},"The Princess Bride":{"teaser":"Buttercup is the most beautiful woman in the world and her true love Westley is lost at sea. What follows involves pirates, giants, fencing, revenge and true love.","blurbs":[{"quote":"Nutball funny . . . A 'classic' medieval melodrama...","attribution":"Newsweek","url":"https://www.barnesandnoble.com/w/the-princess-bride-william-goldman/1100617233"},{"quote":"One of the most laconic, tightly-plotted tales of mythical morality you'll ever read","attribution":"Uncut","url":"https://www.waterstones.com/book/the-princess-bride/william-goldman/9780747545187"},{"quote":"There's nothing fluffy about The Princess Bride. The rocket-powered narrative tricks you...","attribution":"Neon","url":"https://www.waterstones.com/book/the-princess-bride/william-goldman/9780747545187"}],"genres":["Fantasy","Adventure","Comedy"]},"A Thousand Splendid Suns":{"teaser":"Two Afghan women, born a generation apart and strangers to each other, are thrown together in a single Kabul household as thirty years of war reshape their country.","blurbs":[{"quote":"A Thousand Splendid Suns is an ambitious work.","attribution":"The New York Times","url":"https://www.penguinrandomhouse.com/books/391566/a-thousand-splendid-suns-by-khaled-hosseini/"},{"quote":"Spectacular. . . . Hosseini's writing makes our hearts ache, our stomachs clench...","attribution":"USA Today","url":"https://www.penguinrandomhouse.com/books/391566/a-thousand-splendid-suns-by-khaled-hosseini/"},{"quote":"...a brave, honorable, big-hearted book","attribution":"The Washington Post Book World","url":"https://www.penguinrandomhouse.com/books/391566/a-thousand-splendid-suns-by-khaled-hosseini/"}],"genres":["Historical Fiction","Literary Fiction"]},"I'm Not Scared":{"teaser":"During a scorching 1978 summer, nine-year-old Michele roams the wheat fields around his tiny southern Italian village and stumbles on something hidden near an abandoned farmhouse.","blurbs":[{"quote":"A deft masterpiece with never a false note","attribution":"The Guardian","url":"https://canongate.co.uk/books/112-im-not-scared/"},{"quote":"The new Italian word for talent is Ammaniti","attribution":"The Times","url":"https://canongate.co.uk/books/112-im-not-scared/"},{"quote":"An exquisite parable","attribution":"Daily Telegraph","url":"https://canongate.co.uk/books/112-im-not-scared/"}],"genres":["Literary Thriller","Coming of Age","Italian Fiction"]},"Man's Search for Meaning":{"teaser":"A psychiatrist's account of surviving the Nazi concentration camps, and the therapy he built from it: the argument that our deepest drive is the search for meaning.","blurbs":[{"quote":"One of the great books of our time.","attribution":"Harold S. Kushner, author of When Bad Things Happen to Good People","url":"https://www.beacon.org/Mans-Search-for-Meaning-P602.aspx"},{"quote":"One of the outstanding contributions to psychological thought in the last fifty years.","attribution":"Carl R. Rogers","url":"https://www.beacon.org/Mans-Search-for-Meaning-P602.aspx"},{"quote":"[O]ne of the most significant books of the 20th century.","attribution":"O, the Oprah Magazine","url":"https://www.beacon.org/Mans-Search-for-Meaning-P602.aspx"}],"genres":["Memoir","Psychology"]},"Guards! Guards!":{"teaser":"Ankh-Morpork's shambolic Night Watch faces a dragon conjured by a secret society, reinforced by a hugely tall, dwarf-raised recruit who takes the law rather too seriously.","blurbs":[{"quote":"This is one of Pratchett's best books. Hilarious and highly recommended","attribution":"The Times","url":"https://www.penguin.co.uk/books/328779/guards-guards-by-terry-pratchett/9781804990674"},{"quote":"One of our greatest fantasists, and beyond a doubt the funniest","attribution":"George R.R. Martin","url":"https://www.penguin.co.uk/books/328779/guards-guards-by-terry-pratchett/9781804990674"},{"quote":"[Pratchett's] spectacular inventiveness makes the Discworld series one of the perennial joys of modern fiction","attribution":"Mail on Sunday","url":"https://www.penguin.co.uk/books/328779/guards-guards-by-terry-pratchett/9781804990674"}],"genres":["Fantasy","Comedy","Discworld"]},"A Gentleman in Moscow":{"teaser":"In 1922 an unrepentant Russian count is sentenced to house arrest in a grand Moscow hotel, and sets about making a life inside it while history churns outside.","blurbs":[{"quote":"The novel buzzes with the energy of numerous adventures, love affairs, [and] twists of fate.","attribution":"The Wall Street Journal","url":"https://www.penguinrandomhouse.com/books/311564/a-gentleman-in-moscow-by-amor-towles/"},{"quote":"How delightful that in an era as crude as ours this finely composed novel...","attribution":"The Washington Post","url":"https://www.penguinrandomhouse.com/books/311564/a-gentleman-in-moscow-by-amor-towles/"},{"quote":"This is an old fashioned sort of romance, filled with delicious detail.","attribution":"Louise Erdrich","url":"https://www.penguinrandomhouse.com/books/311564/a-gentleman-in-moscow-by-amor-towles/"}],"genres":["Historical Fiction","Literary Fiction"]},"Contact":{"teaser":"A radio astronomer hunting for extraterrestrial intelligence picks up an unmistakable signal from the star Vega, triggering a worldwide scientific, political and religious scramble to decode it.","blurbs":[{"quote":"The range and depth of ideas is quite uncommon","attribution":"The New York Times Book Review","url":"https://www.orbit-books.co.uk/titles/carl-sagan-4/contact/9780356518848/"},{"quote":"Sagan's informed and dramatically enacted speculations into the mysteries of the universe . . .","attribution":"Publishers Weekly","url":"https://www.orbit-books.co.uk/titles/carl-sagan-4/contact/9780356518848/"},{"quote":"Stunning and satisfying","attribution":"Los Angeles Times","url":"https://www.orbit-books.co.uk/titles/carl-sagan-4/contact/9780356518848/"}],"genres":["Science Fiction","First Contact"]},"My Brilliant Friend":{"teaser":"Two clever girls grow up in a poor, violent neighbourhood on the edge of 1950s Naples, their fierce friendship shaping them even as their futures start to diverge.","blurbs":[{"quote":"Ferrante has captured the intensity of childhood friendships – their all-consuming nature, the passions...","attribution":"The Guardian","url":"https://www.europaeditions.com/reviews/book/a75d5f12-500c-41ef-945a-01a401e449cf"},{"quote":"Cinematic in the density of its detail.","attribution":"Times Literary Supplement","url":"https://www.europaeditions.com/reviews/book/a75d5f12-500c-41ef-945a-01a401e449cf"},{"quote":"Ferrante, beautifully translated by Ann Goldstein...writes with a ferocious, intimate urgency.","attribution":"San Francisco Chronicle","url":"https://www.europaeditions.com/reviews/book/a75d5f12-500c-41ef-945a-01a401e449cf"}],"genres":["Literary Fiction","Coming of Age","Italian Fiction"]},"The House in the Cerulean Sea":{"teaser":"A rule-following caseworker for magical youth is sent to inspect a remote island orphanage housing six highly unusual children and their enigmatic guardian, and finds his careful world unsettled.","blurbs":[{"quote":"A witty, wholesome fantasy that's likely to cause heart-swelling","attribution":"The Washington Post","url":"https://www.waterstones.com/book/the-house-in-the-cerulean-sea/tj-klune/9781529087949"},{"quote":"I loved it. It is like being wrapped up in a big gay blanket.","attribution":"V. E. Schwab, author of Gallant","url":"https://www.waterstones.com/book/the-house-in-the-cerulean-sea/tj-klune/9781529087949"},{"quote":"This tale of found family is hopeful to its core.","attribution":"Publishers Weekly","url":"https://www.waterstones.com/book/the-house-in-the-cerulean-sea/tj-klune/9781529087949"}],"genres":["Fantasy","Romance","Feel-good"]},"The Story of a New Name":{"teaser":"The second Neapolitan novel follows Elena and Lila into young adulthood, as marriage, study and ambition pull the two friends along sharply different paths in and beyond Naples.","blurbs":[{"quote":"Imagine if Jane Austen got angry and you'll have some idea of how explosive...","attribution":"The Australian","url":"https://www.europaeditions.com/book/9781609451349/the-story-of-a-new-name"},{"quote":"one of the great novelists of our time","attribution":"The New York Times","url":"https://www.europaeditions.com/book/9781609451349/the-story-of-a-new-name"},{"quote":"Brilliant . . . captivating and insightful . . .","attribution":"Booklist (starred review)","url":"https://www.europaeditions.com/book/9781609451349/the-story-of-a-new-name"}],"genres":["Literary Fiction","Italian Fiction"]},"The Pleasures of Reading in an Age of Distraction":{"teaser":"A literature professor argues against dutiful, self-improving reading and makes the case for reading at whim: following delight and curiosity instead of lists, guilt or prescriptions.","blurbs":[{"quote":"Delightful yet discombobulating","attribution":"The Wall Street Journal","url":"https://www.waterstones.com/book/the-pleasures-of-reading-in-an-age-of-distraction/alan-jacobs/9780199747498"},{"quote":"what could be nicer to read than a book about how nice reading is?","attribution":"Steven Poole, The Guardian","url":"https://www.waterstones.com/book/the-pleasures-of-reading-in-an-age-of-distraction/alan-jacobs/9780199747498"},{"quote":"A vigorous and friendly exhortation to get back into the kind of reading...","attribution":"Library Journal","url":"https://www.waterstones.com/book/the-pleasures-of-reading-in-an-age-of-distraction/alan-jacobs/9780199747498"}],"genres":["Essays","Books About Books"]},"Billy Summers":{"teaser":"A sniper-for-hire with a personal code takes one last contract, moving into a quiet town under a false name and posing as a writer while he waits.","blurbs":[{"quote":"Murder most foul and mayhem most entertaining. Another worthy page-turner from a protean master.","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/stephen-king/billy-summers/"},{"quote":"a dazzlingly shapeshifting novel that, like its antihero, only pretends to be easy to pigeonhole","attribution":"The Sunday Times","url":"https://bookmarks.reviews/reviews/billy-summers/"},{"quote":"…And it's [King's] best book in years","attribution":"The Guardian","url":"https://bookmarks.reviews/reviews/billy-summers/"}],"genres":["Thriller","Crime"]},"Moby-Dick":{"teaser":"Ishmael signs aboard the whaler Pequod and discovers that its captain, Ahab, has bent the whole voyage to one purpose: hunting the white whale that took his leg.","blurbs":[{"quote":"High philosophy, liberal feeling, abstruse metaphysics popularly phrased, soaring speculation, a style as many-coloured…","attribution":"London Morning Advertiser (1851)","url":"https://bookmarks.reviews/the-original-1851-reviews-of-moby-dick/"},{"quote":"the artist has succeeded in investing objects apparently the most unattractive with an absorbing fascination","attribution":"John Bull (1851)","url":"https://bookmarks.reviews/the-original-1851-reviews-of-moby-dick/"},{"quote":"surpasses any of the former productions of this highly successful author","attribution":"George Ripley, Harper's New Monthly Magazine (1851)","url":"https://bookmarks.reviews/the-original-1851-reviews-of-moby-dick/"}],"genres":["Classic","Adventure","Sea Story"]},"Beach Read":{"teaser":"A romance novelist who has stopped believing in love and a literary writer with writer's block end up neighbours for a summer, and dare each other to swap genres.","blurbs":[{"quote":"Readers are sure to fall hard for this meta, heartfelt take on the romance genre.","attribution":"Publishers Weekly (starred review)","url":"https://www.penguinrandomhouse.com/books/608898/beach-read-by-emily-henry/"},{"quote":"A heartfelt look at taking second chances, in life and in love.","attribution":"Kirkus Reviews","url":"https://www.penguinrandomhouse.com/books/608898/beach-read-by-emily-henry/"},{"quote":"That Henry can manage to both pack a fierce emotional wallop and spear literary posturing…","attribution":"Entertainment Weekly","url":"https://www.penguinrandomhouse.com/books/608898/beach-read-by-emily-henry/"}],"genres":["Romance","Contemporary"]},"The Silent Patient":{"teaser":"A celebrated London painter shoots her husband and then never speaks again. Years later a criminal psychotherapist takes a post at her secure unit, determined to make her talk.","blurbs":[{"quote":"That rarest of beasts: the perfect thriller.","attribution":"A. J. Finn, author of The Woman in the Window","url":"https://celadonbooks.com/book/the-silent-patient/"},{"quote":"Smart, sophisticated storytelling freighted with real suspense—a very fine novel by any standard.","attribution":"Lee Child","url":"https://celadonbooks.com/book/the-silent-patient/"},{"quote":"Alex Michaelides has written one of the best psychological thrillers I have ever read.","attribution":"Blake Crouch, author of Dark Matter","url":"https://celadonbooks.com/book/the-silent-patient/"}],"genres":["Psychological Thriller","Mystery"]},"Rock Paper Scissors":{"teaser":"A couple whose ten-year marriage is failing spend a weekend at a remote converted chapel in the Scottish Highlands. Both are keeping things back, and the snow is closing in.","blurbs":[{"quote":"This complicated gothic thriller of dueling spouses and homicidal writers is cleverly plotted…","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/alice-feeney/rock-paper-scissors-feeney/"},{"quote":"Feeney's signature misdirection sets up gasp-worthy twists down the stretch…","attribution":"Publishers Weekly","url":"https://www.publishersweekly.com/9781250266101"},{"quote":"This book was highly unpredictable with a unique premise.","attribution":"The Concord Insider","url":"https://www.theconcordinsider.com/2022/03/24/book-rock-paper-scissors/"}],"genres":["Psychological Thriller","Domestic Suspense"]},"Rebecca":{"teaser":"A shy young bride arrives at Manderley, her new husband's grand Cornish estate, and finds the house and its staff still ruled by the memory of his first wife.","blurbs":[{"quote":"One of the most influential novels of the twentieth century","attribution":"Sarah Waters","url":"https://www.virago.co.uk/titles/daphne-du-maurier-2/rebecca/9780349010267/"},{"quote":"Excellent entertainment... du Maurier created a scale by which modern women can measure their feelings.","attribution":"Stephen King","url":"https://www.hachettebookgroup.com/titles/daphne-du-maurier/rebecca/9780316575201/"},{"quote":"Rebecca is a masterpiece in which du Maurier pulls off several spectacular high-wire acts…","attribution":"Jim Crace, The Guardian","url":"https://www.virago.co.uk/titles/daphne-du-maurier-2/rebecca/9780349010267/"}],"genres":["Gothic","Suspense","Classic"]},"The Book Thief":{"teaser":"In Nazi Germany a foster girl outside Munich learns to read, steals books wherever she can find them, and shares them with the neighbours sheltering in the cellar. Death narrates.","blurbs":[{"quote":"Elegant, philosophical and moving...Beautiful and important.","attribution":"Kirkus Reviews (starred review)","url":"https://penguinrandomhousehighereducation.com/book/?isbn=9780375842207"},{"quote":"Brilliant and hugely ambitious…It's the kind of book that can be life-changing","attribution":"The New York Times","url":"https://penguinrandomhousehighereducation.com/book/?isbn=9780375842207"},{"quote":"Zusak doesn't sugarcoat anything, but he makes his ostensibly gloomy subject bearable…","attribution":"Time Magazine","url":"https://penguinrandomhousehighereducation.com/book/?isbn=9780375842207"}],"genres":["Historical Fiction","Second World War","Young Adult"]},"Call For The Dead":{"teaser":"A Foreign Office civil servant kills himself after a routine security interview, and George Smiley, quiet and unglamorous, refuses to accept the obvious explanation. Le Carré's first novel.","blurbs":[{"quote":"A subtle and acute story of counterespionage marked by restraint, indirection, and intelligence.","attribution":"The New York Times Book Review","url":"https://www.penguinrandomhouse.com/books/312131/call-for-the-dead-by-john-le-carre/"},{"quote":"Intelligent, thrilling, surprising … makes most cloak-and-dagger stuff taste of cardboard.","attribution":"Sunday Telegraph (London)","url":"https://www.penguinrandomhouse.com/books/312131/call-for-the-dead-by-john-le-carre/"},{"quote":"Brilliant. Realistic. Constant suspense…excellent writing.","attribution":"The Observer (London)","url":"https://www.penguinrandomhouse.com/books/312131/call-for-the-dead-by-john-le-carre/"}],"genres":["Spy Fiction","Crime"]},"The First Fifteen Lives of Harry August":{"teaser":"Harry August dies and is born again into the same life, over and over, remembering everything. In his eleventh life a dying girl brings him a message about the end of the world.","blurbs":[{"quote":"…is one of the top ten books I've ever read.","attribution":"James Dashner, author of The Maze Runner","url":"https://www.hachettebookgroup.com/titles/claire-north/the-first-fifteen-lives-of-harry-august/9780316399623/"},{"quote":"An astonishing re-invention of the time travel narrative. Bold, magical and masterful.","attribution":"Mike Carey","url":"https://www.hachettebookgroup.com/titles/claire-north/the-first-fifteen-lives-of-harry-august/9780316399623/"},{"quote":"A subtle study of friendship, love and the complexity of existence.","attribution":"Eric Brown, The Guardian","url":"https://www.hachettebookgroup.com/titles/claire-north/the-first-fifteen-lives-of-harry-august/9780316399623/"}],"genres":["Science Fiction","Time Loop"]},"One Hundred Years of Solitude":{"teaser":"Seven generations of the Buendía family rise and fall in Macondo, the remote town they founded, where the miraculous and the everyday are impossible to tell apart.","blurbs":[{"quote":"The greatest novel in any language of the last 50 years","attribution":"Salman Rushdie","url":"https://www.penguin.com.au/books/one-hundred-years-of-solitude-9780241968581"},{"quote":"Should be required reading for the entire human race","attribution":"The New York Times","url":"https://www.penguin.com.au/books/one-hundred-years-of-solitude-9780241968581"},{"quote":"The book that sort of saved my life","attribution":"Emma Thompson","url":"https://www.penguin.com.au/books/one-hundred-years-of-solitude-9780241968581"}],"genres":["Magical Realism","Classic","Latin American"]},"The Wind-Up Bird Chronicle":{"teaser":"An unemployed Tokyo man's search for his wife's missing cat pulls him into a widening mystery of strange callers, dry wells and unresolved wartime history.","blurbs":[{"quote":"Dreamlike and compelling…. Murakami is a genius.","attribution":"Chicago Tribune","url":"https://www.penguinrandomhouse.com/books/118727/the-wind-up-bird-chronicle-by-haruki-murakami/"},{"quote":"Seductive…. A labyrinth designed by a master, at once familiar and irresistibly strange.","attribution":"San Francisco Chronicle","url":"https://www.penguinrandomhouse.com/books/118727/the-wind-up-bird-chronicle-by-haruki-murakami/"},{"quote":"A significant advance in Murakami's art … a bold and generous book.","attribution":"The New York Times Book Review","url":"https://www.penguinrandomhouse.com/books/118727/the-wind-up-bird-chronicle-by-haruki-murakami/"}],"genres":["Magical Realism","Literary Fiction","Japanese Fiction"]},"East of Eden":{"teaser":"In California's Salinas Valley, two families across three generations replay the rivalry of Cain and Abel, wrestling with inheritance, jealousy and whether a person can choose to be good.","blurbs":[{"quote":"A novel planned on the grandest possible scale . . .","attribution":"The New York Herald Tribune","url":"https://www.penguinrandomhouse.com/books/354458/east-of-eden-by-john-steinbeck-introduction-by-david-wyatt-suggestions-for-further-explorationby-susan-shillinglaw/"},{"quote":"A fantasia and myth . . . A strange and original work of art","attribution":"The New York Times Book Review","url":"https://www.penguinrandomhouse.com/books/354458/east-of-eden-by-john-steinbeck-introduction-by-david-wyatt-suggestions-for-further-explorationby-susan-shillinglaw/"},{"quote":"A moving, crying pageant with wilderness strengths.","attribution":"Carl Sandburg","url":"https://www.penguinrandomhouse.com/books/354458/east-of-eden-by-john-steinbeck-introduction-by-david-wyatt-suggestions-for-further-explorationby-susan-shillinglaw/"}],"genres":["Literary Fiction","Family Saga","Classic"]},"Of Mice and Men":{"teaser":"Two migrant ranch hands, quick-witted George and the powerful, gentle Lennie, drift through Depression-era California chasing a shared dream of a small farm of their own.","blurbs":[{"quote":"Of Mice and Men is a thriller, a gripping tale running to novelette length…","attribution":"The New York Times","url":"https://www.penguinrandomhouse.com/books/354251/of-mice-and-men-by-john-steinbeck/"},{"quote":"Brutality and tenderness mingle in these strangely moving pages.","attribution":"Chicago Tribune","url":"https://www.penguinrandomhouse.com/books/354251/of-mice-and-men-by-john-steinbeck/"},{"quote":"A short tale of much power and beauty.","attribution":"Times Literary Supplement [London]","url":"https://www.penguinrandomhouse.com/books/354251/of-mice-and-men-by-john-steinbeck/"}],"genres":["Classic","Literary Fiction","Novella"]},"The Seven Husbands of Evelyn Hugo":{"teaser":"A reclusive Hollywood legend finally agrees to tell her life story, choosing an unknown magazine journalist to hear the truth behind her glamorous career and seven marriages.","blurbs":[{"quote":"Reid's heroine reveals her darkest secrets as if she were wiping off makeup…","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/taylor-jenkins-reid/the-seven-husbands-of-evelyn-hugo/"},{"quote":"Riveting, heart-wrenching and full of Old Hollywood glamour","attribution":"BuzzFeed","url":"https://www.simonandschuster.co.uk/books/The-Seven-Husbands-of-Evelyn-Hugo/Taylor-Jenkins-Reid/9781398515697"},{"quote":"This wildly addictive journey of a reclusive Hollywood starlet and her tumultuous Tinseltown journey…","attribution":"PopSugar","url":"https://www.simonandschuster.co.uk/books/The-Seven-Husbands-of-Evelyn-Hugo/Taylor-Jenkins-Reid/9781398515697"}],"genres":["Historical Fiction","Romance"]},"The Boy, the Mole, the Fox and the Horse":{"teaser":"An illustrated book of brief, hand-lettered conversations between four unlikely friends, wandering through ink-and-watercolour landscapes and talking about kindness, fear, courage and asking for help.","blurbs":[{"quote":"Simply, the world needs Charlie's work right now.","attribution":"Miranda Hart","url":"https://www.penguin.co.uk/books/439667/the-boy-the-mole-the-fox-and-the-horse-by-mackesy-charlie/9781529105100"},{"quote":"A wonderful work of art and a wonderful window into the human heart.","attribution":"Richard Curtis","url":"https://www.penguin.co.uk/books/439667/the-boy-the-mole-the-fox-and-the-horse-by-mackesy-charlie/9781529105100"},{"quote":"Those in need of peace will find it between the covers…","attribution":"The New York Times","url":"https://www.penguin.co.uk/books/439667/the-boy-the-mole-the-fox-and-the-horse-by-mackesy-charlie/9781529105100"}],"genres":["Illustrated","Philosophy","Feel-good"]},"Happy Place":{"teaser":"Harriet and Wyn broke up months ago but never told their closest friends, so they fake being a couple through one last annual week together in Maine.","blurbs":[{"quote":"This has the makings of a rom-com classic.","attribution":"Publishers Weekly","url":"https://www.penguinrandomhouse.com/books/704944/happy-place-by-emily-henry/"},{"quote":"Another knock-out from the champ. The woman doesn't miss.","attribution":"Taylor Jenkins Reid","url":"https://www.penguinrandomhouse.com/books/704944/happy-place-by-emily-henry/"},{"quote":"Henry's latest rom-com is a charming, heartwarming read about second-chance romance.","attribution":"USA Today","url":"https://www.penguinrandomhouse.com/books/704944/happy-place-by-emily-henry/"}],"genres":["Romance","Contemporary"]},"The Bitch":{"teaser":"On Colombia's storm-battered Pacific coast, a childless woman living in poverty takes in an orphaned puppy, and the fierce bond that grows between them unsettles everything around her.","blurbs":[{"quote":"Unforgettable. . . a powerful, jolting tale about class, motherhood and rage.","attribution":"The Guardian","url":"https://www.barnesandnoble.com/w/the-bitch-pilar-quintana/1133785089"},{"quote":"A perfect book.","attribution":"Kiran Desai, author of The Loneliness of Sonia and Sunny","url":"https://www.barnesandnoble.com/w/the-bitch-pilar-quintana/1133785089"},{"quote":"A somber and sensitive dog-and-owner tale scrubbed clean of the genre's usual sweetness.","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/pilar-quintana/bitch-quintana/"}],"genres":["Literary Fiction","Colombian","Novella"]},"The Paper Menagerie and Other Stories":{"teaser":"Fifteen speculative short stories ranging across science fiction, fantasy and alternate history, returning again and again to family, memory, immigration and the weight of the past.","blurbs":[{"quote":"I have never been so moved by a collection of short fiction.","attribution":"Amal El-Mohtar, NPR","url":"https://www.npr.org/2016/03/13/468942030/no-paper-tiger-this-menagerie-is-full-of-fierce-feeling"},{"quote":"Gracefully written and often profoundly moving, these stories are high-water marks of contemporary speculative fiction.","attribution":"Publishers Weekly (starred review)","url":"https://kenliu.name/blog/book/the-paper-menagerie-and-other-stories/"},{"quote":"These remarkable stories highlight Liu's themes of family, love, and…","attribution":"Library Journal (starred review)","url":"https://kenliu.name/blog/book/the-paper-menagerie-and-other-stories/"}],"genres":["Science Fiction","Short Stories","Fantasy"]},"A Man Called Ove":{"teaser":"A curmudgeonly Swedish widower with strong opinions about rules, cars and neighbours finds his rigid solitude repeatedly invaded by the boisterous young family who move in next door.","blurbs":[{"quote":"...it would be hard to beat grumpy Ove and his hidden, generous heart.","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/fredrik-backman/a-man-called-ove/"},{"quote":"...a fuzzy crowd-pleaser that serves up laughs to accompany a thoughtful reflection on loss...","attribution":"Publishers Weekly","url":"https://www.publishersweekly.com/9781476738024"},{"quote":"It's warm, funny, and ultimately almost unbearably moving.","attribution":"Daily Mail","url":"https://www.hachette.com.au/fredrik-backman/a-man-called-ove-the-global-bestselling-phenomenon"}],"genres":["Contemporary Fiction","Humour","Feel-good"]},"We Have Always Lived in the Castle":{"teaser":"Merricat Blackwood lives with her adored sister Constance and ailing uncle in a grand house shunned by the nearby village, until a cousin arrives and unsettles their cloistered routine.","blurbs":[{"quote":"Her greatest book ... at once whimsical and harrowing","attribution":"Donna Tartt","url":"https://www.penguin.co.uk/books/133431/we-have-always-lived-in-the-castle-by-jackson-shirley/9780241685044"},{"quote":"...you have missed out on something marvellous.","attribution":"Neil Gaiman","url":"https://www.penguin.co.uk/books/133431/we-have-always-lived-in-the-castle-by-jackson-shirley/9780241685044"},{"quote":"A masterpiece of Gothic suspense.","attribution":"Joyce Carol Oates","url":"https://www.penguin.co.uk/books/133431/we-have-always-lived-in-the-castle-by-jackson-shirley/9780241685044"}],"genres":["Gothic","Mystery","Classic"]},"How to Know a Person":{"teaser":"Brooks argues that truly seeing another person is a learnable skill, drawing on psychology, philosophy and his own failures to offer practical ways to listen, converse and understand.","blurbs":[{"quote":"A hands-on guide to making meaningful human connections.","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/david-brooks/how-to-know-a-person/"},{"quote":"Original and useful… Brooks is a chatty, likeable guide","attribution":"The TLS (Times Literary Supplement)","url":"https://www.penguin.com.au/books/how-to-know-a-person-9780241670293"},{"quote":"I raced through the book, which is well-structured and engagingly written","attribution":"Sophie McBain, The New Statesman","url":"https://www.penguin.com.au/books/how-to-know-a-person-9780241670293"}],"genres":["Psychology","Relationships"]},"The Secret History":{"teaser":"A scholarship student joins an elite, insular circle of classics undergraduates at a small Vermont college, where an intoxicating world of Greek and privilege drifts toward moral catastrophe.","blurbs":[{"quote":"Powerful . . . Enthralling . . . A ferociously well-paced entertainment.","attribution":"The New York Times","url":"https://www.penguinrandomhouse.com/books/176619/the-secret-history-by-donna-tartt/"},{"quote":"A beautifully written story, well-told, funny, sad, scary, and impossible to leave alone...","attribution":"John Grisham","url":"https://www.penguinrandomhouse.com/books/176619/the-secret-history-by-donna-tartt/"},{"quote":"A smart, craftsman-like, viscerally compelling novel.","attribution":"Time","url":"https://www.penguinrandomhouse.com/books/176619/the-secret-history-by-donna-tartt/"}],"genres":["Literary Fiction","Dark Academia","Mystery"]},"The Stranger":{"teaser":"In French Algiers, an emotionally detached young clerk drifts through his mother's funeral, an easy love affair, and a sun-struck act of violence that leaves society to judge his indifference.","blurbs":[{"quote":"Matthew Ward has done Camus and us a great service.","attribution":"Chicago Sun-Times","url":"https://www.penguinrandomhouse.com/books/23477/the-stranger-by-albert-camus-translated-by-matthew-ward-introduction-by-keith-gore/"},{"quote":"No book in contemporary literature points with such soberness and directness...","attribution":"The New Republic","url":"https://newrepublic.com/article/115492/albert-camus-stranger"}],"genres":["Classic","Philosophical Fiction","Existentialism"]},"The Remains of the Day":{"teaser":"An ageing English butler takes a motoring holiday through the West Country in 1956, reflecting on decades of service at Darlington Hall and on the housekeeper he once worked beside.","blurbs":[{"quote":"An intricate and dazzling novel.","attribution":"The New York Times","url":"https://www.penguinrandomhouse.com/books/85611/the-remains-of-the-day-by-kazuo-ishiguro-introduction-by-salman-rushdie/"},{"quote":"A perfect novel. I couldn't put it down.","attribution":"Ann Beattie","url":"https://www.penguinrandomhouse.com/books/85611/the-remains-of-the-day-by-kazuo-ishiguro-introduction-by-salman-rushdie/"},{"quote":"Brilliant and quietly devastating.","attribution":"Newsweek","url":"https://www.penguinrandomhouse.com/books/85611/the-remains-of-the-day-by-kazuo-ishiguro-introduction-by-salman-rushdie/"}],"genres":["Literary Fiction","Historical Fiction"]},"Solaris":{"teaser":"A psychologist arrives at a research station orbiting a planet covered by a vast, possibly sentient ocean, where the crew are being confronted by impossible visitors drawn from their memories.","blurbs":[{"quote":"It all gleams with portent.","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/stanislaw-lem/solaris/"},{"quote":"A novel that makes you reevaluate the nature of intelligence itself.","attribution":"Anne McCaffrey","url":"https://www.abebooks.com/9780156027601/Solaris-Novel-Lem-Stanislaw-0156027607/plp"},{"quote":"Solaris, a quintessential novel of science fiction's New Wave movement...","attribution":"Reactor","url":"https://reactormag.com/2019/08/01/embracing-the-impossible-puzzle-of-stanislaw-lems-solaris/"}],"genres":["Science Fiction","Philosophical Fiction"]},"Piranesi":{"teaser":"A man lives alone in an infinite labyrinth of statue-filled halls washed by tides, keeping meticulous journals, until signs of another presence begin to unsettle his ordered world.","blurbs":[{"quote":"Weird and haunting and excellent.","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/susanna-clarke/piranesi/"},{"quote":"...sure to be recognized as one of the year's most inventive novels.","attribution":"Publishers Weekly","url":"https://www.publishersweekly.com/9781635575637"},{"quote":"rich, wondrous, full of aching joy and sweet sorrow","attribution":"The New York Times Book Review","url":"https://bookmarks.reviews/reviews/all/piranesi/"}],"genres":["Fantasy","Mystery","Literary Fiction"]},"The Nightingale":{"teaser":"Two French sisters take very different paths through the Nazi occupation, one sheltering her family in an occupied village, the other drawn into dangerous resistance work.","blurbs":[{"quote":"Hannah's latest is a page-turner that will no doubt have readers reaching for tissues.","attribution":"Booklist","url":"https://kristinhannah.com/books/the-nightingale/praise/"},{"quote":"...a respectful and absorbing page-turner.","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/kristin-hannah/the-nightingale-hannah/"},{"quote":"The author ably depicts war's horrors through the eyes of these two women...","attribution":"Publishers Weekly","url":"https://www.publishersweekly.com/9780312577223"}],"genres":["Historical Fiction","Second World War"]},"Spring Snow":{"teaser":"Tokyo, 1912. Kiyoaki Matsugae, the beautiful and aloof son of a newly ennobled family, realises far too late what he feels for Satoko, the aristocratic girl promised elsewhere.","blurbs":[{"quote":"An austere love story, probably my favourite of his novels","attribution":"David Mitchell, Independent on Sunday","url":"https://www.penguin.co.uk/books/1091191/spring-snow-by-mishima-yukio/9780099282990"},{"quote":"Perfect beauty…. A classic of Japanese literature.","attribution":"Chicago Sun-Times","url":"https://www.penguinrandomhouse.com/books/115345/spring-snow-by-yukio-mishima/"},{"quote":"Mishima's novels exude a monstrous and compulsive weirdness...","attribution":"Angela Carter","url":"https://www.penguin.co.uk/books/1091191/spring-snow-by-mishima-yukio/9780099282990"}],"genres":["Literary Fiction","Japanese Fiction","Historical Fiction"]},"I Who Have Never Known Men":{"teaser":"A girl who has never known the world above is caged underground with thirty-nine women who remember it. She alone keeps asking why.","blurbs":[{"quote":"A consistently gripping experience.","attribution":"TLS","url":"https://www.transitbooks.org/books/iwhohaveneverknownmen"},{"quote":"the book's austere mystery...provides a richly allusive consideration of human life.","attribution":"Deborah Eisenberg, The New York Review of Books","url":"https://www.transitbooks.org/books/iwhohaveneverknownmen"},{"quote":"[I] couldn't put it down. . . It's a deceptively simple but wholly propulsive story","attribution":"Laila Lalami, author of The Dream Hotel","url":"https://www.transitbooks.org/books/iwhohaveneverknownmen"}],"genres":["Dystopia","Speculative Fiction","Literary Fiction"]},"Journey by Moonlight":{"teaser":"On his Italian honeymoon, a respectable Budapest bourgeois slips away from his new wife and drifts back toward the intoxicating friends of his youth.","blurbs":[{"quote":"No one who has read it has failed to love it.","attribution":"Nicholas Lezard, The Guardian","url":"https://parnassusbooks.net/book/9781590177730"},{"quote":"A stealthy masterpiece...both comic and beautiful.","attribution":"The Telegraph","url":"https://parnassusbooks.net/book/9781590177730"},{"quote":"A writer of immense subtlety and generosity...","attribution":"Ali Smith","url":"https://parnassusbooks.net/book/9781590177730"}],"genres":["Literary Fiction","Hungarian","Classic"]},"The Mountains Sing":{"teaser":"Across the twentieth century in Hanoi, a grandmother tells her granddaughter how the Trần family survived land reform, famine and war, one story at a time.","blurbs":[{"quote":"A sweeping tale of one family's shifting fortunes in Vietnam across half a century...","attribution":"Kirkus Reviews","url":"https://www.hachettebookgroup.com/titles/que-mai-phan-nguyen/the-mountains-sing/9781643751351/"},{"quote":"This brilliant, unsparing love letter to Vietnam will move readers.","attribution":"Publishers Weekly","url":"https://www.hachettebookgroup.com/titles/que-mai-phan-nguyen/the-mountains-sing/9781643751351/"},{"quote":"an epic account of Việt Nam's painful 20th century history...","attribution":"Viet Thanh Nguyen, author of The Sympathizer","url":"https://www.hachettebookgroup.com/titles/que-mai-phan-nguyen/the-mountains-sing/9781643751351/"}],"genres":["Historical Fiction","Family Saga","Vietnamese"]},"Circe":{"teaser":"Born a slighted daughter of the sun god and exiled to a lonely island, the witch Circe teaches herself sorcery as gods and mortals wash up on her shore.","blurbs":[{"quote":"An epic spanning thousands of years that's also a keep-you-up-all-night page turner.","attribution":"Ann Patchett","url":"https://madelinemiller.com/circe/"},{"quote":"A bold and subversive retelling of the goddess's story...","attribution":"The New York Times","url":"https://madelinemiller.com/circe/"},{"quote":"Luminous... Deft and compassionate... A compelling and engagingly feminist piece of ancient fantasy.","attribution":"Daily Telegraph","url":"https://madelinemiller.com/circe/"}],"genres":["Mythology","Fantasy","Historical Fiction"]},"The Count of Monte Cristo":{"teaser":"A young sailor on the eve of everything he wants is denounced by jealous friends and imprisoned without trial, and begins to imagine a reckoning.","blurbs":[{"quote":"A piece of perfect storytelling.","attribution":"Robert Louis Stevenson","url":"https://www.penguinrandomhouse.com/books/286345/the-count-of-monte-cristo-by-alexandre-dumas-pere-translated-with-an-introduction-and-notes-by-robin-buss-cover-ilustration-by-coralie-bickford-smith/"},{"quote":"Dumas was . . . a summit of art.","attribution":"George Bernard Shaw","url":"https://parnassusbooks.net/book/9780553213508"},{"quote":"No matter how many times I revisit it, I find new lines to appreciate...","attribution":"V. E. Schwab, The New York Times Book Review","url":"https://penguinrandomhousehighereducation.com/book/?isbn=9780140449266"}],"genres":["Classic","Adventure","Revenge"]},"Wuthering Heights":{"teaser":"A foundling brought home to a bleak Yorkshire farmhouse forms a bond with the daughter of the house that outlasts cruelty, class and two generations.","blurbs":[{"quote":"It is as if she could tear up all that we know human beings by...","attribution":"Virginia Woolf","url":"https://parnassusbooks.net/book/9780375756443"},{"quote":"Only Emily Brontë exposes her imagination to the dark spirit.","attribution":"V.S. Pritchett","url":"https://parnassusbooks.net/book/9780375756443"},{"quote":"the first novel I've read for an age, and the best...","attribution":"Dante Gabriel Rossetti","url":"https://en.wikipedia.org/wiki/Wuthering_Heights"}],"genres":["Gothic","Classic","Romance"]},"The Tokyo Zodiac Murders":{"teaser":"An eccentric artist is found dead in a locked studio, his diary describing a macabre scheme involving seven young women. Forty years later, an astrologer reopens the case.","blurbs":[{"quote":"An ebullient mystery classic that foreshadows the subgenre of intricate 'how-dunits.'","attribution":"Kirkus Reviews","url":"https://www.kirkusreviews.com/book-reviews/soji-shimada/the-tokyo-zodiac-murders/"},{"quote":"The solution is one of the most original that I've ever read","attribution":"Anthony Horowitz","url":"https://www.londonreviewbookshop.co.uk/stock/the-tokyo-zodiac-murders-soji-shimada"},{"quote":"The great Soji Shimada virtually invented the 'logic problem' sub-genre.","attribution":"The Guardian","url":"https://www.penguinrandomhouse.com/books/250981/the-tokyo-zodiac-murders-by-soji-shimada/"}],"genres":["Crime","Locked Room Mystery","Japanese Fiction"]},"Stoner":{"teaser":"The son of Missouri farmers discovers English literature almost by accident and stays at the university for life, quietly weathering a cold marriage and departmental warfare.","blurbs":[{"quote":"something rarer than a great novel — it is a perfect novel...","attribution":"Morris Dickstein, The New York Times Book Review","url":"https://www.nyrb.com/products/stoner"},{"quote":"It is a marvelous discovery for everyone who loves literature.","attribution":"Ian McEwan, BBC Radio 4","url":"https://www.nyrb.com/products/stoner"},{"quote":"One of the great forgotten novels of the past century.","attribution":"Colum McCann, The Guardian","url":"https://www.nyrb.com/products/stoner"}],"genres":["Literary Fiction","Campus Novel","Classic"]},"The Dispossessed":{"teaser":"A brilliant physicist from a poor anarchist moon becomes the first in generations to cross to the rich, propertied world his people once abandoned.","blurbs":[{"quote":"A seamless creation: every thing is made up, nothing seems arbitrary.","attribution":"The New York Times Book Review","url":"https://prologuebookshop.com/book/9780060512750"},{"quote":"This remains a challenging and urgent book.","attribution":"The Guardian","url":"https://prologuebookshop.com/book/9780060512750"},{"quote":"One of the great American political novels.","attribution":"Los Angeles Review of Books","url":"https://prologuebookshop.com/book/9780060512750"}],"genres":["Science Fiction","Utopian Fiction","Political"]},"The Song of Achilles":{"teaser":"Patroclus, an exiled prince, is taken in by Achilles, the golden son of a sea goddess. Their bond deepens as Greece marches on Troy and prophecy closes in.","blurbs":[{"quote":"A captivating retelling of the Iliad and events leading up to it...","attribution":"Donna Tartt, The Times","url":"https://madelinemiller.com/the-song-of-achilles/"},{"quote":"...a startlingly original work of art by an incredibly talented new novelist.","attribution":"Ann Patchett","url":"https://madelinemiller.com/the-song-of-achilles/"},{"quote":"A ravishingly vivid and convincing version of one of the most legendary of love stories.","attribution":"Emma Donoghue","url":"https://madelinemiller.com/the-song-of-achilles/"}],"genres":["Mythology","Historical Fiction","Romance"]}};
+
+function slug(b){
+  return (b.year+'-'+b.period+'-'+(b.title||'break')).toLowerCase().replace(/[^a-z0-9]+/g,'-');
+}
+
+const OVERRIDES_KEY = 'jpbooks-cover-overrides';
+function getOverrides(){ try{ return JSON.parse(localStorage.getItem(OVERRIDES_KEY)||'{}'); }catch(e){ return {}; } }
+function setOverride(key, url){
+  const o = getOverrides();
+  if(url) o[key] = url; else delete o[key];
+  localStorage.setItem(OVERRIDES_KEY, JSON.stringify(o));
+}
+function coverFor(b){
+  const o = getOverrides();
+  const k = slug(b);
+  if(o[k]) return o[k];
+  return b.cover || null;
+}
+
+const years = [...new Set(DATA.map(b=>b.year))].sort((a,b)=>b-a);
+
+// ---- topbar year nav (tabs, newest year first) ----
+const yearNav = document.getElementById('yearNav');
+years.forEach(y=>{
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = y;
+  btn.dataset.year = y;
+  btn.style.setProperty('--yr-color', YEAR_COLORS[y]);
+  btn.addEventListener('click', ()=> showYear(y));
+  yearNav.appendChild(btn);
+});
+function showYear(y){
+  document.querySelectorAll('.year-section').forEach(s=> s.classList.toggle('active', s.id === 'y'+y));
+  [...yearNav.children].forEach(btn=> btn.dataset.active = (+btn.dataset.year === y));
+}
+
+// ---- icon svgs ----
+const ICON_BOOK = `<svg class="p-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v17H6.5A2.5 2.5 0 0 0 4 21.5v-17Z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/></svg>`;
+const ICON_CHEV_L = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`;
+const ICON_CHEV_R = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>`;
+const ICON_PENCIL = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>`;
+
+const yearsRoot = document.getElementById('years');
+const carousels = {}; // year -> {active, items, els}
+
+years.forEach(y=>{
+  const items = DATA.filter(b=>b.year===y);
+  const color = YEAR_COLORS[y] || '#333';
+
+  const section = document.createElement('section');
+  section.className = 'year-section';
+  section.id = 'y'+y;
+  section.style.setProperty('--yr-color', color);
+
+  const nonBreakCount = items.filter(b=>!b.break).length;
+  section.innerHTML = `
+    <div class="year-head">
+      <span class="num">${y}</span>
+      <span class="meta"><b>${nonBreakCount}</b> book${nonBreakCount===1?'':'s'}</span>
+    </div>
+    <div class="carousel-wrap">
+      <div class="carousel" data-year="${y}"></div>
+    </div>
+    <div class="carousel-nav">
+      <button class="nav-btn" data-dir="-1" data-year="${y}">${ICON_CHEV_L}</button>
+      <div class="dots" data-year="${y}"></div>
+      <button class="nav-btn" data-dir="1" data-year="${y}">${ICON_CHEV_R}</button>
+    </div>
+    <div class="book-detail" data-year="${y}"></div>
+  `;
+  yearsRoot.appendChild(section);
+
+  const carouselEl = section.querySelector('.carousel');
+  const dotsEl = section.querySelector('.dots');
+  const detailEl = section.querySelector('.book-detail');
+
+  const cardEls = items.map((b, i)=>{
+    const el = document.createElement('div');
+    el.className = 'card' + (b.break ? ' is-break' : '');
+    el.dataset.index = i;
+
+    if(b.break){
+      el.innerHTML = `
+        <div class="placeholder">
+          ${ICON_BOOK}
+          <div class="p-title">${b.note || 'Break'}</div>
+          <div class="p-author">${b.period}</div>
+        </div>
+      `;
+    } else {
+      const cover = coverFor(b);
+      const coverHtml = cover
+        ? `<img class="cover-img" src="${cover}" alt="${b.title} cover" loading="lazy" decoding="async">`
+        : `<div class="placeholder">${ICON_BOOK}<div class="p-title">${b.title}</div><div class="p-author">${b.author}</div></div>`;
+      el.innerHTML = `
+        ${coverHtml}
+        <div class="gradient"></div>
+        <span class="badge">${b.period}</span>
+        ${b.nonfiction ? '<span class="nf-badge">Non-fiction</span>' : ''}
+        <div class="card-foot">
+          <div class="t">${b.title}</div>
+          <div class="a">${b.author}</div>
+        </div>
+        <button class="edit-btn" type="button" aria-label="Edit cover">${ICON_PENCIL}</button>
+      `;
+    }
+    carouselEl.appendChild(el);
+    return el;
+  });
+
+  items.forEach((b,i)=>{
+    if(b.break) return;
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.dataset.index = i;
+    dot.addEventListener('click', ()=> setActive(y, i));
+    dotsEl.appendChild(dot);
+  });
+
+  carousels[y] = { items, cardEls, active: 0, dotsEl, detailEl, carouselEl };
+
+  function layout(){
+    const st = carousels[y];
+    /* card width is height-driven now, so the fan spacing has to be measured
+       rather than hard-coded — otherwise big cards overlap into a solid block */
+    const cardW = st.cardEls[0] ? st.cardEls[0].getBoundingClientRect().width : 190;
+    const step = Math.max(34, cardW * 0.36);
+    st.cardEls.forEach((el, i)=>{
+      const offset = i - st.active;
+      const abs = Math.abs(offset);
+      const clamped = Math.max(-4, Math.min(4, offset));
+      const x = clamped * step;
+      const rot = clamped * 7;
+      const scale = Math.max(0.62, 1 - abs*0.11);
+      const z = 100 - abs;
+      const opacity = abs > 4 ? 0 : Math.max(0.15, 1 - abs*0.22);
+      el.style.transform = `translateX(${x}px) rotate(${rot}deg) scale(${scale})`;
+      el.style.zIndex = z;
+      el.style.opacity = opacity;
+      el.classList.toggle('is-active', offset===0);
+    });
+    st.dotsEl.querySelectorAll('.dot').forEach(d=>{
+      d.dataset.active = (+d.dataset.index === st.active);
+    });
+    const b = st.items[st.active];
+    if(b.break){
+      st.detailEl.innerHTML = `<div class="d-period">${b.period}</div><h3>${b.note||'Break'}</h3>`;
+    } else {
+      const gr = `https://www.goodreads.com/search?q=${encodeURIComponent(b.title+' '+b.author)}`;
+      st.detailEl.innerHTML = `
+        <div class="d-period">${b.period} ${y}</div>
+        <h3>${b.title}</h3>
+        <div class="d-author">${b.author}</div>
+        <div class="d-sub">${b.country || ''}${b.published ? ' · first published '+b.published : ''}</div>
+        <a class="d-link" href="${gr}" target="_blank" rel="noopener">View on Goodreads ↗</a>
+      `;
+    }
+  }
+  carousels[y].layout = layout;
+  layout();
+
+  cardEls.forEach((el,i)=>{
+    const editBtn = el.querySelector('.edit-btn');
+    if(editBtn){
+      editBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        openEditPop(el, items[i]);
+      });
+    }
+  });
+
+  /* Which card was tapped is resolved on pointerup rather than with a click
+     listener on each card: as soon as a drag crosses the capture threshold the
+     browser retargets the click to the carousel, so a per-card click handler
+     silently never fires — a nudge of the mouse mid-click would do nothing. */
+  let dragging = false, startX = 0, moved = 0, captured = false, downIdx = -1;
+  carouselEl.addEventListener('pointerdown', (e)=>{
+    dragging = true; startX = e.clientX; moved = 0; captured = false;
+    const card = e.target.closest('.card');
+    downIdx = (card && !e.target.closest('.edit-btn')) ? cardEls.indexOf(card) : -1;
+  });
+  carouselEl.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    moved = e.clientX - startX;
+    if(!captured && Math.abs(moved) > 6){
+      captured = true;
+      carouselEl.classList.add('dragging');
+      carouselEl.setPointerCapture(e.pointerId);
+    }
+  });
+  function endDrag(isUp){
+    if(!dragging) return;
+    dragging = false;
+    carouselEl.classList.remove('dragging');
+    if(Math.abs(moved) > 40){
+      shift(y, moved < 0 ? 1 : -1);
+    } else if(isUp && downIdx >= 0 && Math.abs(moved) <= 6){
+      // a genuine tap: centred card opens up, a fanned one just comes to the front
+      if(downIdx === carousels[y].active){
+        if(!items[downIdx].break) openBookModal(items[downIdx], y);
+      } else {
+        setActive(y, downIdx);
+      }
+    }
+    captured = false; moved = 0; downIdx = -1;
+  }
+  carouselEl.addEventListener('pointerup', ()=> endDrag(true));
+  carouselEl.addEventListener('pointercancel', ()=> endDrag(false));
+  carouselEl.addEventListener('pointerleave', ()=>{ if(dragging) endDrag(false); });
+
+  // keyboard: left/right arrows step through the year's books
+  carouselEl.setAttribute('tabindex', '0');
+  carouselEl.setAttribute('aria-label', `${y} carousel — use left and right arrow keys to browse`);
+  carouselEl.addEventListener('keydown', (e)=>{
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); shift(y, -1); }
+    else if(e.key === 'ArrowRight'){ e.preventDefault(); shift(y, 1); }
+  });
+});
+
+function setActive(y, i){
+  const st = carousels[y];
+  st.active = Math.max(0, Math.min(st.items.length-1, i));
+  st.layout();
+}
+function shift(y, dir){
+  const st = carousels[y];
+  setActive(y, st.active + dir);
+}
+
+document.querySelectorAll('.nav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    shift(+btn.dataset.year, +btn.dataset.dir);
+  });
+});
+
+// card size follows viewport height, so the fan spacing must be recomputed on resize
+let resizeTimer;
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(()=>{ years.forEach(y=> carousels[y].layout()); }, 120);
+});
+
+// open on the most recent year, tabs run newest → oldest
+showYear(years[0]);
+
+// ---- book modal ----
+const bookModal   = document.getElementById('bookModal');
+const mTeaser     = document.getElementById('mTeaser');
+const mBlurbs     = document.getElementById('mBlurbs');
+let lastFocused = null;
+
+function openBookModal(b, y){
+  const info = BOOKINFO[b.title] || {};
+
+  document.getElementById('mCover').src = coverFor(b) || '';
+  document.getElementById('mCover').alt = b.title + ' cover';
+  document.getElementById('mPeriod').textContent = `${b.period} ${y}`;
+  document.getElementById('mTitle').textContent  = b.title;
+  document.getElementById('mAuthor').textContent = b.author;
+  document.getElementById('mSub').textContent =
+    `${b.country || ''}${b.published ? ' · first published ' + b.published : ''}`;
+
+  const link = document.getElementById('mLink');
+  link.href = `https://www.goodreads.com/search?q=${encodeURIComponent(b.title + ' ' + b.author)}`;
+
+  mTeaser.textContent = info.teaser || '';
+
+  document.getElementById('mGenres').innerHTML =
+    (b.nonfiction ? '<span class="genre-tag is-nf">Non-fiction</span>' : '') +
+    (info.genres || []).map(g=>`<span class="genre-tag">${g}</span>`).join('');
+
+  const blurbs = info.blurbs || [];
+  if(blurbs.length){
+    mBlurbs.innerHTML =
+      '<div class="blurbs-head">What the reviews said</div>' +
+      blurbs.map(bl=>
+        `<blockquote class="blurb"><q>${bl.quote}</q><cite>— ${bl.attribution}</cite></blockquote>`
+      ).join('');
+    mBlurbs.style.display = 'flex';
+  } else {
+    mBlurbs.innerHTML = '';
+    mBlurbs.style.display = 'none';
+  }
+
+  const section = document.getElementById('y'+y);
+  bookModal.style.setProperty('--yr-color', getComputedStyle(section).getPropertyValue('--yr-color'));
+
+  lastFocused = document.activeElement;
+  bookModal.dataset.show = 'true';
+  bookModal.setAttribute('aria-hidden', 'false');
+  document.getElementById('bookClose').focus();
+}
+
+function closeBookModal(){
+  bookModal.dataset.show = 'false';
+  bookModal.setAttribute('aria-hidden', 'true');
+  if(lastFocused) lastFocused.focus();
+}
+
+document.getElementById('bookClose').addEventListener('click', closeBookModal);
+bookModal.addEventListener('click', (e)=>{ if(e.target === bookModal) closeBookModal(); });
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && bookModal.dataset.show === 'true') closeBookModal();
+});
+
+// ---- edit mode ----
+const editModeBtn = document.getElementById('editModeBtn');
+editModeBtn.addEventListener('click', ()=>{
+  const on = document.body.classList.toggle('edit-mode');
+  editModeBtn.dataset.on = on;
+  editModeBtn.textContent = on ? 'Done editing' : 'Edit covers';
+  document.getElementById('exportBtn').style.display = Object.keys(getOverrides()).length ? 'inline-block' : 'none';
+});
+
+const editPop = document.getElementById('editPop');
+const editUrl = document.getElementById('editUrl');
+let editingBook = null;
+function openEditPop(cardEl, book){
+  editingBook = book;
+  const r = cardEl.getBoundingClientRect();
+  editPop.style.left = (r.left + window.scrollX) + 'px';
+  editPop.style.top = (r.bottom + window.scrollY + 8) + 'px';
+  editUrl.value = getOverrides()[slug(book)] || '';
+  editPop.dataset.show = 'true';
+  editUrl.focus();
+}
+document.getElementById('editApply').addEventListener('click', ()=>{
+  if(!editingBook) return;
+  setOverride(slug(editingBook), editUrl.value.trim());
+  editPop.dataset.show = 'false';
+  carousels[editingBook.year].layout(); // relayout to refresh dots/detail
+  rebuildCard(editingBook);
+  document.getElementById('exportBtn').style.display = Object.keys(getOverrides()).length ? 'inline-block' : 'none';
+});
+document.getElementById('editReset').addEventListener('click', ()=>{
+  if(!editingBook) return;
+  setOverride(slug(editingBook), null);
+  editPop.dataset.show = 'false';
+  rebuildCard(editingBook);
+  document.getElementById('exportBtn').style.display = Object.keys(getOverrides()).length ? 'inline-block' : 'none';
+});
+document.addEventListener('click', (e)=>{
+  if(editPop.dataset.show === 'true' && !editPop.contains(e.target) && !e.target.closest('.edit-btn')){
+    editPop.dataset.show = 'false';
+  }
+});
+function rebuildCard(book){
+  const st = carousels[book.year];
+  const i = st.items.indexOf(book);
+  const el = st.cardEls[i];
+  const cover = coverFor(book);
+  const img = el.querySelector('.cover-img');
+  const ph = el.querySelector('.placeholder');
+  if(cover){
+    if(img){ img.src = cover; }
+    else {
+      el.querySelector('.placeholder')?.remove();
+      const imgEl = document.createElement('img');
+      imgEl.className = 'cover-img'; imgEl.loading='lazy'; imgEl.decoding='async';
+      imgEl.src = cover; imgEl.alt = book.title+' cover';
+      el.insertBefore(imgEl, el.firstChild);
+    }
+  } else if(!ph){
+    img?.remove();
+    const div = document.createElement('div');
+    div.className = 'placeholder';
+    div.innerHTML = `${ICON_BOOK}<div class="p-title">${book.title}</div><div class="p-author">${book.author}</div>`;
+    el.insertBefore(div, el.firstChild);
+  }
+}
+
+// ---- export overrides (modal, doesn't affect page layout/height) ----
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  document.getElementById('exportText').value = JSON.stringify(getOverrides(), null, 2);
+  document.getElementById('exportBackdrop').dataset.show = 'true';
+});
+document.getElementById('closeExportBtn').addEventListener('click', ()=>{
+  document.getElementById('exportBackdrop').dataset.show = 'false';
+});
+document.getElementById('exportBackdrop').addEventListener('click', (e)=>{
+  if(e.target.id === 'exportBackdrop') document.getElementById('exportBackdrop').dataset.show = 'false';
+});
+document.getElementById('copyBtn').addEventListener('click', ()=>{
+  const t = document.getElementById('exportText');
+  t.select();
+  navigator.clipboard?.writeText(t.value);
+});
+if(Object.keys(getOverrides()).length) document.getElementById('exportBtn').style.display = 'inline-block';
+
+// icon strokes need currentColor fix for chevrons/pencil (inherit stroke)
+document.querySelectorAll('.nav-btn svg, .edit-btn svg').forEach(svg=> svg.style.stroke = 'currentColor');
+</script>
+</body>
+</html>
