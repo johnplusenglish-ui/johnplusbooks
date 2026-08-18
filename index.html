@@ -407,7 +407,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
     <span>Telegram</span>
   </a>
   <button class="editmode-btn" id="exportBtn" type="button" style="display:none">Export edits</button>
-  <button class="editmode-btn" id="editModeBtn" type="button">Edit covers</button>
+  <button class="editmode-btn" id="editModeBtn" type="button" style="display:none">Edit covers</button>
 </header>
 
 <main id="years"></main>
@@ -937,12 +937,17 @@ document.addEventListener('keydown', (e)=>{
 });
 
 // ---- edit mode ----
+// Cover editing is for John only, not something a random visitor should stumble
+// onto — the button stays out of the DOM's visible flow entirely unless the
+// page is opened with ?edit in the URL (e.g. johnplusbooks.com/?edit).
+const ADMIN_MODE = new URLSearchParams(location.search).has('edit');
 const editModeBtn = document.getElementById('editModeBtn');
+if(ADMIN_MODE) editModeBtn.style.display = '';
 editModeBtn.addEventListener('click', ()=>{
   const on = document.body.classList.toggle('edit-mode');
   editModeBtn.dataset.on = on;
   editModeBtn.textContent = on ? 'Done editing' : 'Edit covers';
-  document.getElementById('exportBtn').style.display = Object.keys(getOverrides()).length ? 'inline-block' : 'none';
+  document.getElementById('exportBtn').style.display = (ADMIN_MODE && Object.keys(getOverrides()).length) ? 'inline-block' : 'none';
 });
 
 const editPop = document.getElementById('editPop');
@@ -963,14 +968,14 @@ document.getElementById('editApply').addEventListener('click', ()=>{
   editPop.dataset.show = 'false';
   carousels[editingBook.year].layout(); // relayout to refresh dots/detail
   rebuildCard(editingBook);
-  document.getElementById('exportBtn').style.display = Object.keys(getOverrides()).length ? 'inline-block' : 'none';
+  document.getElementById('exportBtn').style.display = (ADMIN_MODE && Object.keys(getOverrides()).length) ? 'inline-block' : 'none';
 });
 document.getElementById('editReset').addEventListener('click', ()=>{
   if(!editingBook) return;
   setOverride(slug(editingBook), null);
   editPop.dataset.show = 'false';
   rebuildCard(editingBook);
-  document.getElementById('exportBtn').style.display = Object.keys(getOverrides()).length ? 'inline-block' : 'none';
+  document.getElementById('exportBtn').style.display = (ADMIN_MODE && Object.keys(getOverrides()).length) ? 'inline-block' : 'none';
 });
 document.addEventListener('click', (e)=>{
   if(editPop.dataset.show === 'true' && !editPop.contains(e.target) && !e.target.closest('.edit-btn')){
@@ -1018,7 +1023,7 @@ document.getElementById('copyBtn').addEventListener('click', ()=>{
   t.select();
   navigator.clipboard?.writeText(t.value);
 });
-if(Object.keys(getOverrides()).length) document.getElementById('exportBtn').style.display = 'inline-block';
+if(ADMIN_MODE && Object.keys(getOverrides()).length) document.getElementById('exportBtn').style.display = 'inline-block';
 
 // icon strokes need currentColor fix for chevrons/pencil (inherit stroke)
 document.querySelectorAll('.nav-btn svg, .edit-btn svg').forEach(svg=> svg.style.stroke = 'currentColor');
