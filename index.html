@@ -324,8 +324,9 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .rating-input .star-row svg{width:19px; height:19px}
 .rating-input .star-row-fg svg{fill:var(--yr-color)}
 .rating-input:focus-visible .star-row{outline:2px solid var(--yr-color); outline-offset:3px; border-radius:3px}
-.rating-yours-note{font-size:.72rem; color:var(--ink-soft); opacity:0; transition:opacity .2s ease}
+.rating-yours-note{font-size:.72rem; font-weight:600; color:var(--ink-soft); opacity:0; transition:opacity .2s ease}
 .rating-yours-note[data-show="true"]{opacity:1}
+.rating-yours-note[data-error="true"]{color:#c0392b}
 
 .m-genres{display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.85rem}
 .m-genres:empty{display:none}
@@ -557,29 +558,52 @@ function renderRatingUI(book, bslug){
   setStarFill(inputRow, (agg.mine || 0) / 5);
   inputRow.setAttribute('aria-valuenow', agg.mine || 0.5);
   inputRow.setAttribute('aria-valuetext', agg.mine ? `${agg.mine} stars` : 'not yet rated');
-  document.getElementById('ratingNote').dataset.show = 'false';
-}
-
-function commitRating(value){
-  if(!currentModalSlug) return;
-  submitRating(currentModalSlug, value);            // updates ratingsCache optimistically, then POSTs
-  renderRatingUI(currentModalBook, currentModalSlug); // re-render both the input and the average from that update
   const note = document.getElementById('ratingNote');
-  note.dataset.show = 'true';
-  clearTimeout(commitRating._t);
-  commitRating._t = setTimeout(()=>{ note.dataset.show = 'false'; }, 1800);
+  note.dataset.show = 'false';
+  note.dataset.error = 'false';
 }
 
-async function submitRating(bookSlug, value){
+async function commitRating(value){
+  if(!currentModalSlug) return;
+  const slug = currentModalSlug, book = currentModalBook;
+  const note = document.getElementById('ratingNote');
+
+  submitRatingLocal(slug, value);           // optimistic cache update, instant
+  renderRatingUI(book, slug);
+  note.textContent = 'Saving…';
+  note.dataset.show = 'true';
+
+  const ok = await submitRatingRemote(slug, value);   // the actual network write — this is the part
+                                                        // that used to be silently fire-and-forget, so a
+                                                        // quick refresh right after tapping (very natural
+                                                        // "did that save?" behaviour) could cancel it before
+                                                        // it landed, with the UI having already claimed success
+  if(currentModalSlug !== slug) return;   // the visitor moved on to another book while this was in flight
+
+  if(ok){
+    note.dataset.error = 'false';
+    note.textContent = 'Saved';
+    clearTimeout(commitRating._t);
+    commitRating._t = setTimeout(()=>{ note.dataset.show = 'false'; }, 1800);
+  } else {
+    note.dataset.error = 'true';
+    note.textContent = 'Not saved — tap a star to retry';
+    // left showing (no auto-hide) so a real failure is visible instead of silently vanishing
+  }
+}
+
+function submitRatingLocal(bookSlug, value){
   const agg = aggFor(bookSlug);
-  // optimistic: the UI reflects the new vote immediately, the network call trails behind
   agg.sum += agg.mine ? (value - agg.mine) : value;
   if(!agg.mine) agg.count += 1;
   agg.mine = value;
+}
 
-  if(!RATINGS_ENABLED) return;
+async function submitRatingRemote(bookSlug, value, attempt){
+  if(!RATINGS_ENABLED) return true;   // nothing to persist to — the local-only cache is the whole story
+  attempt = attempt || 1;
   try{
-    await fetch(`${SUPABASE_URL}/rest/v1/book_ratings`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings`, {
       method: 'POST',
       headers: {
         apikey: SUPABASE_ANON_KEY,
@@ -589,7 +613,16 @@ async function submitRating(bookSlug, value){
       },
       body: JSON.stringify({ book_slug: bookSlug, voter_id: getVoterId(), rating: value })
     });
-  } catch(e){ /* the optimistic local update stands for this visit either way */ }
+    if(!res.ok){
+      console.error('rating save failed', res.status, await res.text().catch(()=>''));
+      return false;
+    }
+    return true;
+  } catch(e){
+    console.error('rating save failed (network)', e);
+    if(attempt < 2) return submitRatingRemote(bookSlug, value, attempt + 1);  // one retry for a transient blip
+    return false;
+  }
 }
 
 function ratingValueFromEvent(rowEl, e){
