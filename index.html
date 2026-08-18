@@ -463,12 +463,29 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
    against the white modal, and it gives the write-a-note form below something
    to belong to. Own note is marked by tinting the fill, not a colour stripe. */
 .club-note{
+  position:relative;
   display:flex; flex-direction:column; gap:.6rem;
   padding:1rem 1.15rem;
   background:var(--bg);
   border:1px solid var(--line);
   border-radius:9px;
 }
+/* Your own note is edited in place from this pencil rather than by leaving the
+   write-form permanently open underneath, which just repeated the note you had
+   already written. Same idiom as the cover-edit pencil on the carousel cards. */
+.cn-edit{
+  position:absolute; right:.6rem; bottom:.6rem;
+  width:26px; height:26px; border-radius:50%; padding:0;
+  border:1px solid var(--line); background:var(--card-bg);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; transition:border-color .15s;
+}
+.cn-edit:hover{border-color:var(--yr-color)}
+.cn-edit svg{
+  width:12px; height:12px;
+  fill:none; stroke:var(--ink-soft); stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+}
+.club-note[data-mine="true"] .cn-by{padding-right:2.2rem}
 .club-note[data-mine="true"]{
   background:color-mix(in srgb, var(--yr-color) 5%, var(--bg));
   border-color:color-mix(in srgb, var(--yr-color) 30%, var(--line));
@@ -505,6 +522,12 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   transition:opacity .15s;
 }
 .note-save[disabled]{opacity:.4; cursor:not-allowed}
+.note-cancel{
+  border:none; background:none; padding:.45rem .2rem;
+  font-family:inherit; font-size:.78rem; font-weight:600; color:var(--ink-soft);
+  cursor:pointer;
+}
+.note-cancel:hover{color:var(--ink)}
 .note-hint{font-size:.76rem; color:var(--ink-soft); font-style:italic}
 
 .m-link{
@@ -603,6 +626,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
             <div class="note-actions">
               <span class="note-count" id="noteCount">0/280</span>
               <span class="note-state" id="noteState"></span>
+              <button type="button" class="note-cancel" id="noteCancel">Cancel</button>
               <button type="button" class="note-save" id="noteSave">Save note</button>
             </div>
           </div>
@@ -698,6 +722,7 @@ let currentModalBook = null;
    is the shape the club actually wants anyway. */
 const NAME_KEY = 'jpbooks-display-name';
 const NOTE_MAX = 280;
+let editingNote = false;   // is the write-form open on top of your existing note?
 const RATING_COLS = 'book_slug,voter_id,rating';
 const NOTE_COLS   = RATING_COLS + ',comment,display_name,updated_at';
 /* Flips to false if the comment/display_name columns aren't in the table yet, so
@@ -846,7 +871,11 @@ function renderNotesUI(bslug){
   wrap.dataset.ready = 'true';
 
   const list = notesCache[bslug] || [];
-  document.getElementById('notesList').innerHTML = list.map(n=>`
+  const mine = list.find(n=>n.mine);
+  // while editing, your own note is replaced by the form rather than shown twice
+  document.getElementById('notesList').innerHTML = list
+    .filter(n => !(n.mine && editingNote))
+    .map(n=>`
     <div class="club-note" data-mine="${n.mine ? 'true' : 'false'}">
       <div class="cn-text">${escHTML(n.text)}</div>
       <div class="cn-by">
@@ -854,9 +883,9 @@ function renderNotesUI(bslug){
         <span class="cn-score">${n.rating.toFixed(1)}</span>
         ${n.mine ? '<span class="cn-mine">yours</span>' : ''}
       </div>
+      ${n.mine ? `<button type="button" class="cn-edit" aria-label="Edit your note">${ICON_PENCIL}</button>` : ''}
     </div>`).join('');
 
-  const mine = list.find(n=>n.mine);
   const nameEl = document.getElementById('noteName');
   const textEl = document.getElementById('noteText');
   const savedName = localStorage.getItem(NAME_KEY) || '';
@@ -864,10 +893,13 @@ function renderNotesUI(bslug){
   textEl.value = mine ? mine.text : '';
   updateNoteCount();
 
-  // a note rides on a rating row, so there has to be a rating first
+  // a note rides on a rating row, so there has to be a rating first; once you
+  // have a note the form stays closed until the pencil opens it
   const rated = !!aggFor(bslug).mine;
-  document.getElementById('noteForm').style.display = rated ? 'flex' : 'none';
+  const showForm = rated && (!mine || editingNote);
+  document.getElementById('noteForm').style.display = showForm ? 'flex' : 'none';
   document.getElementById('noteHint').style.display = rated ? 'none' : 'block';
+  document.getElementById('noteCancel').style.display = (mine && editingNote) ? 'inline' : 'none';
   document.getElementById('noteSave').textContent = mine ? 'Update note' : 'Save note';
 
   const state = document.getElementById('noteState');
@@ -908,6 +940,7 @@ async function commitNote(){
     const rest = (notesCache[slug] || []).filter(n=>!n.mine);
     if(text) rest.unshift({ name: name || 'Anonymous', text, rating: agg.mine, at: new Date().toISOString(), mine: true });
     notesCache[slug] = rest;
+    editingNote = false;                    // saved, so collapse back to the note card
     renderNotesUI(slug);                    // this resets the state line, so set it after
     state.dataset.show = 'true';
     state.textContent = text ? 'Saved' : 'Note removed';
@@ -1378,6 +1411,7 @@ function openBookModal(b, y){
 
   currentModalBook = b;
   currentModalSlug = slug(b);
+  editingNote = false;             // a freshly opened book never starts in edit mode
   renderRatingUI(b, currentModalSlug);
   renderNotesUI(currentModalSlug);
 
@@ -1412,6 +1446,18 @@ ratingInputEl.addEventListener('click', (e)=> commitRating(ratingValueFromEvent(
 // ---- club notes ----
 document.getElementById('noteText').addEventListener('input', updateNoteCount);
 document.getElementById('noteSave').addEventListener('click', commitNote);
+// delegated: the note cards are re-rendered on every change, so the pencil
+// can't hold its own listener
+document.getElementById('notesList').addEventListener('click', (e)=>{
+  if(!e.target.closest('.cn-edit')) return;
+  editingNote = true;
+  renderNotesUI(currentModalSlug);
+  document.getElementById('noteText').focus();
+});
+document.getElementById('noteCancel').addEventListener('click', ()=>{
+  editingNote = false;
+  renderNotesUI(currentModalSlug);   // discards the edits by reloading from cache
+});
 document.getElementById('noteText').addEventListener('keydown', (e)=>{
   if((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); commitNote(); }
 });
