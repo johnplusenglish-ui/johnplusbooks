@@ -306,6 +306,31 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .book-info h2{font-size:1.7rem; font-weight:900; letter-spacing:-.015em; line-height:1.15; margin:.35rem 0 .25rem}
 .book-info .m-author{font-size:1rem; color:var(--ink-soft); font-style:italic}
 .book-info .m-sub{font-size:.8rem; color:var(--ink-soft); margin-top:.45rem}
+
+/* ---------- star ratings ----------
+   Each row stacks two identical strips of 5 stars: a grey background strip and
+   a gold foreground strip clipped to a % width. Clipping a continuous strip
+   (rather than styling 5 separate icons) is what lets a value like 3.7 render
+   as a genuinely partial star, and lets the input track the pointer smoothly. */
+.m-rating{display:none; align-items:center; gap:.9rem; flex-wrap:wrap; margin-top:.85rem}
+.m-rating[data-ready="true"]{display:flex}
+.rating-avg{display:flex; align-items:center; gap:.5rem}
+.rating-avg-text{font-size:.78rem; color:var(--ink-soft)}
+.rating-yours{display:flex; align-items:center; gap:.5rem; padding-left:.9rem; border-left:1px solid var(--line)}
+.rating-yours-label{font-size:.72rem; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em}
+.star-row{position:relative; display:inline-block; line-height:0}
+.star-row-bg, .star-row-fg{display:flex; gap:1px}
+.star-row-fg{position:absolute; inset:0 auto 0 0; overflow:hidden; white-space:nowrap}
+.star-row svg{width:16px; height:16px; flex:none}
+.star-row-bg svg{fill:var(--line)}
+.star-row-fg svg{fill:#f0a72e}
+.rating-input .star-row{cursor:pointer}
+.rating-input .star-row svg{width:19px; height:19px}
+.rating-input .star-row-fg svg{fill:var(--yr-color)}
+.rating-input:focus-visible .star-row{outline:2px solid var(--yr-color); outline-offset:3px; border-radius:3px}
+.rating-yours-note{font-size:.72rem; color:var(--ink-soft); opacity:0; transition:opacity .2s ease}
+.rating-yours-note[data-show="true"]{opacity:1}
+
 .m-genres{display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.85rem}
 .m-genres:empty{display:none}
 .genre-tag{
@@ -408,6 +433,19 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
         <h2 id="mTitle"></h2>
         <div class="m-author" id="mAuthor"></div>
         <div class="m-sub" id="mSub"></div>
+        <div class="m-rating" id="mRating">
+          <div class="rating-avg">
+            <span class="star-row" id="ratingAvgStars" aria-hidden="true"></span>
+            <span class="rating-avg-text" id="ratingAvgText"></span>
+          </div>
+          <div class="rating-yours">
+            <span class="rating-yours-label">Your rating</span>
+            <span class="star-row rating-input" id="ratingInput"
+                  role="slider" tabindex="0" aria-label="Your rating"
+                  aria-valuemin="0.5" aria-valuemax="5" aria-valuenow="0"></span>
+            <span class="rating-yours-note" id="ratingNote">Saved</span>
+          </div>
+        </div>
         <div class="m-genres" id="mGenres"></div>
         <p class="m-teaser" id="mTeaser"></p>
         <div class="m-blurbs" id="mBlurbs"></div>
@@ -439,6 +477,130 @@ const BOOKINFO = {"The Devotion of Suspect X":{"teaser":"Yasuko's quiet Tokyo li
 
 function slug(b){
   return (b.year+'-'+b.period+'-'+(b.title||'break')).toLowerCase().replace(/[^a-z0-9]+/g,'-');
+}
+
+/* ---------- star ratings (Supabase, no accounts) ----------
+   Anyone can rate; a random id cached in this browser's localStorage identifies
+   the DEVICE, not a person, so a return visit updates its own vote instead of
+   duplicating it. That's the whole boundary a no-login system can offer — see
+   the RLS policies in supabase_setup.sql for the actual enforcement.
+   SUPABASE_URL/SUPABASE_ANON_KEY start blank; until they're filled in, the
+   feature just stays invisible (see .m-rating[data-ready]) — the rest of the
+   site works exactly as before. */
+const SUPABASE_URL = '';
+const SUPABASE_ANON_KEY = '';
+const RATINGS_ENABLED = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+const VOTER_KEY = 'jpbooks-voter-id';
+function getVoterId(){
+  let id = localStorage.getItem(VOTER_KEY);
+  if(!id){
+    id = (crypto.randomUUID ? crypto.randomUUID() : 'v-'+Date.now()+'-'+Math.random().toString(16).slice(2));
+    localStorage.setItem(VOTER_KEY, id);
+  }
+  return id;
+}
+
+const STAR_PATH = 'M12 2.5l2.9 6.06 6.6.82-4.85 4.6 1.28 6.6L12 17.5l-5.93 3.08 1.28-6.6L2.5 9.38l6.6-.82Z';
+function starRowSVG(){
+  return Array.from({length:5}, ()=>`<svg viewBox="0 0 24 24"><path d="${STAR_PATH}"/></svg>`).join('');
+}
+function starRowHTML(){
+  return `<span class="star-row-bg">${starRowSVG()}</span><span class="star-row-fg" style="width:0%">${starRowSVG()}</span>`;
+}
+function setStarFill(rowEl, fraction){
+  const fg = rowEl && rowEl.querySelector('.star-row-fg');
+  if(fg) fg.style.width = (Math.max(0, Math.min(1, fraction)) * 100) + '%';
+}
+
+let ratingsCache = {};             // bookSlug -> { sum, count, mine }
+let currentModalSlug = null;       // which book the open modal's rating row talks to
+let currentModalBook = null;
+
+async function loadRatings(){
+  if(!RATINGS_ENABLED) return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings?select=book_slug,voter_id,rating`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if(!res.ok) return;
+    const rows = await res.json();
+    const me = getVoterId();
+    const next = {};
+    rows.forEach(r=>{
+      const s = next[r.book_slug] || (next[r.book_slug] = {sum:0, count:0, mine:0});
+      s.sum += Number(r.rating); s.count += 1;
+      if(r.voter_id === me) s.mine = Number(r.rating);
+    });
+    ratingsCache = next;
+  } catch(e){ /* offline, or not configured yet — the widget just stays hidden this visit */ }
+  // a modal may already be open and waiting on this fetch to resolve
+  if(currentModalBook) renderRatingUI(currentModalBook, currentModalSlug);
+}
+
+function aggFor(bslug){
+  return ratingsCache[bslug] || (ratingsCache[bslug] = {sum:0, count:0, mine:0});
+}
+
+function renderRatingUI(book, bslug){
+  const wrap = document.getElementById('mRating');
+  if(!RATINGS_ENABLED){ wrap.dataset.ready = 'false'; return; }
+  wrap.dataset.ready = 'true';
+
+  const agg = aggFor(bslug);
+  const avg = agg.count ? agg.sum / agg.count : 0;
+
+  const avgRow = document.getElementById('ratingAvgStars');
+  avgRow.innerHTML = starRowHTML();
+  setStarFill(avgRow, avg / 5);
+  document.getElementById('ratingAvgText').textContent =
+    agg.count ? `${avg.toFixed(1)} (${agg.count} rating${agg.count===1?'':'s'})` : 'No ratings yet';
+
+  const inputRow = document.getElementById('ratingInput');
+  inputRow.innerHTML = starRowHTML();
+  setStarFill(inputRow, (agg.mine || 0) / 5);
+  inputRow.setAttribute('aria-valuenow', agg.mine || 0.5);
+  inputRow.setAttribute('aria-valuetext', agg.mine ? `${agg.mine} stars` : 'not yet rated');
+  document.getElementById('ratingNote').dataset.show = 'false';
+}
+
+function commitRating(value){
+  if(!currentModalSlug) return;
+  submitRating(currentModalSlug, value);            // updates ratingsCache optimistically, then POSTs
+  renderRatingUI(currentModalBook, currentModalSlug); // re-render both the input and the average from that update
+  const note = document.getElementById('ratingNote');
+  note.dataset.show = 'true';
+  clearTimeout(commitRating._t);
+  commitRating._t = setTimeout(()=>{ note.dataset.show = 'false'; }, 1800);
+}
+
+async function submitRating(bookSlug, value){
+  const agg = aggFor(bookSlug);
+  // optimistic: the UI reflects the new vote immediately, the network call trails behind
+  agg.sum += agg.mine ? (value - agg.mine) : value;
+  if(!agg.mine) agg.count += 1;
+  agg.mine = value;
+
+  if(!RATINGS_ENABLED) return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/book_ratings`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({ book_slug: bookSlug, voter_id: getVoterId(), rating: value })
+    });
+  } catch(e){ /* the optimistic local update stands for this visit either way */ }
+}
+
+function ratingValueFromEvent(rowEl, e){
+  const r = rowEl.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const frac = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+  return Math.max(0.5, Math.min(5, Math.ceil(frac * 10) / 2));   // snapped to the nearest half star
 }
 
 const OVERRIDES_KEY = 'jpbooks-cover-overrides';
@@ -731,6 +893,10 @@ function openBookModal(b, y){
   const section = document.getElementById('y'+y);
   bookModal.style.setProperty('--yr-color', getComputedStyle(section).getPropertyValue('--yr-color'));
 
+  currentModalBook = b;
+  currentModalSlug = slug(b);
+  renderRatingUI(b, currentModalSlug);
+
   lastFocused = document.activeElement;
   bookModal.dataset.show = 'true';
   bookModal.setAttribute('aria-hidden', 'false');
@@ -740,11 +906,32 @@ function openBookModal(b, y){
 function closeBookModal(){
   bookModal.dataset.show = 'false';
   bookModal.setAttribute('aria-hidden', 'true');
+  currentModalBook = null;
+  currentModalSlug = null;
   if(lastFocused) lastFocused.focus();
 }
 
 document.getElementById('bookClose').addEventListener('click', closeBookModal);
 bookModal.addEventListener('click', (e)=>{ if(e.target === bookModal) closeBookModal(); });
+
+// ---- rating input: hover previews, click or arrow keys commit immediately ----
+const ratingInputEl = document.getElementById('ratingInput');
+ratingInputEl.addEventListener('mousemove', (e)=>{
+  setStarFill(ratingInputEl, ratingValueFromEvent(ratingInputEl, e) / 5);
+});
+ratingInputEl.addEventListener('mouseleave', ()=>{
+  if(!currentModalSlug) return;
+  setStarFill(ratingInputEl, (aggFor(currentModalSlug).mine || 0) / 5);
+});
+ratingInputEl.addEventListener('click', (e)=> commitRating(ratingValueFromEvent(ratingInputEl, e)));
+ratingInputEl.addEventListener('keydown', (e)=>{
+  if(!currentModalSlug) return;
+  const mine = aggFor(currentModalSlug).mine || 0;
+  if(e.key === 'ArrowRight' || e.key === 'ArrowUp'){ e.preventDefault(); commitRating(Math.min(5, mine + 0.5)); }
+  else if(e.key === 'ArrowLeft' || e.key === 'ArrowDown'){ e.preventDefault(); commitRating(Math.max(0.5, (mine || 0.5) - 0.5)); }
+});
+
+loadRatings();
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && bookModal.dataset.show === 'true') closeBookModal();
 });
