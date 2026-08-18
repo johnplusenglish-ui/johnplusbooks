@@ -1027,6 +1027,21 @@ if(ADMIN_MODE && Object.keys(getOverrides()).length) document.getElementById('ex
 
 // icon strokes need currentColor fix for chevrons/pencil (inherit stroke)
 document.querySelectorAll('.nav-btn svg, .edit-btn svg').forEach(svg=> svg.style.stroke = 'currentColor');
+
+// ---- deep link straight to one book, e.g. johnplusbooks.com/#2021-january-the-devotion-of-suspect-x ----
+// lets a specific pick be shared on its own (Telegram, etc.) rather than just linking the whole site
+function openFromHash(){
+  const wanted = location.hash.slice(1);
+  if(!wanted) return;
+  const b = DATA.find(x => !x.break && slug(x) === wanted);
+  if(!b) return;
+  showYear(b.year);
+  const st = carousels[b.year];
+  setActive(b.year, st.items.indexOf(b));
+  openBookModal(b, b.year);
+}
+openFromHash();
+window.addEventListener('hashchange', openFromHash);
 </script>
 </body>
 </html>
