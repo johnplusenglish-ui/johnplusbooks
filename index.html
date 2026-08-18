@@ -463,8 +463,8 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
    against the white modal, and it gives the write-a-note form below something
    to belong to. Own note is marked by tinting the fill, not a colour stripe. */
 .club-note{
-  display:flex; flex-direction:column; gap:.3rem;
-  padding:.8rem .95rem;
+  display:flex; flex-direction:column; gap:.6rem;
+  padding:1rem 1.15rem;
   background:var(--bg);
   border:1px solid var(--line);
   border-radius:9px;
@@ -473,10 +473,17 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   background:color-mix(in srgb, var(--yr-color) 5%, var(--bg));
   border-color:color-mix(in srgb, var(--yr-color) 30%, var(--line));
 }
-.club-note .cn-text{font-size:.92rem; line-height:1.5; color:var(--ink)}
-.club-note .cn-by{font-size:.74rem; font-weight:600; color:var(--ink-soft)}
+/* italic to match the press quotes above — both are someone being quoted */
+.club-note .cn-text{font-size:.92rem; line-height:1.6; color:var(--ink); font-style:italic}
+/* the byline used to be one run of text ("John 5.0 · yours") sitting .3rem under
+   the note, which read as cramped. Now three separately-weighted tokens spaced
+   by flex gap, with real room above them. */
+.club-note .cn-by{
+  display:flex; align-items:baseline; gap:.55rem; flex-wrap:wrap;
+  font-size:.74rem; font-weight:700; color:var(--ink-soft);
+}
 .club-note .cn-by .cn-score{color:var(--yr-color)}
-.club-note[data-mine="true"] .cn-by::after{content:' · yours'; font-weight:400; opacity:.7}
+.club-note .cn-by .cn-mine{font-weight:500; opacity:.6}
 .notes-empty{font-size:.85rem; color:var(--ink-soft); font-style:italic}
 .note-form{display:flex; flex-direction:column; gap:.5rem; margin-top:.2rem}
 .note-form input, .note-form textarea{
@@ -842,7 +849,11 @@ function renderNotesUI(bslug){
   document.getElementById('notesList').innerHTML = list.map(n=>`
     <div class="club-note" data-mine="${n.mine ? 'true' : 'false'}">
       <div class="cn-text">${escHTML(n.text)}</div>
-      <div class="cn-by">${escHTML(n.name)} <span class="cn-score">${n.rating.toFixed(1)}</span></div>
+      <div class="cn-by">
+        <span class="cn-name">${escHTML(n.name)}</span>
+        <span class="cn-score">${n.rating.toFixed(1)}</span>
+        ${n.mine ? '<span class="cn-mine">yours</span>' : ''}
+      </div>
     </div>`).join('');
 
   const mine = list.find(n=>n.mine);
