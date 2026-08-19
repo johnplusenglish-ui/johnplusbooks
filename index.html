@@ -492,6 +492,21 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   .nm-name{font-size:1.35rem}
 }
 
+/* ---------- squared-off year grid (opt-in with ?grid) ----------
+   Deliberately reuses .nob-grid / .nob-card from the prize galleries rather
+   than restyling: the whole point of the alternative is that a year should
+   look like the rest of the site. */
+.year-grid-scroll{flex:1 1 auto; min-height:0; width:100%; overflow-y:auto; padding:.2rem 0 2rem}
+.year-grid-inner{width:100%; max-width:1180px; margin:0 auto}
+.year-grid-inner .nob-badge{background:color-mix(in srgb, var(--yr-color) 88%, #000)}
+.card-break{
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem;
+  aspect-ratio:2/3; border-radius:5px; background:var(--card-bg);
+  border:1px dashed var(--line); color:var(--ink-soft); text-align:center; padding:.8rem;
+}
+.card-break .p-title{font-size:.8rem; font-weight:700; color:var(--ink)}
+.card-break .p-author{font-size:.72rem}
+
 /* ---------- export modal ---------- */
 .modal-backdrop{
   position:fixed; inset:0; z-index:520;
@@ -1936,6 +1951,11 @@ document.addEventListener('keydown', (e)=>{
 renderPrize('nobel');
 
 
+/* An alternative to the fanned carousel: the same squared-off gallery the prize
+   tabs use. Opt in with ?grid on the URL (same idiom as ?edit) so both can be
+   looked at side by side before either becomes the default. */
+const GRID_YEARS = new URLSearchParams(location.search).has('grid');
+
 years.forEach(y=>{
   /* The newest year is the one still in progress, so it opens on the most
      recent pick — you land on "what we're reading now". Finished years stay in
@@ -1945,6 +1965,48 @@ years.forEach(y=>{
     ? DATA.filter(b=>b.year===y).slice().reverse()
     : DATA.filter(b=>b.year===y);
   const color = YEAR_COLORS[y] || '#333';
+
+  if(GRID_YEARS){
+    const sec = document.createElement('section');
+    sec.className = 'year-section';
+    sec.id = 'y'+y;
+    sec.style.setProperty('--yr-color', color);
+    const n = items.filter(b=>!b.break).length;
+    sec.innerHTML = `
+      <div class="year-head">
+        <span class="num">${y}</span>
+        <span class="meta"><b>${n}</b> book${n===1?'':'s'}</span>
+      </div>
+      <div class="year-grid-scroll">
+        <div class="year-grid-inner">
+          <ol class="nob-grid">${items.map((b, i)=>{
+            if(b.break) return `<li><div class="card-break">${ICON_BOOK}
+              <div class="p-title">${escHTML(b.note || 'Break')}</div>
+              <div class="p-author">${escHTML(b.period)}</div></div></li>`;
+            const cover = coverFor(b);
+            return `<li><button class="nob-card" type="button" data-idx="${i}"
+                aria-label="${escHTML(b.title)}, ${escHTML(b.period)} ${y}">
+              <span class="nob-cover">
+                ${cover ? `<img src="${cover}" alt="${escHTML(b.title)} cover" loading="lazy" decoding="async">` : ''}
+                <span class="nob-badge">${escHTML(b.period)}</span>
+              </span>
+              <span class="nob-who">${escHTML(b.title)}</span>
+              <span class="nob-work">${escHTML(b.author)}</span>
+            </button></li>`;
+          }).join('')}</ol>
+        </div>
+      </div>`;
+    yearsRoot.appendChild(sec);
+    sec.addEventListener('click', (e)=>{
+      const card = e.target.closest('[data-idx]');
+      if(card) openBookModal(items[Number(card.dataset.idx)], y);
+    });
+    /* Stepping inside the modal, deep links and showYear() all reach through
+       carousels[y]; in grid mode there is nothing to move, so the entry exists
+       with no-op render/layout rather than being absent. */
+    carousels[y] = { items, active:0, cardEls:[], render(){}, layout(){} };
+    return;
+  }
 
   const section = document.createElement('section');
   section.className = 'year-section';
