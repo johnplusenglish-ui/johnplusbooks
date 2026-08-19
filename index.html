@@ -493,51 +493,32 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 }
 
 /* ---------- sideways year gallery (opt-in with ?strip) ----------
-   The alternative to the fanned stack: squared-off covers in a row you scroll
-   sideways. Card width is driven by BOTH vw and vh so the covers grow into a
-   tall window without ever overflowing a short one, and the cover itself is
-   sized by aspect-ratio off that width — one definite constraint, which is
-   exactly what the fanned version kept getting wrong across browsers. */
+   Same .card markup as the fanned stack — badge, gradient, foot, placeholder
+   and edit pencil all come along — laid out in a scrollable row instead of
+   fanned, with the selected card at full size and its neighbours stepped back.
+   Width is driven by BOTH vw and vh so covers grow into a tall window without
+   overflowing a short one, and the cover is sized by aspect-ratio off that
+   width: one definite constraint, which is exactly what the fanned version
+   kept getting wrong across browsers. */
 .strip-wrap{flex:1 1 auto; min-height:0; display:flex; align-items:center}
 .strip{
-  display:flex; gap:1.4rem; align-items:flex-start;
+  display:flex; gap:.7rem; align-items:center;
   width:100%; overflow-x:auto; overflow-y:hidden;
-  padding:.5rem 1.5rem 1rem;
+  padding:1.2rem 50% 1.2rem 1.5rem;   /* the right pad lets the last card reach the middle */
   scroll-snap-type:x proximity; scrollbar-width:none;
-  scroll-padding-left:1.5rem;
 }
 .strip::-webkit-scrollbar{display:none}
-.strip-card{
-  flex:0 0 auto; scroll-snap-align:start;
-  width:clamp(140px, min(22vw, 32vh), 300px);
-  padding:0; border:none; background:none; text-align:left;
-  font-family:inherit; color:inherit; cursor:pointer;
+.strip .card{
+  position:relative; flex:0 0 auto; scroll-snap-align:center;
+  width:clamp(140px, min(24vw, 34vh), 300px); height:auto;
+  transform:scale(.84); opacity:.62;
 }
-.strip-cover{
-  position:relative; display:block; border-radius:5px; overflow:hidden; background:#eee;
-  box-shadow:var(--shadow-md); transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s;
-}
-.strip-card:hover .strip-cover{transform:translateY(-6px); box-shadow:var(--shadow-hi)}
-.strip-cover img{display:block; width:100%; aspect-ratio:2/3; object-fit:cover}
-.strip-badge{
-  position:absolute; top:.5rem; left:.5rem; padding:.22rem .5rem; border-radius:4px;
-  background:var(--yr-color); color:#fff; font-size:.68rem; font-weight:700;
-}
-.strip-title{display:block; margin-top:.6rem; font-size:.9rem; font-weight:700; line-height:1.25}
-.strip-author{display:block; margin-top:.1rem; font-size:.76rem; color:var(--ink-soft); font-style:italic}
-.strip-break{
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem;
-  aspect-ratio:2/3; border-radius:5px; background:var(--card-bg);
-  border:1px dashed var(--line); color:var(--ink-soft); text-align:center; padding:.8rem;
-}
-.strip-break .p-title{font-size:.82rem; font-weight:700; color:var(--ink)}
-.strip-break .p-author{font-size:.74rem}
-/* On a phone the vw term above collapses to the floor and leaves the covers
-   stranded in a tall empty column, so widen the share of the screen a card
-   takes — 56vw shows one cover properly with the next one peeking. */
+.strip .card .cover-img,
+.strip .card .placeholder{height:auto; aspect-ratio:2/3}
+.strip .card.is-active{transform:scale(1); opacity:1}
 @media (max-width:680px){
-  .strip{gap:1rem; padding:.5rem 1.2rem 1rem; scroll-padding-left:1.2rem}
-  .strip-card{width:clamp(150px, 56vw, 260px)}
+  .strip{padding-left:1.2rem; gap:.5rem}
+  .strip .card{width:clamp(150px, 52vw, 260px)}
 }
 
 /* ---------- export modal ---------- */
@@ -2004,53 +1985,108 @@ years.forEach(y=>{
     sec.className = 'year-section';
     sec.id = 'y'+y;
     sec.style.setProperty('--yr-color', color);
-    const n = items.filter(b=>!b.break).length;
+    const nonBreak = items.filter(b=>!b.break).length;
+    const cardHTML = (b, i)=>{
+      if(b.break) return `<div class="card is-break" data-index="${i}">
+        <div class="placeholder">${ICON_BOOK}
+          <div class="p-title">${escHTML(b.note || 'Break')}</div>
+          <div class="p-author">${escHTML(b.period)}</div>
+        </div></div>`;
+      const cover = coverFor(b);
+      const art = cover
+        ? `<img class="cover-img" src="${cover}" alt="${escHTML(b.title)} cover" loading="lazy" decoding="async">`
+        : `<div class="placeholder">${ICON_BOOK}<div class="p-title">${escHTML(b.title)}</div><div class="p-author">${escHTML(b.author)}</div></div>`;
+      return `<div class="card" data-index="${i}">
+        ${art}
+        <div class="gradient"></div>
+        <span class="badge">${escHTML(b.period)}</span>
+        ${b.nonfiction ? '<span class="nf-badge">Non-fiction</span>' : ''}
+        <div class="card-foot">
+          <div class="t">${escHTML(b.title)}</div>
+          <div class="a">${escHTML(b.author)}</div>
+        </div>
+        <button class="edit-btn" type="button" aria-label="Edit cover">${ICON_PENCIL}</button>
+      </div>`;
+    };
     sec.innerHTML = `
       <div class="year-head">
         <span class="num">${y}</span>
-        <span class="meta"><b>${n}</b> book${n===1?'':'s'}</span>
+        <span class="meta"><b>${nonBreak}</b> book${nonBreak===1?'':'s'}</span>
       </div>
       <div class="strip-wrap">
-        <div class="strip" data-year="${y}">${items.map((b, i)=>{
-          if(b.break) return `<div class="strip-card" aria-hidden="true"><span class="strip-break">${ICON_BOOK}
-            <span class="p-title">${escHTML(b.note || 'Break')}</span>
-            <span class="p-author">${escHTML(b.period)}</span></span></div>`;
-          const cover = coverFor(b);
-          return `<button class="strip-card" type="button" data-idx="${i}"
-              aria-label="${escHTML(b.title)}, ${escHTML(b.period)} ${y}">
-            <span class="strip-cover">
-              ${cover ? `<img src="${cover}" alt="${escHTML(b.title)} cover" loading="lazy" decoding="async">` : ''}
-              <span class="strip-badge">${escHTML(b.period)}</span>
-            </span>
-            <span class="strip-title">${escHTML(b.title)}</span>
-            <span class="strip-author">${escHTML(b.author)}</span>
-          </button>`;
-        }).join('')}</div>
+        <div class="strip">${items.map(cardHTML).join('')}</div>
       </div>
+      <div class="click-hint">click for more</div>
       <div class="carousel-nav">
         <button class="nav-btn" data-strip="${y}" data-dir="-1">${ICON_CHEV_L}</button>
+        <div class="dots"></div>
         <button class="nav-btn" data-strip="${y}" data-dir="1">${ICON_CHEV_R}</button>
-      </div>`;
+      </div>
+      <div class="book-detail"></div>`;
     yearsRoot.appendChild(sec);
 
     const stripEl = sec.querySelector('.strip');
-    sec.addEventListener('click', (e)=>{
-      const card = e.target.closest('[data-idx]');
-      if(card){ openBookModal(items[Number(card.dataset.idx)], y); return; }
-      const nav = e.target.closest('[data-dir]');
-      // scroll by a bit over one card so the next one lands under the snap point
-      if(nav) stripEl.scrollBy({ left: Number(nav.dataset.dir) * (stripEl.firstElementChild.getBoundingClientRect().width + 22) * 1.5, behavior:'smooth' });
+    const cardEls = [...stripEl.children];
+    const dotsEl = sec.querySelector('.dots');
+    const detailEl = sec.querySelector('.book-detail');
+    items.forEach((b, i)=>{
+      if(b.break) return;
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.dataset.index = i;
+      dot.addEventListener('click', ()=> setActive(y, i));
+      dotsEl.appendChild(dot);
     });
-    /* Stepping inside the modal and deep links both reach through carousels[y].
-       There is no fan to re-lay-out here, so render() just brings the active
-       card into view instead — which is what makes a #deep-link land on the
-       right cover rather than at the far left of the row. */
+
+    /* One tap selects, a second opens — the same two-stage gesture the fan had,
+       where clicking a card off to the side only brought it to the front. */
+    sec.addEventListener('click', (e)=>{
+      if(e.target.closest('.edit-btn')) return;          // wired per card below
+      const nav = e.target.closest('[data-dir]');
+      if(nav){ setActive(y, carousels[y].active + Number(nav.dataset.dir)); return; }
+      const card = e.target.closest('.card');
+      if(!card) return;
+      const i = Number(card.dataset.index);
+      if(i === carousels[y].active){ if(!items[i].break) openBookModal(items[i], y); }
+      else setActive(y, i);
+    });
+    cardEls.forEach((el, i)=>{
+      const btn = el.querySelector('.edit-btn');
+      if(btn) btn.addEventListener('click', (ev)=>{ ev.stopPropagation(); openEditPop(el, items[i]); });
+    });
+
     carousels[y] = {
-      items, active:0, cardEls:[],
-      render(){ const el = stripEl.children[this.active];
-                if(el) el.scrollIntoView({ block:'nearest', inline:'center' }); },
-      layout(){}
+      items, cardEls, active: 0, dotsEl, detailEl,
+      render(){
+        cardEls.forEach((el, i)=> el.classList.toggle('is-active', i === this.active));
+        const el = cardEls[this.active];
+        /* A year should already be sitting on its selection when you switch to
+           it, not visibly slide there, so the first positioning is instant and
+           only later moves animate. "First" has to mean the first one that can
+           actually take effect: sections are built while display:none, where a
+           scroll does nothing and would otherwise burn the instant pass. */
+        const visible = stripEl.clientWidth > 0;
+        if(el) el.scrollIntoView({ block:'nearest', inline:'center',
+                                   behavior: (visible && this._positioned) ? 'smooth' : 'auto' });
+        if(visible) this._positioned = true;
+        dotsEl.querySelectorAll('.dot').forEach(d=>{ d.dataset.active = (+d.dataset.index === this.active); });
+        const b = items[this.active];
+        if(b.break){
+          detailEl.innerHTML = `<div class="d-period">${escHTML(b.period)}</div><h3>${escHTML(b.note||'Break')}</h3>`;
+        } else {
+          const gr = `https://www.goodreads.com/search?q=${encodeURIComponent(b.title+' '+b.author)}`;
+          detailEl.innerHTML = `
+            <div class="d-period">${escHTML(b.period)} ${y}</div>
+            <h3>${escHTML(b.title)}</h3>
+            <div class="d-author">${escHTML(b.author)}</div>
+            <div class="d-sub">${escHTML(b.country || '')}${b.published ? ' &middot; first published '+b.published : ''}</div>
+            <a class="d-link" href="${gr}" target="_blank" rel="noopener">View on Goodreads &#8599;</a>`;
+        }
+      },
+      layout(){ this.render(); }
     };
+    carousels[y].active = Math.max(0, items.findIndex(b=>!b.break));
+    carousels[y].render();
     return;
   }
 
