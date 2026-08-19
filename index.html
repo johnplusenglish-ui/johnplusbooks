@@ -373,6 +373,26 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .fav-num{font-size:.76rem; font-weight:700; white-space:nowrap}
 .fav-num small{font-weight:500; font-size:.72rem; color:var(--ink-soft)}
 .fav-empty{font-size:.85rem; color:var(--ink-soft)}
+
+/* what the club said — the same notes that live inside each book modal,
+   gathered in one place so they're actually findable */
+.cnote-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.9rem}
+.cnote-card{
+  display:flex; gap:1rem; align-items:flex-start; width:100%; text-align:left;
+  padding:1rem 1.15rem; border:1px solid var(--line); border-radius:9px;
+  background:var(--card-bg); font-family:inherit; color:inherit; cursor:pointer;
+  transition:border-color .15s, background .15s;
+}
+.cnote-card:hover{border-color:color-mix(in srgb, var(--c) 45%, var(--line));
+  background:color-mix(in srgb, var(--c) 4%, var(--card-bg))}
+.cnote-cover{flex:none; width:44px; height:66px; object-fit:cover; border-radius:3px;
+  background:#eee; box-shadow:var(--shadow-lo)}
+.cnote-body{min-width:0; flex:1 1 auto}
+.cnote-text{display:block; font-size:.9rem; line-height:1.6; font-style:italic}
+.cnote-by{display:block; margin-top:.55rem; font-size:.75rem; color:var(--ink-soft)}
+.cnote-by b{color:var(--ink); font-weight:700; font-style:normal}
+.cnote-by .cnote-book{color:var(--c); font-weight:600}
+.cnote-by .cnote-score{font-weight:700; color:var(--ink)}
 .faves-more{
   margin-top:1.3rem; padding:.5rem 1rem; border-radius:999px;
   border:1px solid var(--line); background:none; color:var(--ink-soft);
@@ -775,7 +795,7 @@ const YEAR_COLORS = {
      note       — an optional one-liner shown under the countdown */
 const NOW = {
   title: null,
-  discussion: null,
+  discussion: '2026-10-04T00:00',
   nextTitle: null,
   note: ''
 };
@@ -1365,6 +1385,13 @@ favesSection.innerHTML = `
         <ol class="fav-list" id="favList"></ol>
         <button class="faves-more" id="favMore" type="button" style="display:none"></button>
       </div>
+      <div class="faves-block" id="notesBlock" style="display:none">
+        <div class="faves-kicker">In their own words</div>
+        <h2 class="faves-head">What the club said</h2>
+        <p class="faves-lede">Notes members left on the books themselves. Open any book, give it a
+          score, and you can leave one too.</p>
+        <ol class="cnote-list" id="cnoteList"></ol>
+      </div>
     </div>
   </div>`;
 yearsRoot.appendChild(favesSection);
@@ -1374,6 +1401,8 @@ const shelfListEl = favesSection.querySelector('#shelfList');
 const favListEl   = favesSection.querySelector('#favList');
 const favLedeEl   = favesSection.querySelector('#favLede');
 const favMoreEl   = favesSection.querySelector('#favMore');
+const notesBlock  = favesSection.querySelector('#notesBlock');
+const cnoteListEl = favesSection.querySelector('#cnoteList');
 let favExpanded = false;
 
 function renderShelf(){
@@ -1400,8 +1429,41 @@ function renderShelf(){
   }).join('');
 }
 
+/* The notes are per-book inside the modal, where nobody finds them. Same data,
+   flattened across every book and sorted newest first, so the club can see what
+   each other actually wrote — which is also the best nudge to write one. */
+function renderClubNotes(){
+  if(!cnoteListEl) return;
+  const all = [];
+  DATA.forEach(b=>{
+    if(b.break) return;
+    (notesCache[slug(b)] || []).forEach(n=> all.push({ n, b }));
+  });
+  all.sort((x, y)=> (y.n.at || '').localeCompare(x.n.at || ''));
+
+  notesBlock.style.display = all.length ? 'block' : 'none';
+  if(!all.length) return;
+
+  /* every field here is anonymous public input rendered back to every visitor,
+     so all of it goes through escHTML — never innerHTML a note raw */
+  cnoteListEl.innerHTML = all.map(({n, b})=>{
+    const color = YEAR_COLORS[b.year] || FAVES_COLOR;
+    const cover = coverFor(b);
+    return `<li><button class="cnote-card" type="button" style="--c:${color}" data-slug="${slug(b)}">
+      ${cover ? `<img class="cnote-cover" src="${cover}" alt="" loading="lazy" decoding="async">` : ''}
+      <span class="cnote-body">
+        <span class="cnote-text">${escHTML(n.text)}</span>
+        <span class="cnote-by"><b>${escHTML(n.name)}</b> on
+          <span class="cnote-book">${escHTML(b.title)}</span>
+          &middot; <span class="cnote-score">${n.rating.toFixed(1)}</span></span>
+      </span>
+    </button></li>`;
+  }).join('');
+}
+
 function renderFaves(){
   if(!favListEl) return;   // called from loadRatings, which can resolve at any time
+  renderClubNotes();
   const { rows, count } = clubRanking();
 
   if(!rows.length){
