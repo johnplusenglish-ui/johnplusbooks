@@ -311,6 +311,83 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   .now-title{font-size:1.5rem}
 }
 
+/* ---------- favourites tab ---------- */
+/* The tab is neutral ink rather than one of the year colours, because it cuts
+   across every year; the per-row colour is that book's own year, so the list
+   doubles as a colour map of when the club read each one. */
+.faves-section{overflow:hidden}
+.faves-scroll{flex:1 1 auto; min-height:0; width:100%; overflow-y:auto; padding:.4rem 0 2.5rem}
+.faves-inner{width:100%; max-width:860px; margin:0 auto}
+.faves-block + .faves-block{margin-top:2.6rem; padding-top:2.2rem; border-top:1px solid var(--line)}
+.faves-kicker{
+  font-size:.72rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--yr-color);
+}
+.faves-head{font-size:1.6rem; font-weight:800; letter-spacing:-.02em; margin:.4rem 0 .35rem; line-height:1.15}
+.faves-lede{font-size:.84rem; line-height:1.6; color:var(--ink-soft); margin:0 0 1.5rem; max-width:58ch}
+
+/* John's shelf */
+.shelf-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1.6rem}
+.shelf-item{display:flex; gap:1.1rem; align-items:flex-start; width:100%; text-align:left;
+  font-family:inherit; color:inherit; background:none; border:none; padding:0}
+button.shelf-item{cursor:pointer}
+.shelf-rank{
+  flex:none; width:1.6rem; padding-top:.1rem; text-align:right;
+  font-size:1rem; font-weight:800; color:var(--c); font-variant-numeric:tabular-nums;
+}
+.shelf-cover{flex:none; width:66px; border-radius:4px; overflow:hidden; box-shadow:var(--shadow-md); background:#eee}
+.shelf-cover img{display:block; width:100%; aspect-ratio:2/3; object-fit:cover;
+  transition:transform .25s cubic-bezier(.22,1,.36,1)}
+button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
+.shelf-body{min-width:0; flex:1 1 auto}
+/* these are spans (a <button> may not contain block-level children in valid
+   HTML), so each one has to be told to behave like a line of its own */
+.shelf-title{display:block; font-size:1.02rem; font-weight:800; letter-spacing:-.01em; line-height:1.2}
+.shelf-author{display:block; font-size:.8rem; color:var(--ink-soft); font-style:italic; margin-top:.15rem}
+.shelf-note{display:block; font-size:.88rem; line-height:1.6; margin:.55rem 0 0; max-width:52ch}
+.shelf-tag{
+  display:inline-block; margin-top:.6rem; padding:.25rem .55rem; border-radius:4px;
+  font-size:.68rem; font-weight:700; letter-spacing:.02em;
+  color:var(--c); background:color-mix(in srgb, var(--c) 10%, var(--card-bg));
+}
+
+/* the club's verdict */
+.fav-list{list-style:none; margin:0; padding:0}
+.fav-row{
+  display:flex; align-items:center; gap:.95rem; width:100%; text-align:left;
+  padding:.65rem .55rem; border:none; border-bottom:1px solid var(--line);
+  background:none; font-family:inherit; color:inherit; cursor:pointer; border-radius:8px;
+  transition:background .15s;
+}
+.fav-row:hover{background:color-mix(in srgb, var(--c) 7%, transparent)}
+.fav-rank{
+  flex:none; width:1.5rem; text-align:right;
+  font-size:.95rem; font-weight:800; color:var(--c); font-variant-numeric:tabular-nums;
+}
+.fav-cover{flex:none; width:38px; height:57px; object-fit:cover; border-radius:3px;
+  background:#eee; box-shadow:var(--shadow-lo)}
+.fav-main{flex:1 1 auto; min-width:0}
+.fav-title{display:block; font-size:.93rem; font-weight:700; line-height:1.25}
+.fav-author{display:block; font-size:.74rem; color:var(--ink-soft); margin-top:.12rem}
+.fav-score{flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:.22rem}
+.fav-num{font-size:.76rem; font-weight:700; white-space:nowrap}
+.fav-num small{font-weight:500; font-size:.72rem; color:var(--ink-soft)}
+.fav-empty{font-size:.85rem; color:var(--ink-soft)}
+.faves-more{
+  margin-top:1.3rem; padding:.5rem 1rem; border-radius:999px;
+  border:1px solid var(--line); background:none; color:var(--ink-soft);
+  font-family:inherit; font-size:.78rem; font-weight:600; cursor:pointer;
+  transition:border-color .15s, color .15s;
+}
+.faves-more:hover{border-color:var(--ink-soft); color:var(--ink)}
+@media (max-width:680px){
+  .faves-inner{padding:0 .1rem}
+  .shelf-cover{width:54px}
+  .shelf-rank, .fav-rank{width:1.2rem}
+  .fav-row{gap:.7rem; padding:.6rem .3rem}
+  .fav-score .star-row{display:none}   /* the number carries it once space is tight */
+}
+
 /* ---------- export modal ---------- */
 .modal-backdrop{
   position:fixed; inset:0; z-index:520;
@@ -703,6 +780,17 @@ const NOW = {
   note: ''
 };
 
+/* ---------- John's own shelf ----------
+   Hand-kept and ordered best first, and deliberately separate from the club's
+   scores below it: this half is one person's taste, that half is the arithmetic.
+   A `title` matching a Book42 pick borrows that pick's cover, author and modal,
+   so most entries need nothing but a title and a line. A book the club never
+   read needs `author`, `cover` and (optionally) `published` supplied here.
+     { title, note }                                  a club pick
+     { title, author, published, cover, note }        off-menu */
+const SHELF = [
+];
+
 /* Plot teasers + real, sourced review quotes, keyed by title.
    Every blurb here was found on a real page; `url` is where it was seen.
    A book missing from this map simply shows no teaser/blurbs. */
@@ -711,6 +799,11 @@ const BOOKINFO = {"The Devotion of Suspect X":{"teaser":"Yasuko's quiet Tokyo li
 function slug(b){
   return (b.year+'-'+b.period+'-'+(b.title||'break')).toLowerCase().replace(/[^a-z0-9]+/g,'-');
 }
+
+/* Every slug that names a real pick. Rows in the ratings table that match
+   nothing here (a slug left over from testing, a book since removed from DATA)
+   are dropped on the way in, so they can't quietly skew the club leaderboard. */
+const VALID_SLUGS = new Set(DATA.filter(b=>!b.break).map(slug));
 
 /* ---------- star ratings (Supabase, no accounts) ----------
    Anyone can rate; a random id cached in this browser's localStorage identifies
@@ -747,6 +840,7 @@ function setStarFill(rowEl, fraction){
 }
 
 let ratingsCache = {};             // bookSlug -> { sum, count, mine }
+let ratingsVoters = 0;             // how many distinct devices have rated anything
 let notesCache = {};               // bookSlug -> [{ name, text, rating, at, mine }] newest first
 let currentModalSlug = null;       // which book the open modal's rating row talks to
 let currentModalBook = null;
@@ -786,7 +880,10 @@ async function loadRatings(){
     const rows = await res.json();
     const me = getVoterId();
     const next = {}, nextNotes = {};
+    const voters = new Set();
     rows.forEach(r=>{
+      if(!VALID_SLUGS.has(r.book_slug)) return;   // not a book on this site
+      voters.add(r.voter_id);
       const s = next[r.book_slug] || (next[r.book_slug] = {sum:0, count:0, mine:0});
       s.sum += Number(r.rating); s.count += 1;
       const isMine = r.voter_id === me;
@@ -802,12 +899,14 @@ async function loadRatings(){
     Object.values(nextNotes).forEach(list => list.sort((a,b)=> (b.at||'').localeCompare(a.at||'')));
     ratingsCache = next;
     notesCache = nextNotes;
+    ratingsVoters = voters.size;
   } catch(e){ /* offline, or not configured yet — the widget just stays hidden this visit */ }
   // a modal may already be open and waiting on this fetch to resolve
   if(currentModalBook){
     renderRatingUI(currentModalBook, currentModalSlug);
     renderNotesUI(currentModalSlug);
   }
+  renderFaves();   // the club leaderboard is nothing but this data, sorted
 }
 
 function aggFor(bslug){
@@ -1076,6 +1175,17 @@ if(nowBook){
   yearNav.appendChild(nowBtn);
 }
 
+// Favourites sits second, next to Now rather than at the far end of the year
+// run: on a phone the nav scrolls, and anything past 2021 is off-screen.
+const FAVES_COLOR = '#1b1b1f';
+const favBtn = document.createElement('button');
+favBtn.type = 'button';
+favBtn.textContent = 'Favourites';
+favBtn.dataset.year = 'faves';
+favBtn.style.setProperty('--yr-color', FAVES_COLOR);
+favBtn.addEventListener('click', ()=> showYear('faves'));
+yearNav.appendChild(favBtn);
+
 years.forEach(y=>{
   const btn = document.createElement('button');
   btn.type = 'button';
@@ -1108,6 +1218,25 @@ const yearsRoot = document.getElementById('years');
 const carousels = {}; // year -> {active, items, els}
 
 /* ---------- Now tab ---------- */
+/* A pick can be announced weeks before its month starts, and "currently
+   reading" would then be a lie. These turn a period label — 'March',
+   'June-August', 'Quarter 1' — into the month it begins, so the Now tab can
+   say which of the two it actually is. */
+const MONTH_NAMES = ['january','february','march','april','may','june','july',
+                     'august','september','october','november','december'];
+function periodStartMonth(b){
+  const p = String(b.period || '').toLowerCase();
+  const q = p.match(/quarter\s*([1-4])/);
+  if(q) return (Number(q[1]) - 1) * 3;
+  const m = MONTH_NAMES.findIndex(name => p.startsWith(name));
+  return m < 0 ? 0 : m;
+}
+function isUpcoming(b){
+  const now = new Date();
+  // compared by month, not by day: a book is "current" for the whole of its month
+  return (b.year * 12 + periodStartMonth(b)) > (now.getFullYear() * 12 + now.getMonth());
+}
+
 function countdownFor(iso){
   if(!iso) return null;
   const when = new Date(iso);
@@ -1137,7 +1266,7 @@ if(nowBook){
   sec.style.setProperty('--yr-color', YEAR_COLORS[nowBook.year] || '#333');
   sec.innerHTML = `
     <div class="now-inner">
-      <div class="now-kicker">Currently reading</div>
+      <div class="now-kicker">${isUpcoming(nowBook) ? 'Next up' : 'Currently reading'}</div>
       <div class="now-grid">
         <button class="now-cover" type="button" id="nowCover" aria-label="Open ${escHTML(nowBook.title)}">
           ${cover ? `<img src="${cover}" alt="${escHTML(nowBook.title)} cover">` : ''}
@@ -1167,6 +1296,175 @@ if(nowBook){
   sec.querySelector('#nowCover').addEventListener('click', openNow);
   sec.querySelector('#nowOpen').addEventListener('click', openNow);
 }
+
+/* ---------- favourites tab ----------
+   Two answers to the same question. The top half is John's own shelf, kept by
+   hand in SHELF. The bottom half is the club's, and is derived entirely from
+   the ratings table — nothing to maintain, it just tracks whatever people vote. */
+
+/* A straight average puts a book with one five-star vote above a book four
+   people loved, which is not what "the club's favourite" means. So the ORDER
+   uses the standard weighted average — a book is pulled toward the site-wide
+   mean until enough people have voted on it — while the number on screen stays
+   the real average, because that's the honest thing to show. */
+const FAV_PRIOR = 3;    // votes' worth of pull toward the mean
+const FAV_TOP   = 10;
+/* The ranked list also asks for a second opinion. With a dozen readers, one
+   person's five stars is a personal favourite, not the club's verdict — those
+   books are still all there behind "show all", counted honestly. */
+const FAV_MIN_N = 2;
+
+function clubRanking(){
+  const rows = [];
+  let sum = 0, count = 0;
+  DATA.forEach(b=>{
+    if(b.break) return;
+    const agg = ratingsCache[slug(b)];
+    if(!agg || !agg.count) return;
+    sum += agg.sum; count += agg.count;
+    rows.push({ book:b, avg: agg.sum / agg.count, n: agg.count });
+  });
+  const mean = count ? sum / count : 0;
+  rows.forEach(r=>{ r.weighted = (r.n * r.avg + FAV_PRIOR * mean) / (r.n + FAV_PRIOR); });
+  rows.sort((a,b)=> b.weighted - a.weighted || b.n - a.n || a.book.title.localeCompare(b.book.title));
+  return { rows, count, mean };
+}
+
+/* A shelf entry that names a Book42 pick inherits everything from DATA, so the
+   usual entry is just a title and a line; anything else has to bring its own. */
+function shelfEntries(){
+  return SHELF.map(item=>{
+    const pick = DATA.find(b=>!b.break && b.title === item.title) || null;
+    return {
+      title: item.title,
+      author: item.author || (pick ? pick.author : ''),
+      cover: item.cover || (pick ? coverFor(pick) : null),
+      note: item.note || '',
+      pick
+    };
+  });
+}
+
+const favesSection = document.createElement('section');
+favesSection.className = 'year-section faves-section';
+favesSection.id = 'yfaves';
+favesSection.style.setProperty('--yr-color', FAVES_COLOR);
+favesSection.innerHTML = `
+  <div class="faves-scroll">
+    <div class="faves-inner">
+      <div class="faves-block" id="shelfBlock" style="display:none">
+        <div class="faves-kicker">John&rsquo;s shelf</div>
+        <h2 class="faves-head">The ones I&rsquo;d press into your hands</h2>
+        <p class="faves-lede">Not the club&rsquo;s vote, just mine, best first.</p>
+        <ol class="shelf-list" id="shelfList"></ol>
+      </div>
+      <div class="faves-block">
+        <div class="faves-kicker">The club&rsquo;s verdict</div>
+        <h2 class="faves-head">What Book42 rated highest</h2>
+        <p class="faves-lede" id="favLede">Loading the club&rsquo;s ratings&hellip;</p>
+        <ol class="fav-list" id="favList"></ol>
+        <button class="faves-more" id="favMore" type="button" style="display:none"></button>
+      </div>
+    </div>
+  </div>`;
+yearsRoot.appendChild(favesSection);
+
+const shelfBlock = favesSection.querySelector('#shelfBlock');
+const shelfListEl = favesSection.querySelector('#shelfList');
+const favListEl   = favesSection.querySelector('#favList');
+const favLedeEl   = favesSection.querySelector('#favLede');
+const favMoreEl   = favesSection.querySelector('#favMore');
+let favExpanded = false;
+
+function renderShelf(){
+  const entries = shelfEntries();
+  shelfBlock.style.display = entries.length ? 'block' : 'none';
+  if(!entries.length) return;
+  shelfListEl.innerHTML = entries.map((e, i)=>{
+    const color = e.pick ? (YEAR_COLORS[e.pick.year] || FAVES_COLOR) : FAVES_COLOR;
+    const tag = e.pick
+      ? `<span class="shelf-tag">Club pick &middot; ${escHTML(e.pick.period)} ${e.pick.year}</span>`
+      : '';
+    const inner = `
+      <span class="shelf-rank">${i + 1}</span>
+      <span class="shelf-cover">${e.cover ? `<img src="${e.cover}" alt="${escHTML(e.title)} cover" loading="lazy" decoding="async">` : ''}</span>
+      <span class="shelf-body">
+        <span class="shelf-title">${escHTML(e.title)}</span>
+        <span class="shelf-author">${escHTML(e.author)}</span>
+        ${e.note ? `<span class="shelf-note">${escHTML(e.note)}</span>` : ''}
+        ${tag}
+      </span>`;
+    return e.pick
+      ? `<li><button class="shelf-item" type="button" style="--c:${color}" data-slug="${slug(e.pick)}">${inner}</button></li>`
+      : `<li><div class="shelf-item" style="--c:${color}">${inner}</div></li>`;
+  }).join('');
+}
+
+function renderFaves(){
+  if(!favListEl) return;   // called from loadRatings, which can resolve at any time
+  const { rows, count } = clubRanking();
+
+  if(!rows.length){
+    favLedeEl.textContent = RATINGS_ENABLED
+      ? 'No ratings yet. Open any book and give it a score to start this off.'
+      : 'Ratings are switched off.';
+    favListEl.innerHTML = '';
+    favMoreEl.style.display = 'none';
+    return;
+  }
+
+  /* fallback: early on, before anything has two votes, show what there is
+     rather than an empty list */
+  const ranked = rows.filter(r=> r.n >= FAV_MIN_N);
+  const list = ranked.length ? ranked : rows;
+
+  favLedeEl.innerHTML =
+    `<b>${count}</b> rating${count === 1 ? '' : 's'} from `
+    + `<b>${ratingsVoters}</b> reader${ratingsVoters === 1 ? '' : 's'}. `
+    + (ranked.length ? `Ranked across the books at least two people scored, weighted so `
+                     : `Weighted so `)
+    + `one lone five-star vote can&rsquo;t top the list. `
+    + `The score beside each book is its real average.`;
+
+  const shown = favExpanded ? rows : list.slice(0, FAV_TOP);
+  favListEl.innerHTML = shown.map((r, i)=>{
+    const b = r.book;
+    const color = YEAR_COLORS[b.year] || FAVES_COLOR;
+    const cover = coverFor(b);
+    return `<li><button class="fav-row" type="button" style="--c:${color}" data-slug="${slug(b)}">
+      <span class="fav-rank">${i + 1}</span>
+      ${cover ? `<img class="fav-cover" src="${cover}" alt="" loading="lazy" decoding="async">` : '<span class="fav-cover"></span>'}
+      <span class="fav-main">
+        <span class="fav-title">${escHTML(b.title)}</span>
+        <span class="fav-author">${escHTML(b.author)} &middot; ${escHTML(b.period)} ${b.year}</span>
+      </span>
+      <span class="fav-score">
+        <span class="star-row" data-fill="${(r.avg / 5).toFixed(4)}">${starRowHTML()}</span>
+        <span class="fav-num">${r.avg.toFixed(1)} <small>${r.n} rating${r.n === 1 ? '' : 's'}</small></span>
+      </span>
+    </button></li>`;
+  }).join('');
+  // the star widths can only be set once the rows are in the DOM
+  favListEl.querySelectorAll('.star-row[data-fill]').forEach(el=> setStarFill(el, Number(el.dataset.fill)));
+
+  favMoreEl.style.display = rows.length > shown.length || favExpanded ? 'inline-block' : 'none';
+  favMoreEl.textContent = favExpanded
+    ? 'Show the top ' + FAV_TOP
+    : `Show all ${rows.length} rated books`;
+}
+
+favMoreEl.addEventListener('click', ()=>{ favExpanded = !favExpanded; renderFaves(); });
+
+// one listener for both lists — the rows are rebuilt on every render
+favesSection.addEventListener('click', (e)=>{
+  const row = e.target.closest('[data-slug]');
+  if(!row) return;
+  const b = DATA.find(x => !x.break && slug(x) === row.dataset.slug);
+  if(b) openBookModal(b, b.year);
+});
+
+renderShelf();
+renderFaves();
 
 years.forEach(y=>{
   /* The newest year is the one still in progress, so it opens on the most
@@ -1555,6 +1853,7 @@ function closeBookModal(){
   bookModal.setAttribute('aria-hidden', 'true');
   currentModalBook = null;
   currentModalSlug = null;
+  renderFaves();   // a rating given inside the modal reorders the list behind it
   if(lastFocused) lastFocused.focus();
 }
 
