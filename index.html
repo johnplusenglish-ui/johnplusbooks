@@ -411,42 +411,67 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 /* ---------- nobel tab ---------- */
 .nobel-section{overflow:hidden}
 .nobel-scroll{flex:1 1 auto; min-height:0; width:100%; overflow-y:auto; padding:.4rem 0 2.5rem}
-.nobel-inner{width:100%; max-width:820px; margin:0 auto}
+.nobel-inner{width:100%; max-width:1180px; margin:0 auto}
 .nob-stat{
   display:inline-block; margin-bottom:1.6rem; padding:.42rem .85rem; border-radius:999px;
   background:color-mix(in srgb, var(--yr-color) 12%, transparent);
   color:var(--yr-color); font-size:.78rem; font-weight:700;
 }
-.nob-list{list-style:none; margin:0; padding:0}
-.nob-decade{
-  margin:2rem 0 .9rem; padding-bottom:.4rem; border-bottom:1px solid var(--line);
-  font-size:.7rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
-  color:var(--ink-soft);
+.nob-grid{
+  list-style:none; margin:0; padding:0;
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(132px, 1fr)); gap:1.6rem 1.3rem;
 }
-.nob-decade:first-child{margin-top:0}
-.nob-row{display:flex; gap:1.1rem; align-items:baseline; padding:.85rem .2rem}
-.nob-row + .nob-row{border-top:1px solid color-mix(in srgb, var(--line) 60%, transparent)}
-.nob-year{
-  flex:none; width:2.9rem; font-size:1.05rem; font-weight:800; color:var(--c);
-  font-variant-numeric:tabular-nums; letter-spacing:-.01em;
+.nob-card{
+  display:block; width:100%; padding:0; border:none; background:none; text-align:left;
+  font-family:inherit; color:inherit; cursor:pointer;
 }
-.nob-main{min-width:0; flex:1 1 auto}
-.nob-name{
-  display:inline-block; font-size:1rem; font-weight:700; letter-spacing:-.01em;
-  color:var(--ink); text-decoration:none; border-bottom:1px solid transparent;
+.nob-cover{
+  position:relative; border-radius:5px; overflow:hidden; background:#eee;
+  box-shadow:var(--shadow-md); transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s;
 }
-.nob-name:hover{border-bottom-color:var(--c); color:var(--c)}
-.nob-meta{display:block; font-size:.75rem; color:var(--ink-soft); margin-top:.15rem}
-.nob-cite{display:block; font-size:.86rem; line-height:1.55; font-style:italic; margin-top:.5rem; max-width:56ch}
-.nob-read{
-  display:inline-block; margin-top:.6rem; padding:.3rem .6rem; border-radius:5px;
-  border:none; background:color-mix(in srgb, var(--bc) 11%, var(--card-bg));
-  color:var(--bc); font-family:inherit; font-size:.7rem; font-weight:700; cursor:pointer;
-  transition:background .15s;
+.nob-card:hover .nob-cover{transform:translateY(-5px); box-shadow:var(--shadow-hi)}
+.nob-cover img{display:block; width:100%; aspect-ratio:2/3; object-fit:cover}
+.nob-badge{
+  position:absolute; top:.45rem; left:.45rem;
+  padding:.2rem .45rem; border-radius:4px;
+  background:rgba(20,20,25,.72); color:#fff;
+  font-size:.66rem; font-weight:700; letter-spacing:.02em;
+  backdrop-filter:blur(2px);
 }
-.nob-read:hover{background:color-mix(in srgb, var(--bc) 20%, var(--card-bg))}
+.nob-flag{
+  position:absolute; right:.45rem; bottom:.45rem; width:18px; height:18px; border-radius:50%;
+  background:var(--bc); box-shadow:0 0 0 2px rgba(255,255,255,.85);
+}
+.nob-who{display:block; margin-top:.55rem; font-size:.8rem; font-weight:700; line-height:1.25}
+.nob-work{display:block; margin-top:.1rem; font-size:.72rem; color:var(--ink-soft); font-style:italic; line-height:1.3}
+
+/* detail panel — same shell as the book modal, different innards */
+.nm-kicker{font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--yr-color)}
+.nm-name{font-size:1.7rem; font-weight:800; letter-spacing:-.02em; margin:.35rem 0 .2rem; line-height:1.15}
+.nm-sub{font-size:.8rem; color:var(--ink-soft)}
+.nm-cite{
+  margin:1.1rem 0 0; padding:.9rem 1.1rem; border-radius:9px;
+  background:color-mix(in srgb, var(--yr-color) 7%, var(--bg));
+  font-size:.9rem; line-height:1.6; font-style:italic;
+}
+.nm-cite cite{display:block; margin-top:.5rem; font-style:normal; font-size:.72rem; color:var(--ink-soft)}
+.nm-work{margin-top:1.4rem; padding-top:1.2rem; border-top:1px solid var(--line)}
+.nm-work-head{font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft)}
+.nm-work-title{font-size:1.05rem; font-weight:800; margin-top:.35rem}
+.nm-teaser{font-size:.92rem; line-height:1.6; margin:.5rem 0 0}
+.nm-links{display:flex; flex-wrap:wrap; gap:1.2rem; margin-top:1.4rem}
+.nm-links a{
+  font-size:.8rem; font-weight:600; color:var(--yr-color); text-decoration:none;
+  border-bottom:1px solid currentColor; padding-bottom:1px;
+}
+.nm-read{
+  display:inline-block; margin-top:1.2rem; padding:.5rem .8rem; border-radius:6px; border:none;
+  background:color-mix(in srgb, var(--bc) 12%, var(--card-bg)); color:var(--bc);
+  font-family:inherit; font-size:.75rem; font-weight:700; cursor:pointer;
+}
+.nm-read:hover{background:color-mix(in srgb, var(--bc) 22%, var(--card-bg))}
 .nob-foot{
-  margin-top:2.2rem; padding-top:1.4rem; border-top:1px solid var(--line);
+  margin-top:2.4rem; padding-top:1.4rem; border-top:1px solid var(--line);
   font-size:.8rem; line-height:1.7; color:var(--ink-soft);
 }
 .nob-foot button{
@@ -456,8 +481,8 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .nob-foot button:hover{border-bottom-color:currentColor}
 @media (max-width:680px){
   .nobel-inner{padding:0 .1rem}
-  .nob-row{gap:.7rem}
-  .nob-year{width:2.4rem; font-size:.95rem}
+  .nob-grid{grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:1.2rem .9rem}
+  .nm-name{font-size:1.35rem}
 }
 
 /* ---------- export modal ---------- */
@@ -883,7 +908,7 @@ const BOOKINFO = {"The Devotion of Suspect X":{"teaser":"Yasuko's quiet Tokyo li
    Adding next October's winner: prepend one entry to NOBEL and one pair to
    NOBEL_NAMES. The list renders the newest 42, so the oldest drops off
    by itself. */
-const NOBEL = [{"y":2025,"name":"László Krasznahorkai","born":1954,"country":"Hungary","slug":"krasznahorkai","cite":"for his compelling and visionary oeuvre that, in the midst of apocalyptic terror, reaffirms the power of art"},{"y":2024,"name":"Han Kang","born":1970,"country":"South Korea","slug":"han","cite":"for her intense poetic prose that confronts historical traumas and exposes the fragility of human life"},{"y":2023,"name":"Jon Fosse","born":1959,"country":"Norway","slug":"fosse","cite":"for his innovative plays and prose which give voice to the unsayable"},{"y":2022,"name":"Annie Ernaux","born":1940,"country":"France","slug":"ernaux","cite":"for the courage and clinical acuity with which she uncovers the roots, estrangements and  collective restraints of personal memory"},{"y":2021,"name":"Abdulrazak Gurnah","born":1948,"country":"Zanzibar","slug":"gurnah","cite":"for his uncompromising and compassionate penetration of the effects of colonialism and the fate of the refugee in the gulf between cultures and continents","now":"Tanzania"},{"y":2020,"name":"Louise Glück","born":1943,"country":"USA","slug":"gluck","cite":"for her unmistakable poetic voice that with austere beauty makes individual existence universal","died":2023},{"y":2019,"name":"Peter Handke","born":1942,"country":"Austria","slug":"handke","cite":"for an influential work that with linguistic ingenuity has explored the periphery and the specificity of human experience"},{"y":2018,"name":"Olga Tokarczuk","born":1962,"country":"Poland","slug":"tokarczuk","cite":"for a narrative imagination that with encyclopedic passion represents the crossing of boundaries as a form of life"},{"y":2017,"name":"Kazuo Ishiguro","born":1954,"country":"Japan","slug":"ishiguro","cite":"who, in novels of great emotional force, has uncovered the abyss beneath our illusory sense of connection with the world"},{"y":2016,"name":"Bob Dylan","born":1941,"country":"USA","slug":"dylan","cite":"for having created new poetic expressions within the great American song tradition"},{"y":2015,"name":"Svetlana Alexievich","born":1948,"country":"Ukraine","slug":"alexievich","cite":"for her polyphonic writings, a monument to suffering and courage in our time"},{"y":2014,"name":"Patrick Modiano","born":1945,"country":"France","slug":"modiano","cite":"for the art of memory with which he has evoked the most ungraspable human destinies and\r\nuncovered the life-world of the occupation"},{"y":2013,"name":"Alice Munro","born":1931,"country":"Canada","slug":"munro","cite":"master of the contemporary short story","died":2024},{"y":2012,"name":"Mo Yan","born":1956,"country":"China","slug":"yan","cite":"who with hallucinatory realism merges folk tales, history and the contemporary"},{"y":2011,"name":"Tomas Tranströmer","born":1931,"country":"Sweden","slug":"transtromer","cite":"because, through his condensed, translucent images, he gives us fresh access to reality","died":2015},{"y":2010,"name":"Mario Vargas Llosa","born":1936,"country":"Peru","slug":"vargas_llosa","cite":"for his cartography of structures of power and his trenchant images of the individual's resistance, revolt, and defeat","died":2025},{"y":2009,"name":"Herta Müller","born":1953,"country":"Romania","slug":"muller","cite":"who, with the concentration of poetry and the frankness of prose, depicts the landscape of the dispossessed"},{"y":2008,"name":"Jean-Marie Gustave Le Clézio","born":1940,"country":"France","slug":"clezio","cite":"author of new departures, poetic adventure and sensual ecstasy, explorer of a humanity beyond and below the reigning civilization"},{"y":2007,"name":"Doris Lessing","born":1919,"country":"Persia","slug":"lessing","cite":"that epicist of the female experience, who with scepticism, fire and visionary power has subjected a divided civilisation to scrutiny","died":2013,"now":"Iran"},{"y":2006,"name":"Orhan Pamuk","born":1952,"country":"Turkey","slug":"pamuk","cite":"who in the quest for the melancholic soul of his native city has discovered new symbols for the clash and interlacing of cultures"},{"y":2005,"name":"Harold Pinter","born":1930,"country":"United Kingdom","slug":"pinter","cite":"who in his plays uncovers the precipice under everyday prattle and forces entry into oppression's closed rooms","died":2008},{"y":2004,"name":"Elfriede Jelinek","born":1946,"country":"Austria","slug":"jelinek","cite":"for her musical flow of voices and counter-voices in novels and plays that with extraordinary linguistic zeal reveal the absurdity of society's clich&eacute;s and their subjugating power"},{"y":2003,"name":"J. M. Coetzee","born":1940,"country":"South Africa","slug":"coetzee","cite":"who in innumerable guises portrays the surprising involvement of the outsider"},{"y":2002,"name":"Imre Kertész","born":1929,"country":"Hungary","slug":"kertesz","cite":"for writing that upholds the fragile experience of the individual against the barbaric arbitrariness of history","died":2016},{"y":2001,"name":"V. S. Naipaul","born":1932,"country":"Trinidad and Tobago","slug":"naipaul","cite":"for having united perceptive narrative and incorruptible scrutiny in works that compel us to see the presence of suppressed histories","died":2018},{"y":2000,"name":"Gao Xingjian","born":1940,"country":"China","slug":"gao","cite":"for an œuvre of universal validity, bitter insights and linguistic ingenuity, which has opened new paths for the Chinese novel and drama"},{"y":1999,"name":"Günter Grass","born":1927,"country":"Free City of Danzig","slug":"grass","cite":"whose frolicsome black fables portray the forgotten face of history","died":2015,"now":"Poland"},{"y":1998,"name":"José Saramago","born":1922,"country":"Portugal","slug":"saramago","cite":"who with parables sustained by imagination, compassion and irony continually enables us once again to apprehend an elusory reality","died":2010},{"y":1997,"name":"Dario Fo","born":1926,"country":"Italy","slug":"fo","cite":"who emulates the jesters of the Middle Ages in scourging authority and upholding the dignity of the downtrodden","died":2016},{"y":1996,"name":"Wisława Szymborska","born":1923,"country":"Poland","slug":"szymborska","cite":"for poetry that with ironic precision allows the historical and biological context to come to light in fragments of human reality","died":2012},{"y":1995,"name":"Seamus Heaney","born":1939,"country":"Northern Ireland","slug":"heaney","cite":"for works of lyrical beauty and ethical depth, which exalt everyday miracles and the living past","died":2013},{"y":1994,"name":"Kenzaburo Oe","born":1935,"country":"Japan","slug":"oe","cite":"who with poetic force creates an imagined world, where life and myth condense to form a disconcerting picture of the human predicament today","died":2023},{"y":1993,"name":"Toni Morrison","born":1931,"country":"USA","slug":"morrison","cite":"who in novels characterized by visionary force and poetic import, gives life to an essential aspect of American reality","died":2019},{"y":1992,"name":"Derek Walcott","born":1930,"country":"Saint Lucia","slug":"walcott","cite":"for a poetic oeuvre of great luminosity, sustained by a historical vision, the outcome of a multicultural commitment","died":2017},{"y":1991,"name":"Nadine Gordimer","born":1923,"country":"South Africa","slug":"gordimer","cite":"who through her magnificent epic writing has - in the words of Alfred Nobel - been of very great benefit to humanity","died":2014},{"y":1990,"name":"Octavio Paz","born":1914,"country":"Mexico","slug":"paz","cite":"for impassioned writing with wide horizons, characterized by sensuous intelligence and humanistic integrity","died":1998},{"y":1989,"name":"Camilo José Cela","born":1916,"country":"Spain","slug":"cela","cite":"for a rich and intensive prose, which with restrained compassion forms a challenging vision of man's vulnerability","died":2002},{"y":1988,"name":"Naguib Mahfouz","born":1911,"country":"Egypt","slug":"mahfouz","cite":"who, through works rich in nuance - now clear-sightedly realistic, now evocatively ambiguous - has formed an Arabian narrative art that applies to all mankind","died":2006},{"y":1987,"name":"Joseph Brodsky","born":1940,"country":"USSR","slug":"brodsky","cite":"for an all-embracing authorship, imbued with clarity of thought and poetic intensity","died":1996,"now":"Russia"},{"y":1986,"name":"Wole Soyinka","born":1934,"country":"Nigeria","slug":"soyinka","cite":"who in a wide cultural perspective and with poetic overtones fashions the drama of existence"},{"y":1985,"name":"Claude Simon","born":1913,"country":"Madagascar","slug":"simon","cite":"who in his novel combines the poet's and the painter's creativeness with a deepened awareness of time in the depiction of the human condition","died":2005},{"y":1984,"name":"Jaroslav Seifert","born":1901,"country":"Austria-Hungary","slug":"seifert","cite":"for his poetry which endowed with freshness, sensuality and rich inventiveness provides a liberating image of the indomitable spirit and versatility of man","died":1986,"now":"Czech Republic"}];
+const NOBEL = [{"y":2025,"name":"László Krasznahorkai","born":1954,"country":"Hungary","slug":"krasznahorkai","cite":"for his compelling and visionary oeuvre that, in the midst of apocalyptic terror, reaffirms the power of art","book":"Satantango","teaser":"On a collapsing collective farm in rain-soaked Hungary the villagers are waiting to leave, when a man they had believed dead walks back in promising deliverance.","cover":"covers/nobel/2025.jpg"},{"y":2024,"name":"Han Kang","born":1970,"country":"South Korea","slug":"han","cite":"for her intense poetic prose that confronts historical traumas and exposes the fragility of human life","book":"The Vegetarian","teaser":"After a violent dream a quiet Seoul housewife stops eating meat. Her refusal hardens, and the attempts to force her back are told by the three people closest to her.","cover":"covers/nobel/2024.jpg"},{"y":2023,"name":"Jon Fosse","born":1959,"country":"Norway","slug":"fosse","cite":"for his innovative plays and prose which give voice to the unsayable","book":"Septology","teaser":"An ageing painter in western Norway looks at an unfinished canvas and, across seven parts and almost no full stops, keeps meeting a version of himself who made every other choice.","cover":"covers/nobel/2023.jpg"},{"y":2022,"name":"Annie Ernaux","born":1940,"country":"France","slug":"ernaux","cite":"for the courage and clinical acuity with which she uncovers the roots, estrangements and  collective restraints of personal memory","book":"The Years","teaser":"Six decades of French life told through a collective “we”, tracking a woman and a country from postwar rationing to the internet without ever saying “I”.","cover":"covers/nobel/2022.jpg"},{"y":2021,"name":"Abdulrazak Gurnah","born":1948,"country":"Zanzibar","slug":"gurnah","cite":"for his uncompromising and compassionate penetration of the effects of colonialism and the fate of the refugee in the gulf between cultures and continents","now":"Tanzania","book":"Paradise","teaser":"A boy in colonial East Africa is handed to a merchant to settle his father's debt, and travels inland with a trading caravan on the eve of the First World War.","cover":"covers/nobel/2021.jpg"},{"y":2020,"name":"Louise Glück","born":1943,"country":"USA","slug":"gluck","cite":"for her unmistakable poetic voice that with austere beauty makes individual existence universal","died":2023,"book":"The Wild Iris","teaser":"A garden speaks. Flowers, a gardener and a distant, unreliable god argue about suffering and renewal across a single New England growing season.","cover":"covers/nobel/2020.jpg"},{"y":2019,"name":"Peter Handke","born":1942,"country":"Austria","slug":"handke","cite":"for an influential work that with linguistic ingenuity has explored the periphery and the specificity of human experience","book":"A Sorrow Beyond Dreams","teaser":"Written weeks after his mother's suicide, Handke tries to reconstruct her life in rural Austria and keeps catching himself turning her into a literary figure.","cover":"covers/nobel/2019.jpg"},{"y":2018,"name":"Olga Tokarczuk","born":1962,"country":"Poland","slug":"tokarczuk","cite":"for a narrative imagination that with encyclopedic passion represents the crossing of boundaries as a form of life","book":"The Books of Jacob","teaser":"The eighteenth-century mystic Jacob Frank declares himself the messiah and leads thousands of Polish Jews across borders, faiths and empires. The pages are numbered backwards.","cover":"covers/nobel/2018.jpg"},{"y":2017,"name":"Kazuo Ishiguro","born":1954,"country":"Japan","slug":"ishiguro","cite":"who, in novels of great emotional force, has uncovered the abyss beneath our illusory sense of connection with the world","book":"The Remains of the Day","teaser":"An English butler drives west in 1956 and reviews a lifetime of service to a man he chose not to see clearly, and a housekeeper he never spoke to honestly.","cover":"covers/nobel/2017.jpg"},{"y":2016,"name":"Bob Dylan","born":1941,"country":"USA","slug":"dylan","cite":"for having created new poetic expressions within the great American song tradition","book":"Chronicles: Volume One","teaser":"Dylan's own account of arriving in New York in 1961, and of two later moments when he had to rebuild what he was doing from almost nothing.","cover":"covers/nobel/2016.jpg"},{"y":2015,"name":"Svetlana Alexievich","born":1948,"country":"Ukraine","slug":"alexievich","cite":"for her polyphonic writings, a monument to suffering and courage in our time","book":"Second-hand Time","teaser":"Hundreds of ordinary Soviet citizens describe, in their own words, what happened to them when the country they had been built for stopped existing.","cover":"covers/nobel/2015.jpg"},{"y":2014,"name":"Patrick Modiano","born":1945,"country":"France","slug":"modiano","cite":"for the art of memory with which he has evoked the most ungraspable human destinies and\r\nuncovered the life-world of the occupation","book":"Missing Person","teaser":"A detective with amnesia investigates the only case that matters, his own identity, through the paper trail of occupied Paris.","cover":"covers/nobel/2014.jpg"},{"y":2013,"name":"Alice Munro","born":1931,"country":"Canada","slug":"munro","cite":"master of the contemporary short story","died":2024,"book":"Dear Life","teaser":"Fourteen stories set mostly in small-town Ontario, where a decision made in one afternoon turns out to have been the whole of a life.","cover":"covers/nobel/2013.jpg"},{"y":2012,"name":"Mo Yan","born":1956,"country":"China","slug":"yan","cite":"who with hallucinatory realism merges folk tales, history and the contemporary","book":"Red Sorghum","teaser":"Three generations of a family in a sorghum-growing county in Shandong, from bandit romance to the Japanese invasion, pieced together by a grandson.","cover":"covers/nobel/2012.jpg"},{"y":2011,"name":"Tomas Tranströmer","born":1931,"country":"Sweden","slug":"transtromer","cite":"because, through his condensed, translucent images, he gives us fresh access to reality","died":2015,"book":"The Half-Finished Heaven","teaser":"Poems that begin in an ordinary Swedish afternoon, a car, a hospital corridor, a frozen lake, and open without warning onto something vast.","cover":"covers/nobel/2011.jpg"},{"y":2010,"name":"Mario Vargas Llosa","born":1936,"country":"Peru","slug":"vargas_llosa","cite":"for his cartography of structures of power and his trenchant images of the individual's resistance, revolt, and defeat","died":2025,"book":"The Feast of the Goat","teaser":"The last day of the Trujillo dictatorship in the Dominican Republic, seen by the dictator, by his assassins waiting in a car, and by a woman returning after thirty-five years.","cover":"covers/nobel/2010.jpg"},{"y":2009,"name":"Herta Müller","born":1953,"country":"Romania","slug":"muller","cite":"who, with the concentration of poetry and the frankness of prose, depicts the landscape of the dispossessed","book":"The Land of Green Plums","teaser":"Four young friends under Ceaușescu try to keep speaking honestly to each other while the state sets out to make that impossible.","cover":"covers/nobel/2009.jpg"},{"y":2008,"name":"Jean-Marie Gustave Le Clézio","born":1940,"country":"France","slug":"clezio","cite":"author of new departures, poetic adventure and sensual ecstasy, explorer of a humanity beyond and below the reigning civilization","book":"Desert","teaser":"Two stories braided together: a Saharan people driven north by colonial troops in 1909, and a girl from a shanty town who becomes briefly, uselessly famous in Marseille.","cover":"covers/nobel/2008.jpg"},{"y":2007,"name":"Doris Lessing","born":1919,"country":"Persia","slug":"lessing","cite":"that epicist of the female experience, who with scepticism, fire and visionary power has subjected a divided civilisation to scrutiny","died":2013,"now":"Iran","book":"The Golden Notebook","teaser":"A writer keeps four separate notebooks to stop her life fragmenting, and the novel takes them apart to show what the effort costs her.","cover":"covers/nobel/2007.jpg"},{"y":2006,"name":"Orhan Pamuk","born":1952,"country":"Turkey","slug":"pamuk","cite":"who in the quest for the melancholic soul of his native city has discovered new symbols for the clash and interlacing of cultures","book":"My Name Is Red","teaser":"A miniaturist is murdered in 1590s Istanbul over a book of illustrations that breaks Islamic convention. The suspects narrate, and so do a corpse, a coin and a dog.","cover":"covers/nobel/2006.jpg"},{"y":2005,"name":"Harold Pinter","born":1930,"country":"United Kingdom","slug":"pinter","cite":"who in his plays uncovers the precipice under everyday prattle and forces entry into oppression's closed rooms","died":2008,"book":"The Birthday Party","teaser":"A lodger in a shabby seaside boarding house is thrown a party by two strangers who appear to have come specifically for him.","cover":"covers/nobel/2005.jpg"},{"y":2004,"name":"Elfriede Jelinek","born":1946,"country":"Austria","slug":"jelinek","cite":"for her musical flow of voices and counter-voices in novels and plays that with extraordinary linguistic zeal reveal the absurdity of society's clich&eacute;s and their subjugating power","book":"The Piano Teacher","teaser":"A Vienna conservatory professor, still living with her mother, begins an affair with a student and tries to script it in advance.","cover":"covers/nobel/2004.jpg"},{"y":2003,"name":"J. M. Coetzee","born":1940,"country":"South Africa","slug":"coetzee","cite":"who in innumerable guises portrays the surprising involvement of the outsider","book":"Disgrace","teaser":"A Cape Town professor loses his job over an affair with a student, moves to his daughter's smallholding, and finds that neither of them controls what happens next.","cover":"covers/nobel/2003.jpg"},{"y":2002,"name":"Imre Kertész","born":1929,"country":"Hungary","slug":"kertesz","cite":"for writing that upholds the fragile experience of the individual against the barbaric arbitrariness of history","died":2016,"book":"Fateless","teaser":"A fourteen-year-old from Budapest is taken to Auschwitz and Buchenwald, and describes it in a flat, reasonable voice that refuses to become testimony.","cover":"covers/nobel/2002.jpg"},{"y":2001,"name":"V. S. Naipaul","born":1932,"country":"Trinidad and Tobago","slug":"naipaul","cite":"for having united perceptive narrative and incorruptible scrutiny in works that compel us to see the presence of suppressed histories","died":2018,"book":"A House for Mr Biswas","teaser":"A sign-painter in Trinidad marries into a large, domineering family and spends his life trying to own one house of his own.","cover":"covers/nobel/2001.jpg"},{"y":2000,"name":"Gao Xingjian","born":1940,"country":"China","slug":"gao","cite":"for an œuvre of universal validity, bitter insights and linguistic ingenuity, which has opened new paths for the Chinese novel and drama","book":"Soul Mountain","teaser":"A man told he is dying walks into the forests and villages of southwest China looking for a mountain, and the narration splits into I, you and she.","cover":"covers/nobel/2000.jpg"},{"y":1999,"name":"Günter Grass","born":1927,"country":"Free City of Danzig","slug":"grass","cite":"whose frolicsome black fables portray the forgotten face of history","died":2015,"now":"Poland","book":"The Tin Drum","teaser":"Oskar decides at three to stop growing. He keeps a tin drum and a scream that shatters glass, and watches Danzig pass through Nazism from waist height.","cover":"covers/nobel/1999.jpg"},{"y":1998,"name":"José Saramago","born":1922,"country":"Portugal","slug":"saramago","cite":"who with parables sustained by imagination, compassion and irony continually enables us once again to apprehend an elusory reality","died":2010,"book":"Blindness","teaser":"An epidemic of white blindness spreads through an unnamed city. Those interned are abandoned, and the one woman who can still see says nothing about it.","cover":"covers/nobel/1998.jpg"},{"y":1997,"name":"Dario Fo","born":1926,"country":"Italy","slug":"fo","cite":"who emulates the jesters of the Middle Ages in scourging authority and upholding the dignity of the downtrodden","died":2016,"book":"Accidental Death of an Anarchist","teaser":"A farce built on a real death in police custody, in which a madman impersonates a judge and makes the officers keep revising their story.","cover":"covers/nobel/1997.jpg"},{"y":1996,"name":"Wisława Szymborska","born":1923,"country":"Poland","slug":"szymborska","cite":"for poetry that with ironic precision allows the historical and biological context to come to light in fragments of human reality","died":2012,"book":"View with a Grain of Sand","teaser":"Poems that take something small, a grain of sand, an onion, a cat in an empty flat, and use it to ask what we can honestly claim to know.","cover":"covers/nobel/1996.jpg"},{"y":1995,"name":"Seamus Heaney","born":1939,"country":"Northern Ireland","slug":"heaney","cite":"for works of lyrical beauty and ethical depth, which exalt everyday miracles and the living past","died":2013,"book":"Death of a Naturalist","teaser":"The debut collection: frogspawn, a father digging potatoes, a County Derry farm childhood, and a young poet deciding that his spade is a pen.","cover":"covers/nobel/1995.jpg"},{"y":1994,"name":"Kenzaburo Oe","born":1935,"country":"Japan","slug":"oe","cite":"who with poetic force creates an imagined world, where life and myth condense to form a disconcerting picture of the human predicament today","died":2023,"book":"A Personal Matter","teaser":"A man nicknamed Bird is told his newborn son has a brain hernia, and spends several days deciding whether to let him die.","cover":"covers/nobel/1994.jpg"},{"y":1993,"name":"Toni Morrison","born":1931,"country":"USA","slug":"morrison","cite":"who in novels characterized by visionary force and poetic import, gives life to an essential aspect of American reality","died":2019,"book":"Beloved","teaser":"An escaped slave in Ohio is visited by a young woman who appears to be the daughter she killed rather than see taken back.","cover":"covers/nobel/1993.jpg"},{"y":1992,"name":"Derek Walcott","born":1930,"country":"Saint Lucia","slug":"walcott","cite":"for a poetic oeuvre of great luminosity, sustained by a historical vision, the outcome of a multicultural commitment","died":2017,"book":"Omeros","teaser":"A Caribbean epic in terza rima, where St Lucian fishermen carry the names of Homer's heroes and the sea keeps the accounts of empire.","cover":"covers/nobel/1992.jpg"},{"y":1991,"name":"Nadine Gordimer","born":1923,"country":"South Africa","slug":"gordimer","cite":"who through her magnificent epic writing has - in the words of Alfred Nobel - been of very great benefit to humanity","died":2014,"book":"July's People","teaser":"A white Johannesburg family flees a revolution and shelters in their servant's village, where every habit of authority quietly inverts.","cover":"covers/nobel/1991.jpg"},{"y":1990,"name":"Octavio Paz","born":1914,"country":"Mexico","slug":"paz","cite":"for impassioned writing with wide horizons, characterized by sensuous intelligence and humanistic integrity","died":1998,"book":"El laberinto de la soledad","teaser":"Nine essays on what Mexico inherited from conquest, and why solitude and the mask are, for Paz, the country's central inheritance. Published in English as The Labyrinth of Solitude.","cover":"covers/nobel/1990.jpg"},{"y":1989,"name":"Camilo José Cela","born":1916,"country":"Spain","slug":"cela","cite":"for a rich and intensive prose, which with restrained compassion forms a challenging vision of man's vulnerability","died":2002,"book":"The Family of Pascual Duarte","teaser":"A condemned man writes his life from a prison cell in rural Extremadura, explaining each violent act as reasonably as the last.","cover":"covers/nobel/1989.jpg"},{"y":1988,"name":"Naguib Mahfouz","born":1911,"country":"Egypt","slug":"mahfouz","cite":"who, through works rich in nuance - now clear-sightedly realistic, now evocatively ambiguous - has formed an Arabian narrative art that applies to all mankind","died":2006,"book":"Palace Walk","teaser":"First of the Cairo Trilogy. A merchant rules his household with absolute authority and spends his nights elsewhere, while the 1919 revolution reaches the street outside.","cover":"covers/nobel/1988.jpg"},{"y":1987,"name":"Joseph Brodsky","born":1940,"country":"USSR","slug":"brodsky","cite":"for an all-embracing authorship, imbued with clarity of thought and poetic intensity","died":1996,"now":"Russia","book":"Less Than One","teaser":"Essays on exile, a Leningrad childhood, Auden and Cavafy, by a poet tried for “social parasitism” and expelled from his own language.","cover":"covers/nobel/1987.jpg"},{"y":1986,"name":"Wole Soyinka","born":1934,"country":"Nigeria","slug":"soyinka","cite":"who in a wide cultural perspective and with poetic overtones fashions the drama of existence","book":"The Interpreters","teaser":"Five young Nigerians educated abroad come home to independence and find the country, and each other, harder to interpret than they expected.","cover":"covers/nobel/1986.jpg"},{"y":1985,"name":"Claude Simon","born":1913,"country":"Madagascar","slug":"simon","cite":"who in his novel combines the poet's and the painter's creativeness with a deepened awareness of time in the depiction of the human condition","died":2005,"book":"The Flanders Road","teaser":"A cavalryman's memory of a 1940 rout in Flanders returns in fragments across a single night, refusing to settle into any order.","cover":"covers/nobel/1985.jpg"},{"y":1984,"name":"Jaroslav Seifert","born":1901,"country":"Austria-Hungary","slug":"seifert","cite":"for his poetry which endowed with freshness, sensuality and rich inventiveness provides a liberating image of the indomitable spirit and versatility of man","died":1986,"now":"Czech Republic","book":"The Poetry of Jaroslav Seifert","teaser":"Six decades of Czech poems, from avant-garde city verse to the plain late work written under a regime he would not flatter.","cover":"covers/nobel/1984.jpg"}];
 const NOBEL_NAMES = [[2025,"László Krasznahorkai"],[2024,"Han Kang"],[2023,"Jon Fosse"],[2022,"Annie Ernaux"],[2021,"Abdulrazak Gurnah"],[2020,"Louise Glück"],[2019,"Peter Handke"],[2018,"Olga Tokarczuk"],[2017,"Kazuo Ishiguro"],[2016,"Bob Dylan"],[2015,"Svetlana Alexievich"],[2014,"Patrick Modiano"],[2013,"Alice Munro"],[2012,"Mo Yan"],[2011,"Tomas Tranströmer"],[2010,"Mario Vargas Llosa"],[2009,"Herta Müller"],[2008,"Jean-Marie Gustave Le Clézio"],[2007,"Doris Lessing"],[2006,"Orhan Pamuk"],[2005,"Harold Pinter"],[2004,"Elfriede Jelinek"],[2003,"J. M. Coetzee"],[2002,"Imre Kertész"],[2001,"V. S. Naipaul"],[2000,"Gao Xingjian"],[1999,"Günter Grass"],[1998,"José Saramago"],[1997,"Dario Fo"],[1996,"Wisława Szymborska"],[1995,"Seamus Heaney"],[1994,"Kenzaburo Oe"],[1993,"Toni Morrison"],[1992,"Derek Walcott"],[1991,"Nadine Gordimer"],[1990,"Octavio Paz"],[1989,"Camilo José Cela"],[1988,"Naguib Mahfouz"],[1987,"Joseph Brodsky"],[1986,"Wole Soyinka"],[1985,"Claude Simon"],[1984,"Jaroslav Seifert"],[1983,"William Golding"],[1982,"Gabriel García Márquez"],[1981,"Elias Canetti"],[1980,"Czesław Miłosz"],[1979,"Odysseus Elytis"],[1978,"Isaac Bashevis Singer"],[1977,"Vicente Aleixandre"],[1976,"Saul Bellow"],[1975,"Eugenio Montale"],[1974,"Eyvind Johnson"],[1974,"Harry Martinson"],[1973,"Patrick White"],[1972,"Heinrich Böll"],[1971,"Pablo Neruda"],[1970,"Aleksandr Solzhenitsyn"],[1969,"Samuel Beckett"],[1968,"Yasunari Kawabata"],[1967,"Miguel Angel Asturias"],[1966,"Shmuel Agnon"],[1966,"Nelly Sachs"],[1965,"Mikhail Sholokhov"],[1964,"Jean-Paul Sartre"],[1963,"Giorgos Seferis"],[1962,"John Steinbeck"],[1961,"Ivo Andrić"],[1960,"Saint-John Perse"],[1959,"Salvatore Quasimodo"],[1958,"Boris Pasternak"],[1957,"Albert Camus"],[1956,"Juan Ramón Jiménez"],[1955,"Halldór Laxness"],[1954,"Ernest Hemingway"],[1953,"Winston Churchill"],[1952,"François Mauriac"],[1951,"Pär Lagerkvist"],[1950,"Bertrand Russell"],[1949,"William Faulkner"],[1948,"T.S. Eliot"],[1947,"André Gide"],[1946,"Hermann Hesse"],[1945,"Gabriela Mistral"],[1944,"Johannes V. Jensen"],[1939,"Frans Eemil Sillanpää"],[1938,"Pearl Buck"],[1937,"Roger Martin du Gard"],[1936,"Eugene O'Neill"],[1934,"Luigi Pirandello"],[1933,"Ivan Bunin"],[1932,"John Galsworthy"],[1931,"Erik Axel Karlfeldt"],[1930,"Sinclair Lewis"],[1929,"Thomas Mann"],[1928,"Sigrid Undset"],[1927,"Henri Bergson"],[1926,"Grazia Deledda"],[1925,"George Bernard Shaw"],[1924,"Władysław Reymont"],[1923,"William Butler Yeats"],[1922,"Jacinto Benavente"],[1921,"Anatole France"],[1920,"Knut Hamsun"],[1919,"Carl Spitteler"],[1917,"Karl Gjellerup"],[1917,"Henrik Pontoppidan"],[1916,"Verner von Heidenstam"],[1915,"Romain Rolland"],[1913,"Rabindranath Tagore"],[1912,"Gerhart Hauptmann"],[1911,"Maurice Maeterlinck"],[1910,"Paul Heyse"],[1909,"Selma Lagerlöf"],[1908,"Rudolf Eucken"],[1907,"Rudyard Kipling"],[1906,"Giosuè Carducci"],[1905,"Henryk Sienkiewicz"],[1904,"Frédéric Mistral"],[1904,"José Echegaray"],[1903,"Bjørnstjerne Bjørnson"],[1902,"Theodor Mommsen"],[1901,"Sully Prudhomme"]];
 
 function slug(b){
@@ -1663,29 +1688,25 @@ function listJoin(parts){
   return parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length-1];
 }
 
-let nobelRows = '', lastDecade = null;
-nobelList.forEach(e=>{
-  const decade = Math.floor(e.y / 10) * 10;
-  if(decade !== lastDecade){
-    nobelRows += `<li class="nob-decade">${decade}s</li>`;
-    lastDecade = decade;
-  }
+/* A gallery card is deliberately the same object as a Book42 card: cover,
+   click, detail panel. What differs is what a laureate IS — the prize is for a
+   body of work, not a book — so each card stands for one representative title,
+   taken from the work the Nobel Foundation's own page highlights wherever it
+   names one. */
+const nobelCards = nobelList.map(e=>{
   const read = laureateReads[e.name];
-  const tag = read ? read.map(r=>{
-    const color = YEAR_COLORS[r.book.year] || NOBEL_COLOR;
-    return `<button class="nob-read" type="button" style="--bc:${color}" data-slug="${slug(r.book)}">Book42 read ${escHTML(r.book.title)}</button>`;
-  }).join(' ') : '';
-  nobelRows += `<li class="nob-row" style="--c:${NOBEL_COLOR}">
-    <span class="nob-year">${e.y}</span>
-    <span class="nob-main">
-      <a class="nob-name" href="https://www.nobelprize.org/prizes/literature/${e.y}/${e.slug}/facts/"
-         target="_blank" rel="noopener">${escHTML(e.name)}</a>
-      <span class="nob-meta">${escHTML(lifeLine(e))}</span>
-      <span class="nob-cite">&ldquo;${escHTML(e.cite)}&rdquo;</span>
-      ${tag}
+  const bc = read ? (YEAR_COLORS[read[0].book.year] || NOBEL_COLOR) : NOBEL_COLOR;
+  return `<li><button class="nob-card" type="button" data-nobel="${e.y}"
+      aria-label="${escHTML(e.name)}, Nobel Prize ${e.y}">
+    <span class="nob-cover">
+      <img src="${e.cover}" alt="${escHTML(e.book)} cover" loading="lazy" decoding="async">
+      <span class="nob-badge">${e.y}</span>
+      ${read ? `<span class="nob-flag" style="--bc:${bc}" title="Book42 read this author"></span>` : ''}
     </span>
-  </li>`;
-});
+    <span class="nob-who">${escHTML(e.name)}</span>
+    <span class="nob-work">${escHTML(e.book)}</span>
+  </button></li>`;
+}).join('');
 
 const earlierHTML = readEarlier.length ? `<div class="nob-foot">
   The club has also read ${numWord(readEarlier.length)} laureate${readEarlier.length===1?'':'s'}
@@ -1700,21 +1721,107 @@ nobelSection.innerHTML = `
     <div class="nobel-inner">
       <div class="faves-kicker">The Nobel Prize in Literature</div>
       <h2 class="faves-head">Forty-two laureates, one for every year in the name</h2>
-      <p class="faves-lede">Every winner from ${nobelList[nobelList.length-1].y} to ${nobelList[0].y},
-        with the Swedish Academy&rsquo;s own citation for each. Names link to the Nobel Foundation.</p>
+      <p class="faves-lede">Every winner from ${nobelList[nobelList.length-1].y} to ${nobelList[0].y}.
+        Each cover is one representative book by that writer; open any of them for the
+        Swedish Academy&rsquo;s citation and what the book actually is.</p>
       <div class="nob-stat">Book42 has read ${numWord(readInWindow)} of the ${nobelList.length}</div>
-      <ol class="nob-list">${nobelRows}</ol>
+      <ol class="nob-grid">${nobelCards}</ol>
       ${earlierHTML}
     </div>
   </div>`;
 yearsRoot.appendChild(nobelSection);
 
-// same delegation as the Favourites tab — any [data-slug] in here opens its book
 nobelSection.addEventListener('click', (e)=>{
+  const card = e.target.closest('[data-nobel]');
+  if(card){ openNobelModal(Number(card.dataset.nobel)); return; }
+  // the footnote's book titles still open the club's own modal
   const el = e.target.closest('[data-slug]');
   if(!el) return;
   const b = DATA.find(x => !x.break && slug(x) === el.dataset.slug);
   if(b) openBookModal(b, b.year);
+});
+
+/* ---------- laureate panel ----------
+   Reuses the book modal's shell classes so it reads as the same kind of object,
+   with laureate-shaped innards. Cards carry inline z-index up to 100, so like
+   every other overlay in this file it inherits .book-modal's 500 to clear them. */
+const nobelModal = document.createElement('div');
+nobelModal.className = 'book-modal';
+nobelModal.id = 'nobelModal';
+nobelModal.setAttribute('aria-hidden', 'true');
+nobelModal.innerHTML = `
+  <div class="book-panel" role="dialog" aria-modal="true" aria-labelledby="nmName">
+    <button class="book-close" id="nobelClose" type="button" aria-label="Close">&times;</button>
+    <div class="book-grid">
+      <div class="m-cover"><img id="nmCover" alt=""></div>
+      <div class="book-info">
+        <div class="nm-kicker" id="nmKicker"></div>
+        <h2 class="nm-name" id="nmName"></h2>
+        <div class="nm-sub" id="nmSub"></div>
+        <blockquote class="nm-cite" id="nmCite"></blockquote>
+        <div class="nm-work">
+          <div class="nm-work-head">Representative work</div>
+          <div class="nm-work-title" id="nmWork"></div>
+          <p class="nm-teaser" id="nmTeaser"></p>
+          <div id="nmRead"></div>
+        </div>
+        <div class="nm-links">
+          <a id="nmNobel" target="_blank" rel="noopener">Read the Nobel citation &#8599;</a>
+          <a id="nmGoodreads" target="_blank" rel="noopener">Find the book &#8599;</a>
+        </div>
+      </div>
+    </div>
+  </div>`;
+document.body.appendChild(nobelModal);
+nobelModal.style.setProperty('--yr-color', NOBEL_COLOR);
+
+let nobelLastFocused = null;
+function openNobelModal(year){
+  const e = nobelList.find(x => x.y === year);
+  if(!e) return;
+  document.getElementById('nmCover').src = e.cover;
+  document.getElementById('nmCover').alt = e.book + ' cover';
+  document.getElementById('nmKicker').textContent = `Nobel Prize in Literature ${e.y}`;
+  document.getElementById('nmName').textContent = e.name;
+  document.getElementById('nmSub').textContent = lifeLine(e);
+  document.getElementById('nmCite').innerHTML =
+    `<q>${escHTML(e.cite)}</q><cite>The Swedish Academy&rsquo;s citation</cite>`;
+  document.getElementById('nmWork').textContent = e.book;
+  document.getElementById('nmTeaser').textContent = e.teaser;
+
+  const read = laureateReads[e.name];
+  document.getElementById('nmRead').innerHTML = read ? read.map(r=>{
+    const color = YEAR_COLORS[r.book.year] || NOBEL_COLOR;
+    return `<button class="nm-read" type="button" style="--bc:${color}" data-slug="${slug(r.book)}">Book42 read ${escHTML(r.book.title)} in ${r.book.period} ${r.book.year}</button>`;
+  }).join(' ') : '';
+
+  document.getElementById('nmNobel').href =
+    `https://www.nobelprize.org/prizes/literature/${e.y}/${e.slug}/facts/`;
+  document.getElementById('nmGoodreads').href =
+    `https://www.goodreads.com/search?q=${encodeURIComponent(e.book + ' ' + e.name)}`;
+
+  nobelModal.dataset.show = 'true';
+  nobelModal.setAttribute('aria-hidden', 'false');
+  nobelLastFocused = document.activeElement;
+  document.getElementById('nobelClose').focus();
+  nobelModal.querySelector('.book-panel').scrollTop = 0;
+}
+function closeNobelModal(){
+  nobelModal.dataset.show = 'false';
+  nobelModal.setAttribute('aria-hidden', 'true');
+  if(nobelLastFocused) nobelLastFocused.focus();
+}
+document.getElementById('nobelClose').addEventListener('click', closeNobelModal);
+nobelModal.addEventListener('click', (e)=>{
+  if(e.target === nobelModal){ closeNobelModal(); return; }
+  // "Book42 read X" jumps from the laureate straight into the club's own entry
+  const el = e.target.closest('[data-slug]');
+  if(!el) return;
+  const b = DATA.find(x => !x.break && slug(x) === el.dataset.slug);
+  if(b){ closeNobelModal(); openBookModal(b, b.year); }
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && nobelModal.dataset.show === 'true') closeNobelModal();
 });
 
 years.forEach(y=>{
