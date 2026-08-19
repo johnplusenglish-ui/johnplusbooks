@@ -445,6 +445,18 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .nob-who{display:block; margin-top:.55rem; font-size:.8rem; font-weight:700; line-height:1.25}
 .nob-work{display:block; margin-top:.1rem; font-size:.72rem; color:var(--ink-soft); font-style:italic; line-height:1.3}
 
+/* prize toggle */
+.prz-switch{display:inline-flex; gap:.35rem; margin-bottom:1.4rem; padding:.25rem;
+  border:1px solid var(--line); border-radius:999px; background:var(--card-bg)}
+.prz-tab{
+  appearance:none; font:inherit; font-size:.82rem; font-weight:700;
+  padding:.4rem 1rem; border-radius:999px; border:none; background:none;
+  color:var(--ink-soft); cursor:pointer; transition:background .15s, color .15s;
+}
+.prz-tab:hover{color:var(--ink)}
+.prz-tab[data-active="true"]{background:var(--pc); color:#fff}
+.nob-foot:empty{display:none}
+
 /* detail panel — same shell as the book modal, different innards */
 .nm-kicker{font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--yr-color)}
 .nm-name{font-size:1.7rem; font-weight:800; letter-spacing:-.02em; margin:.35rem 0 .2rem; line-height:1.15}
@@ -911,6 +923,13 @@ const BOOKINFO = {"The Devotion of Suspect X":{"teaser":"Yasuko's quiet Tokyo li
 const NOBEL = [{"y":2025,"name":"László Krasznahorkai","born":1954,"country":"Hungary","slug":"krasznahorkai","cite":"for his compelling and visionary oeuvre that, in the midst of apocalyptic terror, reaffirms the power of art","book":"Satantango","teaser":"On a collapsing collective farm in rain-soaked Hungary the villagers are waiting to leave, when a man they had believed dead walks back in promising deliverance.","cover":"covers/nobel/2025.jpg"},{"y":2024,"name":"Han Kang","born":1970,"country":"South Korea","slug":"han","cite":"for her intense poetic prose that confronts historical traumas and exposes the fragility of human life","book":"The Vegetarian","teaser":"After a violent dream a quiet Seoul housewife stops eating meat. Her refusal hardens, and the attempts to force her back are told by the three people closest to her.","cover":"covers/nobel/2024.jpg"},{"y":2023,"name":"Jon Fosse","born":1959,"country":"Norway","slug":"fosse","cite":"for his innovative plays and prose which give voice to the unsayable","book":"Septology","teaser":"An ageing painter in western Norway looks at an unfinished canvas and, across seven parts and almost no full stops, keeps meeting a version of himself who made every other choice.","cover":"covers/nobel/2023.jpg"},{"y":2022,"name":"Annie Ernaux","born":1940,"country":"France","slug":"ernaux","cite":"for the courage and clinical acuity with which she uncovers the roots, estrangements and  collective restraints of personal memory","book":"The Years","teaser":"Six decades of French life told through a collective “we”, tracking a woman and a country from postwar rationing to the internet without ever saying “I”.","cover":"covers/nobel/2022.jpg"},{"y":2021,"name":"Abdulrazak Gurnah","born":1948,"country":"Zanzibar","slug":"gurnah","cite":"for his uncompromising and compassionate penetration of the effects of colonialism and the fate of the refugee in the gulf between cultures and continents","now":"Tanzania","book":"Paradise","teaser":"A boy in colonial East Africa is handed to a merchant to settle his father's debt, and travels inland with a trading caravan on the eve of the First World War.","cover":"covers/nobel/2021.jpg"},{"y":2020,"name":"Louise Glück","born":1943,"country":"USA","slug":"gluck","cite":"for her unmistakable poetic voice that with austere beauty makes individual existence universal","died":2023,"book":"The Wild Iris","teaser":"A garden speaks. Flowers, a gardener and a distant, unreliable god argue about suffering and renewal across a single New England growing season.","cover":"covers/nobel/2020.jpg"},{"y":2019,"name":"Peter Handke","born":1942,"country":"Austria","slug":"handke","cite":"for an influential work that with linguistic ingenuity has explored the periphery and the specificity of human experience","book":"A Sorrow Beyond Dreams","teaser":"Written weeks after his mother's suicide, Handke tries to reconstruct her life in rural Austria and keeps catching himself turning her into a literary figure.","cover":"covers/nobel/2019.jpg"},{"y":2018,"name":"Olga Tokarczuk","born":1962,"country":"Poland","slug":"tokarczuk","cite":"for a narrative imagination that with encyclopedic passion represents the crossing of boundaries as a form of life","book":"The Books of Jacob","teaser":"The eighteenth-century mystic Jacob Frank declares himself the messiah and leads thousands of Polish Jews across borders, faiths and empires. The pages are numbered backwards.","cover":"covers/nobel/2018.jpg"},{"y":2017,"name":"Kazuo Ishiguro","born":1954,"country":"Japan","slug":"ishiguro","cite":"who, in novels of great emotional force, has uncovered the abyss beneath our illusory sense of connection with the world","book":"The Remains of the Day","teaser":"An English butler drives west in 1956 and reviews a lifetime of service to a man he chose not to see clearly, and a housekeeper he never spoke to honestly.","cover":"covers/nobel/2017.jpg"},{"y":2016,"name":"Bob Dylan","born":1941,"country":"USA","slug":"dylan","cite":"for having created new poetic expressions within the great American song tradition","book":"Chronicles: Volume One","teaser":"Dylan's own account of arriving in New York in 1961, and of two later moments when he had to rebuild what he was doing from almost nothing.","cover":"covers/nobel/2016.jpg"},{"y":2015,"name":"Svetlana Alexievich","born":1948,"country":"Ukraine","slug":"alexievich","cite":"for her polyphonic writings, a monument to suffering and courage in our time","book":"Second-hand Time","teaser":"Hundreds of ordinary Soviet citizens describe, in their own words, what happened to them when the country they had been built for stopped existing.","cover":"covers/nobel/2015.jpg"},{"y":2014,"name":"Patrick Modiano","born":1945,"country":"France","slug":"modiano","cite":"for the art of memory with which he has evoked the most ungraspable human destinies and\r\nuncovered the life-world of the occupation","book":"Missing Person","teaser":"A detective with amnesia investigates the only case that matters, his own identity, through the paper trail of occupied Paris.","cover":"covers/nobel/2014.jpg"},{"y":2013,"name":"Alice Munro","born":1931,"country":"Canada","slug":"munro","cite":"master of the contemporary short story","died":2024,"book":"Dear Life","teaser":"Fourteen stories set mostly in small-town Ontario, where a decision made in one afternoon turns out to have been the whole of a life.","cover":"covers/nobel/2013.jpg"},{"y":2012,"name":"Mo Yan","born":1956,"country":"China","slug":"yan","cite":"who with hallucinatory realism merges folk tales, history and the contemporary","book":"Red Sorghum","teaser":"Three generations of a family in a sorghum-growing county in Shandong, from bandit romance to the Japanese invasion, pieced together by a grandson.","cover":"covers/nobel/2012.jpg"},{"y":2011,"name":"Tomas Tranströmer","born":1931,"country":"Sweden","slug":"transtromer","cite":"because, through his condensed, translucent images, he gives us fresh access to reality","died":2015,"book":"The Half-Finished Heaven","teaser":"Poems that begin in an ordinary Swedish afternoon, a car, a hospital corridor, a frozen lake, and open without warning onto something vast.","cover":"covers/nobel/2011.jpg"},{"y":2010,"name":"Mario Vargas Llosa","born":1936,"country":"Peru","slug":"vargas_llosa","cite":"for his cartography of structures of power and his trenchant images of the individual's resistance, revolt, and defeat","died":2025,"book":"The Feast of the Goat","teaser":"The last day of the Trujillo dictatorship in the Dominican Republic, seen by the dictator, by his assassins waiting in a car, and by a woman returning after thirty-five years.","cover":"covers/nobel/2010.jpg"},{"y":2009,"name":"Herta Müller","born":1953,"country":"Romania","slug":"muller","cite":"who, with the concentration of poetry and the frankness of prose, depicts the landscape of the dispossessed","book":"The Land of Green Plums","teaser":"Four young friends under Ceaușescu try to keep speaking honestly to each other while the state sets out to make that impossible.","cover":"covers/nobel/2009.jpg"},{"y":2008,"name":"Jean-Marie Gustave Le Clézio","born":1940,"country":"France","slug":"clezio","cite":"author of new departures, poetic adventure and sensual ecstasy, explorer of a humanity beyond and below the reigning civilization","book":"Desert","teaser":"Two stories braided together: a Saharan people driven north by colonial troops in 1909, and a girl from a shanty town who becomes briefly, uselessly famous in Marseille.","cover":"covers/nobel/2008.jpg"},{"y":2007,"name":"Doris Lessing","born":1919,"country":"Persia","slug":"lessing","cite":"that epicist of the female experience, who with scepticism, fire and visionary power has subjected a divided civilisation to scrutiny","died":2013,"now":"Iran","book":"The Golden Notebook","teaser":"A writer keeps four separate notebooks to stop her life fragmenting, and the novel takes them apart to show what the effort costs her.","cover":"covers/nobel/2007.jpg"},{"y":2006,"name":"Orhan Pamuk","born":1952,"country":"Turkey","slug":"pamuk","cite":"who in the quest for the melancholic soul of his native city has discovered new symbols for the clash and interlacing of cultures","book":"My Name Is Red","teaser":"A miniaturist is murdered in 1590s Istanbul over a book of illustrations that breaks Islamic convention. The suspects narrate, and so do a corpse, a coin and a dog.","cover":"covers/nobel/2006.jpg"},{"y":2005,"name":"Harold Pinter","born":1930,"country":"United Kingdom","slug":"pinter","cite":"who in his plays uncovers the precipice under everyday prattle and forces entry into oppression's closed rooms","died":2008,"book":"The Birthday Party","teaser":"A lodger in a shabby seaside boarding house is thrown a party by two strangers who appear to have come specifically for him.","cover":"covers/nobel/2005.jpg"},{"y":2004,"name":"Elfriede Jelinek","born":1946,"country":"Austria","slug":"jelinek","cite":"for her musical flow of voices and counter-voices in novels and plays that with extraordinary linguistic zeal reveal the absurdity of society's clich&eacute;s and their subjugating power","book":"The Piano Teacher","teaser":"A Vienna conservatory professor, still living with her mother, begins an affair with a student and tries to script it in advance.","cover":"covers/nobel/2004.jpg"},{"y":2003,"name":"J. M. Coetzee","born":1940,"country":"South Africa","slug":"coetzee","cite":"who in innumerable guises portrays the surprising involvement of the outsider","book":"Disgrace","teaser":"A Cape Town professor loses his job over an affair with a student, moves to his daughter's smallholding, and finds that neither of them controls what happens next.","cover":"covers/nobel/2003.jpg"},{"y":2002,"name":"Imre Kertész","born":1929,"country":"Hungary","slug":"kertesz","cite":"for writing that upholds the fragile experience of the individual against the barbaric arbitrariness of history","died":2016,"book":"Fateless","teaser":"A fourteen-year-old from Budapest is taken to Auschwitz and Buchenwald, and describes it in a flat, reasonable voice that refuses to become testimony.","cover":"covers/nobel/2002.jpg"},{"y":2001,"name":"V. S. Naipaul","born":1932,"country":"Trinidad and Tobago","slug":"naipaul","cite":"for having united perceptive narrative and incorruptible scrutiny in works that compel us to see the presence of suppressed histories","died":2018,"book":"A House for Mr Biswas","teaser":"A sign-painter in Trinidad marries into a large, domineering family and spends his life trying to own one house of his own.","cover":"covers/nobel/2001.jpg"},{"y":2000,"name":"Gao Xingjian","born":1940,"country":"China","slug":"gao","cite":"for an œuvre of universal validity, bitter insights and linguistic ingenuity, which has opened new paths for the Chinese novel and drama","book":"Soul Mountain","teaser":"A man told he is dying walks into the forests and villages of southwest China looking for a mountain, and the narration splits into I, you and she.","cover":"covers/nobel/2000.jpg"},{"y":1999,"name":"Günter Grass","born":1927,"country":"Free City of Danzig","slug":"grass","cite":"whose frolicsome black fables portray the forgotten face of history","died":2015,"now":"Poland","book":"The Tin Drum","teaser":"Oskar decides at three to stop growing. He keeps a tin drum and a scream that shatters glass, and watches Danzig pass through Nazism from waist height.","cover":"covers/nobel/1999.jpg"},{"y":1998,"name":"José Saramago","born":1922,"country":"Portugal","slug":"saramago","cite":"who with parables sustained by imagination, compassion and irony continually enables us once again to apprehend an elusory reality","died":2010,"book":"Blindness","teaser":"An epidemic of white blindness spreads through an unnamed city. Those interned are abandoned, and the one woman who can still see says nothing about it.","cover":"covers/nobel/1998.jpg"},{"y":1997,"name":"Dario Fo","born":1926,"country":"Italy","slug":"fo","cite":"who emulates the jesters of the Middle Ages in scourging authority and upholding the dignity of the downtrodden","died":2016,"book":"Accidental Death of an Anarchist","teaser":"A farce built on a real death in police custody, in which a madman impersonates a judge and makes the officers keep revising their story.","cover":"covers/nobel/1997.jpg"},{"y":1996,"name":"Wisława Szymborska","born":1923,"country":"Poland","slug":"szymborska","cite":"for poetry that with ironic precision allows the historical and biological context to come to light in fragments of human reality","died":2012,"book":"View with a Grain of Sand","teaser":"Poems that take something small, a grain of sand, an onion, a cat in an empty flat, and use it to ask what we can honestly claim to know.","cover":"covers/nobel/1996.jpg"},{"y":1995,"name":"Seamus Heaney","born":1939,"country":"Northern Ireland","slug":"heaney","cite":"for works of lyrical beauty and ethical depth, which exalt everyday miracles and the living past","died":2013,"book":"Death of a Naturalist","teaser":"The debut collection: frogspawn, a father digging potatoes, a County Derry farm childhood, and a young poet deciding that his spade is a pen.","cover":"covers/nobel/1995.jpg"},{"y":1994,"name":"Kenzaburo Oe","born":1935,"country":"Japan","slug":"oe","cite":"who with poetic force creates an imagined world, where life and myth condense to form a disconcerting picture of the human predicament today","died":2023,"book":"A Personal Matter","teaser":"A man nicknamed Bird is told his newborn son has a brain hernia, and spends several days deciding whether to let him die.","cover":"covers/nobel/1994.jpg"},{"y":1993,"name":"Toni Morrison","born":1931,"country":"USA","slug":"morrison","cite":"who in novels characterized by visionary force and poetic import, gives life to an essential aspect of American reality","died":2019,"book":"Beloved","teaser":"An escaped slave in Ohio is visited by a young woman who appears to be the daughter she killed rather than see taken back.","cover":"covers/nobel/1993.jpg"},{"y":1992,"name":"Derek Walcott","born":1930,"country":"Saint Lucia","slug":"walcott","cite":"for a poetic oeuvre of great luminosity, sustained by a historical vision, the outcome of a multicultural commitment","died":2017,"book":"Omeros","teaser":"A Caribbean epic in terza rima, where St Lucian fishermen carry the names of Homer's heroes and the sea keeps the accounts of empire.","cover":"covers/nobel/1992.jpg"},{"y":1991,"name":"Nadine Gordimer","born":1923,"country":"South Africa","slug":"gordimer","cite":"who through her magnificent epic writing has - in the words of Alfred Nobel - been of very great benefit to humanity","died":2014,"book":"July's People","teaser":"A white Johannesburg family flees a revolution and shelters in their servant's village, where every habit of authority quietly inverts.","cover":"covers/nobel/1991.jpg"},{"y":1990,"name":"Octavio Paz","born":1914,"country":"Mexico","slug":"paz","cite":"for impassioned writing with wide horizons, characterized by sensuous intelligence and humanistic integrity","died":1998,"book":"El laberinto de la soledad","teaser":"Nine essays on what Mexico inherited from conquest, and why solitude and the mask are, for Paz, the country's central inheritance. Published in English as The Labyrinth of Solitude.","cover":"covers/nobel/1990.jpg"},{"y":1989,"name":"Camilo José Cela","born":1916,"country":"Spain","slug":"cela","cite":"for a rich and intensive prose, which with restrained compassion forms a challenging vision of man's vulnerability","died":2002,"book":"The Family of Pascual Duarte","teaser":"A condemned man writes his life from a prison cell in rural Extremadura, explaining each violent act as reasonably as the last.","cover":"covers/nobel/1989.jpg"},{"y":1988,"name":"Naguib Mahfouz","born":1911,"country":"Egypt","slug":"mahfouz","cite":"who, through works rich in nuance - now clear-sightedly realistic, now evocatively ambiguous - has formed an Arabian narrative art that applies to all mankind","died":2006,"book":"Palace Walk","teaser":"First of the Cairo Trilogy. A merchant rules his household with absolute authority and spends his nights elsewhere, while the 1919 revolution reaches the street outside.","cover":"covers/nobel/1988.jpg"},{"y":1987,"name":"Joseph Brodsky","born":1940,"country":"USSR","slug":"brodsky","cite":"for an all-embracing authorship, imbued with clarity of thought and poetic intensity","died":1996,"now":"Russia","book":"Less Than One","teaser":"Essays on exile, a Leningrad childhood, Auden and Cavafy, by a poet tried for “social parasitism” and expelled from his own language.","cover":"covers/nobel/1987.jpg"},{"y":1986,"name":"Wole Soyinka","born":1934,"country":"Nigeria","slug":"soyinka","cite":"who in a wide cultural perspective and with poetic overtones fashions the drama of existence","book":"The Interpreters","teaser":"Five young Nigerians educated abroad come home to independence and find the country, and each other, harder to interpret than they expected.","cover":"covers/nobel/1986.jpg"},{"y":1985,"name":"Claude Simon","born":1913,"country":"Madagascar","slug":"simon","cite":"who in his novel combines the poet's and the painter's creativeness with a deepened awareness of time in the depiction of the human condition","died":2005,"book":"The Flanders Road","teaser":"A cavalryman's memory of a 1940 rout in Flanders returns in fragments across a single night, refusing to settle into any order.","cover":"covers/nobel/1985.jpg"},{"y":1984,"name":"Jaroslav Seifert","born":1901,"country":"Austria-Hungary","slug":"seifert","cite":"for his poetry which endowed with freshness, sensuality and rich inventiveness provides a liberating image of the indomitable spirit and versatility of man","died":1986,"now":"Czech Republic","book":"The Poetry of Jaroslav Seifert","teaser":"Six decades of Czech poems, from avant-garde city verse to the plain late work written under a regime he would not flatter.","cover":"covers/nobel/1984.jpg"}];
 const NOBEL_NAMES = [[2025,"László Krasznahorkai"],[2024,"Han Kang"],[2023,"Jon Fosse"],[2022,"Annie Ernaux"],[2021,"Abdulrazak Gurnah"],[2020,"Louise Glück"],[2019,"Peter Handke"],[2018,"Olga Tokarczuk"],[2017,"Kazuo Ishiguro"],[2016,"Bob Dylan"],[2015,"Svetlana Alexievich"],[2014,"Patrick Modiano"],[2013,"Alice Munro"],[2012,"Mo Yan"],[2011,"Tomas Tranströmer"],[2010,"Mario Vargas Llosa"],[2009,"Herta Müller"],[2008,"Jean-Marie Gustave Le Clézio"],[2007,"Doris Lessing"],[2006,"Orhan Pamuk"],[2005,"Harold Pinter"],[2004,"Elfriede Jelinek"],[2003,"J. M. Coetzee"],[2002,"Imre Kertész"],[2001,"V. S. Naipaul"],[2000,"Gao Xingjian"],[1999,"Günter Grass"],[1998,"José Saramago"],[1997,"Dario Fo"],[1996,"Wisława Szymborska"],[1995,"Seamus Heaney"],[1994,"Kenzaburo Oe"],[1993,"Toni Morrison"],[1992,"Derek Walcott"],[1991,"Nadine Gordimer"],[1990,"Octavio Paz"],[1989,"Camilo José Cela"],[1988,"Naguib Mahfouz"],[1987,"Joseph Brodsky"],[1986,"Wole Soyinka"],[1985,"Claude Simon"],[1984,"Jaroslav Seifert"],[1983,"William Golding"],[1982,"Gabriel García Márquez"],[1981,"Elias Canetti"],[1980,"Czesław Miłosz"],[1979,"Odysseus Elytis"],[1978,"Isaac Bashevis Singer"],[1977,"Vicente Aleixandre"],[1976,"Saul Bellow"],[1975,"Eugenio Montale"],[1974,"Eyvind Johnson"],[1974,"Harry Martinson"],[1973,"Patrick White"],[1972,"Heinrich Böll"],[1971,"Pablo Neruda"],[1970,"Aleksandr Solzhenitsyn"],[1969,"Samuel Beckett"],[1968,"Yasunari Kawabata"],[1967,"Miguel Angel Asturias"],[1966,"Shmuel Agnon"],[1966,"Nelly Sachs"],[1965,"Mikhail Sholokhov"],[1964,"Jean-Paul Sartre"],[1963,"Giorgos Seferis"],[1962,"John Steinbeck"],[1961,"Ivo Andrić"],[1960,"Saint-John Perse"],[1959,"Salvatore Quasimodo"],[1958,"Boris Pasternak"],[1957,"Albert Camus"],[1956,"Juan Ramón Jiménez"],[1955,"Halldór Laxness"],[1954,"Ernest Hemingway"],[1953,"Winston Churchill"],[1952,"François Mauriac"],[1951,"Pär Lagerkvist"],[1950,"Bertrand Russell"],[1949,"William Faulkner"],[1948,"T.S. Eliot"],[1947,"André Gide"],[1946,"Hermann Hesse"],[1945,"Gabriela Mistral"],[1944,"Johannes V. Jensen"],[1939,"Frans Eemil Sillanpää"],[1938,"Pearl Buck"],[1937,"Roger Martin du Gard"],[1936,"Eugene O'Neill"],[1934,"Luigi Pirandello"],[1933,"Ivan Bunin"],[1932,"John Galsworthy"],[1931,"Erik Axel Karlfeldt"],[1930,"Sinclair Lewis"],[1929,"Thomas Mann"],[1928,"Sigrid Undset"],[1927,"Henri Bergson"],[1926,"Grazia Deledda"],[1925,"George Bernard Shaw"],[1924,"Władysław Reymont"],[1923,"William Butler Yeats"],[1922,"Jacinto Benavente"],[1921,"Anatole France"],[1920,"Knut Hamsun"],[1919,"Carl Spitteler"],[1917,"Karl Gjellerup"],[1917,"Henrik Pontoppidan"],[1916,"Verner von Heidenstam"],[1915,"Romain Rolland"],[1913,"Rabindranath Tagore"],[1912,"Gerhart Hauptmann"],[1911,"Maurice Maeterlinck"],[1910,"Paul Heyse"],[1909,"Selma Lagerlöf"],[1908,"Rudolf Eucken"],[1907,"Rudyard Kipling"],[1906,"Giosuè Carducci"],[1905,"Henryk Sienkiewicz"],[1904,"Frédéric Mistral"],[1904,"José Echegaray"],[1903,"Bjørnstjerne Bjørnson"],[1902,"Theodor Mommsen"],[1901,"Sully Prudhomme"]];
 
+/* The Booker winners 1984-2025, from Wikidata's award statements (P166 on the
+   work, qualified by year) cross-checked against Wikipedia, plus 2025 taken
+   from Wikipedia directly since the award is not yet on the work item there.
+   42 years but 44 winners: 1992 and 2019 were both split between two books.
+   `wiki` links were all checked for 200 before shipping. */
+const BOOKER = [{"y":2025,"name":"David Szalay","book":"Flesh","country":"United Kingdom / Hungary","pub":2025,"cover":"covers/booker/2025-flesh.jpg","teaser":"A Hungarian boy's life in flat, clipped scenes, from a housing block to a soldier's tour to the edges of London money, with almost everything he feels left off the page.","wiki":"https://en.wikipedia.org/wiki/Flesh_(Szalay_novel)"},{"y":2024,"name":"Samantha Harvey","book":"Orbital","country":"United Kingdom","pub":2024,"cover":"covers/booker/2024-orbital.jpg","teaser":"Six astronauts circle the earth sixteen times in a single day, and the novel stays up there with them, watching weather, borders and a typhoon build.","wiki":"https://en.wikipedia.org/wiki/Orbital_(novel)"},{"y":2023,"name":"Paul Lynch","book":"Prophet Song","country":"Ireland","pub":2023,"cover":"covers/booker/2023-prophet-song.jpg","teaser":"A Dublin mother's husband is taken by the secret police, and Ireland slides into totalitarianism one ordinary compromise at a time.","wiki":"https://en.wikipedia.org/wiki/Prophet_Song"},{"y":2022,"name":"Shehan Karunatilaka","book":"The Seven Moons of Maali Almeida","country":"Sri Lanka","pub":2022,"cover":"covers/booker/2022-the-seven-moons-of-maali-almeida.jpg","teaser":"A dead war photographer in 1990 Colombo has seven moons to lead the living to a box of photographs that would expose everyone.","wiki":"https://en.wikipedia.org/wiki/The_Seven_Moons_of_Maali_Almeida"},{"y":2021,"name":"Damon Galgut","book":"The Promise","country":"South Africa","pub":2021,"cover":"covers/booker/2021-the-promise.jpg","teaser":"Four funerals across four decades of South African history, and a promise made to a Black servant that the family keeps failing to keep.","wiki":"https://en.wikipedia.org/wiki/The_Promise_(Galgut_novel)"},{"y":2020,"name":"Douglas Stuart","book":"Shuggie Bain","country":"United States / United Kingdom","pub":2020,"cover":"covers/booker/2020-shuggie-bain.jpg","teaser":"A boy in 1980s Glasgow loves his mother through her alcoholism, and keeps trying to save her long after everyone else has stopped.","wiki":"https://en.wikipedia.org/wiki/Shuggie_Bain"},{"y":2019,"name":"Bernardine Evaristo","book":"Girl, Woman, Other","country":"United Kingdom","pub":2019,"cover":"covers/booker/2019-girl-woman-other.jpg","teaser":"Twelve mostly Black British women across a century, in a form that runs somewhere between poetry and prose and almost never stops for a full stop.","wiki":"https://en.wikipedia.org/wiki/Girl,_Woman,_Other"},{"y":2019,"name":"Margaret Atwood","book":"The Testaments","country":"Canada","pub":2019,"cover":"covers/booker/2019-the-testaments.jpg","teaser":"Fifteen years after The Handmaid's Tale, Gilead is rotting from the inside, told by three women including Aunt Lydia herself.","wiki":"https://en.wikipedia.org/wiki/The_Testaments"},{"y":2018,"name":"Anna Burns","book":"Milkman","country":"United Kingdom","pub":2018,"cover":"covers/booker/2018-milkman.jpg","teaser":"In an unnamed city during the Troubles, an eighteen-year-old is pursued by a paramilitary, and the rumour becomes more dangerous than the man.","wiki":"https://en.wikipedia.org/wiki/Milkman_(novel)"},{"y":2017,"name":"George Saunders","book":"Lincoln in the Bardo","country":"United States","pub":2017,"cover":"covers/booker/2017-lincoln-in-the-bardo.jpg","teaser":"Lincoln's eleven-year-old son dies, and the graveyard's chattering dead argue over him for one night, narrated by a crowd of ghosts and historical citations.","wiki":"https://en.wikipedia.org/wiki/Lincoln_in_the_Bardo"},{"y":2016,"name":"Paul Beatty","book":"The Sellout","country":"United States","pub":2015,"cover":"covers/booker/2016-the-sellout.jpg","teaser":"A Black narrator in a Los Angeles suburb reinstates segregation and takes a slave, and ends up in front of the Supreme Court. Satire at maximum voltage.","wiki":"https://en.wikipedia.org/wiki/The_Sellout_(novel)"},{"y":2015,"name":"Marlon James","book":"A Brief History of Seven Killings","country":"Jamaica","pub":2014,"cover":"covers/booker/2015-a-brief-history-of-seven-killings.jpg","teaser":"The attempted assassination of Bob Marley in 1976, told across three decades by dozens of voices, from gunmen to CIA officers.","wiki":"https://en.wikipedia.org/wiki/A_Brief_History_of_Seven_Killings"},{"y":2014,"name":"Richard Flanagan","book":"The Narrow Road to the Deep North","country":"Australia","pub":2014,"cover":"covers/booker/2014-the-narrow-road-to-the-deep-north.jpg","teaser":"An Australian surgeon keeps his men alive on the Burma Death Railway, and spends the rest of his life failing to be the hero they made him.","wiki":"https://en.wikipedia.org/wiki/The_Narrow_Road_to_the_Deep_North_(novel)"},{"y":2013,"name":"Eleanor Catton","book":"The Luminaries","country":"Canada / New Zealand","pub":2013,"cover":"covers/booker/2013-the-luminaries.jpg","teaser":"A gold-rush murder mystery in 1866 New Zealand, built on the zodiac, with each part exactly half the length of the one before it.","wiki":"https://en.wikipedia.org/wiki/The_Luminaries"},{"y":2012,"name":"Hilary Mantel","book":"Bring Up the Bodies","country":"United Kingdom","pub":2012,"cover":"covers/booker/2012-bring-up-the-bodies.jpg","teaser":"Cromwell brings down Anne Boleyn in nine months, and the book watches the machinery of a state killing do its work.","wiki":"https://en.wikipedia.org/wiki/Bring_Up_the_Bodies"},{"y":2011,"name":"Julian Barnes","book":"The Sense of an Ending","country":"United Kingdom","pub":2011,"cover":"covers/booker/2011-the-sense-of-an-ending.jpg","teaser":"A retired man receives a strange bequest that forces him to re-read his own past, and finds his memory has been protecting him.","wiki":"https://en.wikipedia.org/wiki/The_Sense_of_an_Ending"},{"y":2010,"name":"Howard Jacobson","book":"The Finkler Question","country":"United Kingdom","pub":2010,"cover":"covers/booker/2010-the-finkler-question.jpg","teaser":"Three friends, two of them widowed, argue about grief, Jewishness and belonging in a comedy that keeps turning serious without warning.","wiki":"https://en.wikipedia.org/wiki/The_Finkler_Question"},{"y":2009,"name":"Hilary Mantel","book":"Wolf Hall","country":"United Kingdom","pub":2009,"cover":"covers/booker/2009-wolf-hall.jpg","teaser":"Thomas Cromwell rises from blacksmith's son to Henry VIII's right hand, seen entirely from inside his own watchful head.","wiki":"https://en.wikipedia.org/wiki/Wolf_Hall"},{"y":2008,"name":"Aravind Adiga","book":"The White Tiger","country":"India","pub":2008,"cover":"covers/booker/2008-the-white-tiger.jpg","teaser":"A driver from an Indian village writes to the Chinese premier to explain how he became an entrepreneur. Murder is part of the explanation.","wiki":"https://en.wikipedia.org/wiki/The_White_Tiger_(Adiga_novel)"},{"y":2007,"name":"Anne Enright","book":"The Gathering","country":"Ireland","pub":2007,"cover":"covers/booker/2007-the-gathering.jpg","teaser":"An Irish family gathers for a brother's wake, and the sister organising it circles what happened to him in their grandmother's house.","wiki":"https://en.wikipedia.org/wiki/The_Gathering_(Enright_novel)"},{"y":2006,"name":"Kiran Desai","book":"The Inheritance of Loss","country":"India","pub":2006,"cover":"covers/booker/2006-the-inheritance-of-loss.jpg","teaser":"In the Himalayan foothills a retired judge, his orphaned granddaughter and his cook are caught by a Nepali insurgency, while the cook's son washes dishes in New York.","wiki":"https://en.wikipedia.org/wiki/The_Inheritance_of_Loss"},{"y":2005,"name":"John Banville","book":"The Sea","country":"Ireland","pub":2005,"cover":"covers/booker/2005-the-sea.jpg","teaser":"A recently widowed art historian returns to the seaside village of one childhood summer, and to the family who marked it.","wiki":"https://en.wikipedia.org/wiki/The_Sea_(novel)"},{"y":2004,"name":"Alan Hollinghurst","book":"The Line of Beauty","country":"United Kingdom","pub":2004,"cover":"covers/booker/2004-the-line-of-beauty.jpg","teaser":"A young gay man lodges with a Tory MP's family through the Thatcher years, from Ecstasy and country houses to the arrival of AIDS.","wiki":"https://en.wikipedia.org/wiki/The_Line_of_Beauty"},{"y":2003,"name":"DBC Pierre","book":"Vernon God Little","country":"Australia","pub":2003,"cover":"covers/booker/2003-vernon-god-little.jpg","teaser":"A Texas teenager is blamed for a school massacre he did not commit, and the media turns his trial into entertainment.","wiki":"https://en.wikipedia.org/wiki/Vernon_God_Little"},{"y":2002,"name":"Yann Martel","book":"Life of Pi","country":"Canada","pub":2001,"cover":"covers/booker/2002-life-of-pi.jpg","teaser":"An Indian boy survives a shipwreck in a lifeboat with a Bengal tiger, then offers a second version of the story and asks which you prefer.","wiki":"https://en.wikipedia.org/wiki/Life_of_Pi"},{"y":2001,"name":"Peter Carey","book":"True History of the Kelly Gang","country":"Australia","pub":2000,"cover":"covers/booker/2001-true-history-of-the-kelly-gang.jpg","teaser":"Ned Kelly writes his own life for the daughter he will never meet, in unpunctuated bush vernacular.","wiki":"https://en.wikipedia.org/wiki/True_History_of_the_Kelly_Gang"},{"y":2000,"name":"Margaret Atwood","book":"The Blind Assassin","country":"Canada","pub":2000,"cover":"covers/booker/2000-the-blind-assassin.jpg","teaser":"An old woman recounts her sister's death in 1945, wrapped around a scandalous novel, which is itself wrapped around a pulp science fiction serial.","wiki":"https://en.wikipedia.org/wiki/The_Blind_Assassin"},{"y":1999,"name":"J. M. Coetzee","book":"Disgrace","country":"South Africa / Australia","pub":1999,"cover":"covers/booker/1999-disgrace.jpg","teaser":"After a scandal at his university, David Lurie retreats to his daughter's farm in the Eastern Cape, where an attack forces both of them to renegotiate everything.","wiki":"https://en.wikipedia.org/wiki/Disgrace"},{"y":1998,"name":"Ian McEwan","book":"Amsterdam","country":"United Kingdom","pub":1998,"cover":"covers/booker/1998-amsterdam.jpg","teaser":"Two old friends make a pact at a funeral, then set about destroying each other.","wiki":"https://en.wikipedia.org/wiki/Amsterdam_(novel)"},{"y":1997,"name":"Arundhati Roy","book":"The God of Small Things","country":"India","pub":1997,"cover":"covers/booker/1997-the-god-of-small-things.jpg","teaser":"Twins in Kerala live through the day that broke their family, told in a circling, childhood-shaped English.","wiki":"https://en.wikipedia.org/wiki/The_God_of_Small_Things"},{"y":1996,"name":"Graham Swift","book":"Last Orders","country":"United Kingdom","pub":1996,"cover":"covers/booker/1996-last-orders.jpg","teaser":"Four men drive a dead friend's ashes to Margate, and the whole of their shared lives comes out on the way.","wiki":"https://en.wikipedia.org/wiki/Last_Orders"},{"y":1995,"name":"Pat Barker","book":"The Ghost Road","country":"United Kingdom","pub":1995,"cover":"covers/booker/1995-the-ghost-road.jpg","teaser":"The last of the Regeneration trilogy: a shell-shocked officer returns to the Western Front in 1918 while his psychiatrist remembers Melanesia.","wiki":"https://en.wikipedia.org/wiki/The_Ghost_Road"},{"y":1994,"name":"James Kelman","book":"How Late It Was, How Late","country":"United Kingdom","pub":1994,"cover":"covers/booker/1994-how-late-it-was-how-late.jpg","teaser":"A Glasgow shoplifter wakes blind after a beating in police custody, and the novel stays entirely inside his head and his dialect.","wiki":"https://en.wikipedia.org/wiki/How_Late_It_Was,_How_Late"},{"y":1993,"name":"Roddy Doyle","book":"Paddy Clarke Ha Ha Ha","country":"Ireland","pub":1993,"cover":"covers/booker/1993-paddy-clarke-ha-ha-ha.jpg","teaser":"Ten-year-old Paddy narrates a Dublin suburb in 1968, and slowly works out what the silences at home mean.","wiki":"https://en.wikipedia.org/wiki/Paddy_Clarke_Ha_Ha_Ha"},{"y":1992,"name":"Barry Unsworth","book":"Sacred Hunger","country":"United Kingdom","pub":1992,"cover":"covers/booker/1992-sacred-hunger.jpg","teaser":"A Liverpool slave ship's crew mutinies and founds a settlement in Florida, watched by two cousins on opposite sides of the trade.","wiki":"https://en.wikipedia.org/wiki/Sacred_Hunger"},{"y":1992,"name":"Michael Ondaatje","book":"The English Patient","country":"Canada","pub":1992,"cover":"covers/booker/1992-the-english-patient.jpg","teaser":"Four damaged people in a bombed Tuscan villa at the end of the war, gathered around a burned man who will not say who he is.","wiki":"https://en.wikipedia.org/wiki/The_English_Patient"},{"y":1991,"name":"Ben Okri","book":"The Famished Road","country":"United Kingdom / Nigeria","pub":1991,"cover":"covers/booker/1991-the-famished-road.jpg","teaser":"Azaro is a spirit child who chooses to stay alive, in a Nigerian city where the road, the bar and the dead are all equally real.","wiki":"https://en.wikipedia.org/wiki/The_Famished_Road"},{"y":1990,"name":"A. S. Byatt","book":"Possession","country":"United Kingdom","pub":1990,"cover":"covers/booker/1990-possession.jpg","teaser":"Two modern academics uncover a secret affair between two Victorian poets, and the novel writes both poets' work as it goes.","wiki":"https://en.wikipedia.org/wiki/Possession_(Byatt_novel)"},{"y":1989,"name":"Kazuo Ishiguro","book":"The Remains of the Day","country":"Japan / United Kingdom","pub":1989,"cover":"covers/booker/1989-the-remains-of-the-day.jpg","teaser":"A butler on a motoring holiday in 1956 reconstructs his years at Darlington Hall, and what his idea of dignity cost him.","wiki":"https://en.wikipedia.org/wiki/The_Remains_of_the_Day"},{"y":1988,"name":"Peter Carey","book":"Oscar and Lucinda","country":"Australia","pub":1988,"cover":"covers/booker/1988-oscar-and-lucinda.jpg","teaser":"A gambling English clergyman and an Australian heiress bet everything on floating a glass church up a river.","wiki":"https://en.wikipedia.org/wiki/Oscar_and_Lucinda"},{"y":1987,"name":"Penelope Lively","book":"Moon Tiger","country":"United Kingdom","pub":1987,"cover":"covers/booker/1987-moon-tiger.jpg","teaser":"A dying historian narrates a history of the world that is really her own, and the wartime love she never got over.","wiki":"https://en.wikipedia.org/wiki/Moon_Tiger"},{"y":1986,"name":"Kingsley Amis","book":"The Old Devils","country":"United Kingdom","pub":1986,"cover":"covers/booker/1986-the-old-devils.jpg","teaser":"A celebrity Welsh poet returns to the friends he left behind, and their long afternoons of drinking turn out to have teeth.","wiki":"https://en.wikipedia.org/wiki/The_Old_Devils"},{"y":1985,"name":"Keri Hulme","book":"The Bone People","country":"New Zealand","pub":1984,"cover":"covers/booker/1985-the-bone-people.jpg","teaser":"A reclusive artist, a mute boy and his violent foster father form a family on the New Zealand coast, in a book laced with Māori.","wiki":"https://en.wikipedia.org/wiki/The_Bone_People"},{"y":1984,"name":"Anita Brookner","book":"Hotel du Lac","country":"United Kingdom","pub":1984,"cover":"covers/booker/1984-hotel-du-lac.jpg","teaser":"A romantic novelist is exiled to a quiet Swiss hotel after a scandal, and is offered a marriage without love.","wiki":"https://en.wikipedia.org/wiki/Hotel_du_Lac"}];
+
 function slug(b){
   return (b.year+'-'+b.period+'-'+(b.title||'break')).toLowerCase().replace(/[^a-z0-9]+/g,'-');
 }
@@ -1301,14 +1320,16 @@ favBtn.style.setProperty('--yr-color', FAVES_COLOR);
 favBtn.addEventListener('click', ()=> showYear('faves'));
 yearNav.appendChild(favBtn);
 
-const NOBEL_COLOR = '#8a6a12';
-const nobBtn = document.createElement('button');
-nobBtn.type = 'button';
-nobBtn.textContent = 'Nobel';
-nobBtn.dataset.year = 'nobel';
-nobBtn.style.setProperty('--yr-color', NOBEL_COLOR);
-nobBtn.addEventListener('click', ()=> showYear('nobel'));
-yearNav.appendChild(nobBtn);
+/* One tab for both prizes; the pill takes the colour of whichever is showing,
+   so the toggle inside the tab is echoed in the nav. */
+const PRIZE_COLORS = { nobel:'#8a6a12', booker:'#7a2246' };
+const prizeBtn = document.createElement('button');
+prizeBtn.type = 'button';
+prizeBtn.textContent = 'Prizes';
+prizeBtn.dataset.year = 'prizes';
+prizeBtn.style.setProperty('--yr-color', PRIZE_COLORS.nobel);
+prizeBtn.addEventListener('click', ()=> showYear('prizes'));
+yearNav.appendChild(prizeBtn);
 
 years.forEach(y=>{
   const btn = document.createElement('button');
@@ -1632,10 +1653,11 @@ favesSection.addEventListener('click', (e)=>{
 renderShelf();
 renderFaves();
 
-/* ---------- Nobel tab ----------
-   A reference list rather than a gallery: no covers exist for "a body of work",
-   so this one is deliberately typographic. Built once at load — nothing here
-   depends on the ratings fetch, so it never needs re-rendering. */
+/* ---------- Prizes tab ----------
+   Two prizes, one tab, one gallery component. They are shaped differently on
+   purpose: the Nobel honours a writer, so its card leads with the laureate and
+   carries one representative book; the Booker honours a book, so its card leads
+   with the title. Everything else — grid, panel, club cross-links — is shared. */
 
 /* Accents and initials are enough to tie a Book42 author to a laureate:
    "J. M. Coetzee" and "John Maxwell Coetzee" share a surname and a first
@@ -1648,6 +1670,10 @@ function sameAuthor(a, b){
   const x = plainName(a).split(' '), y = plainName(b).split(' ');
   if(!x[0] || !y[0]) return false;
   return x[x.length-1] === y[y.length-1] && x[0][0] === y[0][0];
+}
+function plainTitle(str){
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 /* laureate name -> the club's picks by that author, across ALL laureates since
@@ -1662,19 +1688,6 @@ DATA.forEach(b=>{
   });
 });
 
-const nobelSection = document.createElement('section');
-nobelSection.className = 'year-section nobel-section';
-nobelSection.id = 'ynobel';
-nobelSection.style.setProperty('--yr-color', NOBEL_COLOR);
-
-const nobelList = NOBEL.slice(0, 42);
-const nobelNames = new Set(nobelList.map(e=>e.name));
-const readInWindow = nobelList.filter(e=> laureateReads[e.name]).length;
-const readEarlier = Object.keys(laureateReads)
-  .filter(n=> !nobelNames.has(n))
-  .map(n=>({ name:n, nobelYear:laureateReads[n][0].nobelYear, books:laureateReads[n].map(r=>r.book) }))
-  .sort((a,b)=> b.nobelYear - a.nobelYear);
-
 function lifeLine(e){
   const where = e.country + (e.now ? ` (now ${e.now})` : '');
   const when  = e.died ? `${e.born}–${e.died}` : `b. ${e.born}`;
@@ -1688,52 +1701,114 @@ function listJoin(parts){
   return parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length-1];
 }
 
-/* A gallery card is deliberately the same object as a Book42 card: cover,
-   click, detail panel. What differs is what a laureate IS — the prize is for a
-   body of work, not a book — so each card stands for one representative title,
-   taken from the work the Nobel Foundation's own page highlights wherever it
-   names one. */
-const nobelCards = nobelList.map(e=>{
-  const read = laureateReads[e.name];
-  const bc = read ? (YEAR_COLORS[read[0].book.year] || NOBEL_COLOR) : NOBEL_COLOR;
-  return `<li><button class="nob-card" type="button" data-nobel="${e.y}"
-      aria-label="${escHTML(e.name)}, Nobel Prize ${e.y}">
-    <span class="nob-cover">
-      <img src="${e.cover}" alt="${escHTML(e.book)} cover" loading="lazy" decoding="async">
-      <span class="nob-badge">${e.y}</span>
-      ${read ? `<span class="nob-flag" style="--bc:${bc}" title="Book42 read this author"></span>` : ''}
-    </span>
-    <span class="nob-who">${escHTML(e.name)}</span>
-    <span class="nob-work">${escHTML(e.book)}</span>
-  </button></li>`;
-}).join('');
+const nobelList = NOBEL.slice(0, 42);
+const nobelNames = new Set(nobelList.map(e=>e.name));
+const readEarlier = Object.keys(laureateReads)
+  .filter(n=> !nobelNames.has(n))
+  .map(n=>({ name:n, nobelYear:laureateReads[n][0].nobelYear, books:laureateReads[n].map(r=>r.book) }))
+  .sort((a,b)=> b.nobelYear - a.nobelYear);
 
-const earlierHTML = readEarlier.length ? `<div class="nob-foot">
-  The club has also read ${numWord(readEarlier.length)} laureate${readEarlier.length===1?'':'s'}
-  from before this window:
-  ${readEarlier.map(r=> listJoin(r.books.map(b=>
-      `<button type="button" data-slug="${slug(b)}">${escHTML(b.title)}</button>`))
-    + ` by ${escHTML(r.name)}, who won in ${r.nobelYear}`).join('; ')}.
-</div>` : '';
+const PRIZES = {
+  nobel: {
+    id:'nobel', label:'Nobel', color:PRIZE_COLORS.nobel,
+    entries: nobelList,
+    kicker:'The Nobel Prize in Literature',
+    head:'Forty-two laureates, one for every year in the name',
+    lede:`Every winner from ${nobelList[nobelList.length-1].y} to ${nobelList[0].y}. Each cover is one
+      representative book by that writer; open any of them for the Swedish Academy&rsquo;s citation and
+      what the book actually is.`,
+    // the Nobel goes to the writer, so a club pick counts if it is BY that laureate
+    reads: e => (laureateReads[e.name] || []).map(r=>r.book),
+    cardTop: e => e.name, cardSub: e => e.book,
+    foot: readEarlier.length ? `The club has also read ${numWord(readEarlier.length)} laureate${readEarlier.length===1?'':'s'}
+      from before this window:
+      ${readEarlier.map(r=> listJoin(r.books.map(b=>
+          `<button type="button" data-slug="${slug(b)}">${escHTML(b.title)}</button>`))
+        + ` by ${escHTML(r.name)}, who won in ${r.nobelYear}`).join('; ')}.` : ''
+  },
+  booker: {
+    id:'booker', label:'Booker', color:PRIZE_COLORS.booker,
+    entries: BOOKER,
+    kicker:'The Booker Prize',
+    head:'Forty-two years, forty-four winners',
+    lede:`Every winner from ${BOOKER[BOOKER.length-1].y} to ${BOOKER[0].y}. Two of those years ended in a
+      tie, 1992 and 2019, so there are forty-four books here rather than forty-two.`,
+    // the Booker goes to the book, so a club pick counts only if it IS that book
+    reads: e => DATA.filter(b=> !b.break && plainTitle(b.title) === plainTitle(e.book)
+                                && sameAuthor(b.author, e.name)),
+    cardTop: e => e.book, cardSub: e => e.name,
+    foot: ''
+  }
+};
 
-nobelSection.innerHTML = `
+let activePrize = 'nobel';
+
+const prizesSection = document.createElement('section');
+prizesSection.className = 'year-section nobel-section';
+prizesSection.id = 'yprizes';
+prizesSection.innerHTML = `
   <div class="nobel-scroll">
     <div class="nobel-inner">
-      <div class="faves-kicker">The Nobel Prize in Literature</div>
-      <h2 class="faves-head">Forty-two laureates, one for every year in the name</h2>
-      <p class="faves-lede">Every winner from ${nobelList[nobelList.length-1].y} to ${nobelList[0].y}.
-        Each cover is one representative book by that writer; open any of them for the
-        Swedish Academy&rsquo;s citation and what the book actually is.</p>
-      <div class="nob-stat">Book42 has read ${numWord(readInWindow)} of the ${nobelList.length}</div>
-      <ol class="nob-grid">${nobelCards}</ol>
-      ${earlierHTML}
+      <div class="faves-kicker" id="przKicker"></div>
+      <h2 class="faves-head" id="przHead"></h2>
+      <p class="faves-lede" id="przLede"></p>
+      <div class="prz-switch" id="przSwitch"></div>
+      <div class="nob-stat" id="przStat"></div>
+      <ol class="nob-grid" id="przGrid"></ol>
+      <div class="nob-foot" id="przFoot"></div>
     </div>
   </div>`;
-yearsRoot.appendChild(nobelSection);
+yearsRoot.appendChild(prizesSection);
 
-nobelSection.addEventListener('click', (e)=>{
-  const card = e.target.closest('[data-nobel]');
-  if(card){ openNobelModal(Number(card.dataset.nobel)); return; }
+const przSwitch = prizesSection.querySelector('#przSwitch');
+przSwitch.innerHTML = Object.values(PRIZES).map(p=>
+  `<button type="button" class="prz-tab" data-prize="${p.id}" style="--pc:${p.color}">${p.label}</button>`
+).join('');
+
+function renderPrize(which){
+  const p = PRIZES[which];
+  if(!p) return;
+  activePrize = which;
+  prizesSection.style.setProperty('--yr-color', p.color);
+  prizeBtn.style.setProperty('--yr-color', p.color);
+
+  [...przSwitch.children].forEach(b=> b.dataset.active = (b.dataset.prize === which));
+  prizesSection.querySelector('#przKicker').textContent = p.kicker;
+  prizesSection.querySelector('#przHead').textContent = p.head;
+  prizesSection.querySelector('#przLede').innerHTML = p.lede;
+
+  const readCount = p.entries.filter(e=> p.reads(e).length).length;
+  prizesSection.querySelector('#przStat').textContent =
+    `Book42 has read ${numWord(readCount)} of the ${p.entries.length}`;
+
+  prizesSection.querySelector('#przGrid').innerHTML = p.entries.map((e, i)=>{
+    const read = p.reads(e);
+    const bc = read.length ? (YEAR_COLORS[read[0].year] || p.color) : p.color;
+    return `<li><button class="nob-card" type="button" data-prize="${p.id}" data-idx="${i}"
+        aria-label="${escHTML(p.cardTop(e))}, ${p.label} ${e.y}">
+      <span class="nob-cover">
+        <img src="${e.cover}" alt="${escHTML(e.book)} cover" loading="lazy" decoding="async">
+        <span class="nob-badge">${e.y}</span>
+        ${read.length ? `<span class="nob-flag" style="--bc:${bc}" title="Book42 has read this"></span>` : ''}
+      </span>
+      <span class="nob-who">${escHTML(p.cardTop(e))}</span>
+      <span class="nob-work">${escHTML(p.cardSub(e))}</span>
+    </button></li>`;
+  }).join('');
+
+  const footEl = prizesSection.querySelector('#przFoot');
+  footEl.innerHTML = p.foot;
+  footEl.style.display = p.foot ? 'block' : 'none';
+}
+
+przSwitch.addEventListener('click', (e)=>{
+  const b = e.target.closest('[data-prize]');
+  if(b) renderPrize(b.dataset.prize);
+});
+
+prizesSection.addEventListener('click', (e)=>{
+  const card = e.target.closest('.nob-card');
+  if(card){ openPrizeModal(card.dataset.prize, Number(card.dataset.idx)); return; }
   // the footnote's book titles still open the club's own modal
   const el = e.target.closest('[data-slug]');
   if(!el) return;
@@ -1741,17 +1816,17 @@ nobelSection.addEventListener('click', (e)=>{
   if(b) openBookModal(b, b.year);
 });
 
-/* ---------- laureate panel ----------
-   Reuses the book modal's shell classes so it reads as the same kind of object,
-   with laureate-shaped innards. Cards carry inline z-index up to 100, so like
-   every other overlay in this file it inherits .book-modal's 500 to clear them. */
-const nobelModal = document.createElement('div');
-nobelModal.className = 'book-modal';
-nobelModal.id = 'nobelModal';
-nobelModal.setAttribute('aria-hidden', 'true');
-nobelModal.innerHTML = `
+/* ---------- prize panel ----------
+   Reuses the book modal's shell classes so it reads as the same kind of object.
+   Cards carry inline z-index up to 100, so like every other overlay in this file
+   it inherits .book-modal's 500 to clear them. */
+const prizeModal = document.createElement('div');
+prizeModal.className = 'book-modal';
+prizeModal.id = 'prizeModal';
+prizeModal.setAttribute('aria-hidden', 'true');
+prizeModal.innerHTML = `
   <div class="book-panel" role="dialog" aria-modal="true" aria-labelledby="nmName">
-    <button class="book-close" id="nobelClose" type="button" aria-label="Close">&times;</button>
+    <button class="book-close" id="prizeClose" type="button" aria-label="Close">&times;</button>
     <div class="book-grid">
       <div class="m-cover"><img id="nmCover" alt=""></div>
       <div class="book-info">
@@ -1759,70 +1834,94 @@ nobelModal.innerHTML = `
         <h2 class="nm-name" id="nmName"></h2>
         <div class="nm-sub" id="nmSub"></div>
         <blockquote class="nm-cite" id="nmCite"></blockquote>
-        <div class="nm-work">
-          <div class="nm-work-head">Representative work</div>
+        <div class="nm-work" id="nmWorkWrap">
+          <div class="nm-work-head" id="nmWorkHead">Representative work</div>
           <div class="nm-work-title" id="nmWork"></div>
           <p class="nm-teaser" id="nmTeaser"></p>
           <div id="nmRead"></div>
         </div>
         <div class="nm-links">
-          <a id="nmNobel" target="_blank" rel="noopener">Read the Nobel citation &#8599;</a>
+          <a id="nmSource" target="_blank" rel="noopener"></a>
           <a id="nmGoodreads" target="_blank" rel="noopener">Find the book &#8599;</a>
         </div>
       </div>
     </div>
   </div>`;
-document.body.appendChild(nobelModal);
-nobelModal.style.setProperty('--yr-color', NOBEL_COLOR);
+document.body.appendChild(prizeModal);
 
-let nobelLastFocused = null;
-function openNobelModal(year){
-  const e = nobelList.find(x => x.y === year);
+let prizeLastFocused = null;
+function openPrizeModal(which, idx){
+  const p = PRIZES[which];
+  const e = p && p.entries[idx];
   if(!e) return;
+  prizeModal.style.setProperty('--yr-color', p.color);
   document.getElementById('nmCover').src = e.cover;
   document.getElementById('nmCover').alt = e.book + ' cover';
-  document.getElementById('nmKicker').textContent = `Nobel Prize in Literature ${e.y}`;
-  document.getElementById('nmName').textContent = e.name;
-  document.getElementById('nmSub').textContent = lifeLine(e);
-  document.getElementById('nmCite').innerHTML =
-    `<q>${escHTML(e.cite)}</q><cite>The Swedish Academy&rsquo;s citation</cite>`;
-  document.getElementById('nmWork').textContent = e.book;
+  document.getElementById('nmKicker').textContent =
+    which === 'nobel' ? `Nobel Prize in Literature ${e.y}` : `Booker Prize ${e.y}`;
+
+  const cite = document.getElementById('nmCite');
+  const workWrap = document.getElementById('nmWorkWrap');
+  if(which === 'nobel'){
+    // the prize is for the whole body of work, so the laureate leads
+    document.getElementById('nmName').textContent = e.name;
+    document.getElementById('nmSub').textContent = lifeLine(e);
+    cite.innerHTML = `<q>${escHTML(e.cite)}</q><cite>The Swedish Academy&rsquo;s citation</cite>`;
+    cite.style.display = '';
+    workWrap.style.borderTop = '';
+    document.getElementById('nmWorkHead').style.display = '';
+    document.getElementById('nmWork').textContent = e.book;
+    document.getElementById('nmSource').textContent = 'Read the Nobel citation ↗';
+    document.getElementById('nmSource').href =
+      `https://www.nobelprize.org/prizes/literature/${e.y}/${e.slug}/facts/`;
+  } else {
+    // the prize is for one book, so the book leads and there is no citation
+    document.getElementById('nmName').textContent = e.book;
+    document.getElementById('nmSub').textContent =
+      `${e.name} · ${e.country || ''}${e.pub ? ' · first published ' + e.pub : ''}`;
+    cite.style.display = 'none';
+    workWrap.style.borderTop = 'none';
+    document.getElementById('nmWorkHead').style.display = 'none';
+    document.getElementById('nmWork').textContent = '';
+    document.getElementById('nmSource').textContent = 'Read about the book ↗';
+    document.getElementById('nmSource').href = e.wiki;
+  }
   document.getElementById('nmTeaser').textContent = e.teaser;
-
-  const read = laureateReads[e.name];
-  document.getElementById('nmRead').innerHTML = read ? read.map(r=>{
-    const color = YEAR_COLORS[r.book.year] || NOBEL_COLOR;
-    return `<button class="nm-read" type="button" style="--bc:${color}" data-slug="${slug(r.book)}">Book42 read ${escHTML(r.book.title)} in ${r.book.period} ${r.book.year}</button>`;
-  }).join(' ') : '';
-
-  document.getElementById('nmNobel').href =
-    `https://www.nobelprize.org/prizes/literature/${e.y}/${e.slug}/facts/`;
   document.getElementById('nmGoodreads').href =
     `https://www.goodreads.com/search?q=${encodeURIComponent(e.book + ' ' + e.name)}`;
 
-  nobelModal.dataset.show = 'true';
-  nobelModal.setAttribute('aria-hidden', 'false');
-  nobelLastFocused = document.activeElement;
-  document.getElementById('nobelClose').focus();
-  nobelModal.querySelector('.book-panel').scrollTop = 0;
+  const read = p.reads(e);
+  document.getElementById('nmRead').innerHTML = read.map(b=>{
+    const color = YEAR_COLORS[b.year] || p.color;
+    return `<button class="nm-read" type="button" style="--bc:${color}" data-slug="${slug(b)}">Book42 read ${escHTML(b.title)} in ${b.period} ${b.year}</button>`;
+  }).join(' ');
+
+  prizeModal.dataset.show = 'true';
+  prizeModal.setAttribute('aria-hidden', 'false');
+  prizeLastFocused = document.activeElement;
+  document.getElementById('prizeClose').focus();
+  prizeModal.querySelector('.book-panel').scrollTop = 0;
 }
-function closeNobelModal(){
-  nobelModal.dataset.show = 'false';
-  nobelModal.setAttribute('aria-hidden', 'true');
-  if(nobelLastFocused) nobelLastFocused.focus();
+function closePrizeModal(){
+  prizeModal.dataset.show = 'false';
+  prizeModal.setAttribute('aria-hidden', 'true');
+  if(prizeLastFocused) prizeLastFocused.focus();
 }
-document.getElementById('nobelClose').addEventListener('click', closeNobelModal);
-nobelModal.addEventListener('click', (e)=>{
-  if(e.target === nobelModal){ closeNobelModal(); return; }
-  // "Book42 read X" jumps from the laureate straight into the club's own entry
+document.getElementById('prizeClose').addEventListener('click', closePrizeModal);
+prizeModal.addEventListener('click', (e)=>{
+  if(e.target === prizeModal){ closePrizeModal(); return; }
+  // "Book42 read X" jumps from the prize straight into the club's own entry
   const el = e.target.closest('[data-slug]');
   if(!el) return;
   const b = DATA.find(x => !x.break && slug(x) === el.dataset.slug);
-  if(b){ closeNobelModal(); openBookModal(b, b.year); }
+  if(b){ closePrizeModal(); openBookModal(b, b.year); }
 });
 document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape' && nobelModal.dataset.show === 'true') closeNobelModal();
+  if(e.key === 'Escape' && prizeModal.dataset.show === 'true') closePrizeModal();
 });
+
+renderPrize('nobel');
+
 
 years.forEach(y=>{
   /* The newest year is the one still in progress, so it opens on the most
