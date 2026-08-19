@@ -523,6 +523,12 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .club-note .cn-by .cn-mine{font-weight:500; opacity:.6}
 .notes-empty{font-size:.85rem; color:var(--ink-soft); font-style:italic}
 .note-form{display:flex; flex-direction:column; gap:.5rem; margin-top:.2rem}
+/* the score lives in the edit form too, so the pencil edits the whole review —
+   score and note together — rather than only the words */
+.note-rating-row{display:flex; align-items:center; gap:.7rem; margin-bottom:.15rem}
+.note-rating-label{
+  font-size:.72rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft);
+}
 .note-form input, .note-form textarea{
   font-family:inherit; font-size:.88rem; color:var(--ink);
   border:1px solid var(--line); border-radius:7px; padding:.55rem .7rem;
@@ -645,6 +651,12 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
           <div class="notes-head">What the club said</div>
           <div class="notes-list" id="notesList"></div>
           <div class="note-form" id="noteForm">
+            <div class="note-rating-row">
+              <span class="note-rating-label">Your score</span>
+              <span class="star-row rating-input" id="noteRating"
+                    role="slider" tabindex="0" aria-label="Your rating"
+                    aria-valuemin="0.5" aria-valuemax="5" aria-valuenow="0"></span>
+            </div>
             <input type="text" id="noteName" maxlength="40" placeholder="Your name (optional)" autocomplete="name">
             <textarea id="noteText" maxlength="280" rows="2" placeholder="One line on what you thought…"></textarea>
             <div class="note-actions">
@@ -747,6 +759,12 @@ let currentModalBook = null;
 const NAME_KEY = 'jpbooks-display-name';
 const NOTE_MAX = 280;
 let editingNote = false;   // is the write-form open on top of your existing note?
+/* The score being edited in the form. Unlike the star row at the top of the
+   modal (which commits the instant you click, so a first rating is one tap),
+   this one is a draft: it saves with the note on Update, and Cancel throws it
+   away along with the text. That's what makes the pencil "edit my review"
+   rather than "edit my words". */
+let draftRating = 0;
 const RATING_COLS = 'book_slug,voter_id,rating';
 const NOTE_COLS   = RATING_COLS + ',comment,display_name,updated_at';
 /* Flips to false if the comment/display_name columns aren't in the table yet, so
@@ -826,6 +844,7 @@ async function commitRating(value){
   const note = document.getElementById('ratingNote');
 
   submitRatingLocal(slug, value);           // optimistic cache update, instant
+  draftRating = value;                      // keep the form's score in step with the top row
   renderRatingUI(book, slug);
   note.textContent = 'Saving…';
   note.dataset.show = 'true';
@@ -922,6 +941,12 @@ function renderNotesUI(bslug){
   const rated = !!aggFor(bslug).mine;
   const showForm = rated && (!mine || editingNote);
   document.getElementById('noteForm').style.display = showForm ? 'flex' : 'none';
+  if(showForm){
+    const rr = document.getElementById('noteRating');
+    rr.innerHTML = starRowHTML();
+    setStarFill(rr, (draftRating || 0) / 5);
+    rr.setAttribute('aria-valuenow', draftRating || 0);
+  }
   document.getElementById('noteHint').style.display = rated ? 'none' : 'block';
   document.getElementById('noteCancel').style.display = (mine && editingNote) ? 'inline' : 'none';
   document.getElementById('noteSave').textContent = mine ? 'Update note' : 'Save note';
@@ -946,6 +971,8 @@ async function commitNote(){
   const btn = document.getElementById('noteSave');
   const text = document.getElementById('noteText').value.trim().slice(0, NOTE_MAX);
   const name = document.getElementById('noteName').value.trim().slice(0, 40);
+  const prevMine = agg.mine;
+  const rating = draftRating || prevMine;   // the score as edited in this form
   localStorage.setItem(NAME_KEY, name);
 
   /* Same honesty rule the star rating had to learn: never say "Saved" until the
@@ -956,13 +983,18 @@ async function commitNote(){
   state.dataset.show = 'true';
   state.textContent = 'Saving…';
 
-  const ok = await submitNoteRemote(slug, agg.mine, text, name);
+  const ok = await submitNoteRemote(slug, rating, text, name);
   btn.disabled = false;
   if(currentModalSlug !== slug) return;     // moved on to another book mid-flight
 
   if(ok){
+    // the same write carries the score, so fold any change into the average too
+    if(rating !== prevMine){
+      submitRatingLocal(slug, rating);
+      renderRatingUI(currentModalBook, slug);
+    }
     const rest = (notesCache[slug] || []).filter(n=>!n.mine);
-    if(text) rest.unshift({ name: name || 'Anonymous', text, rating: agg.mine, at: new Date().toISOString(), mine: true });
+    if(text) rest.unshift({ name: name || 'Anonymous', text, rating, at: new Date().toISOString(), mine: true });
     notesCache[slug] = rest;
     editingNote = false;                    // saved, so collapse back to the note card
     renderNotesUI(slug);                    // this resets the state line, so set it after
@@ -1439,6 +1471,7 @@ function openBookModal(b, y, opts){
   currentModalSlug = slug(b);
   currentModalYear = y;
   editingNote = false;             // a freshly opened book never starts in edit mode
+  draftRating = aggFor(currentModalSlug).mine || 0;
   renderRatingUI(b, currentModalSlug);
   renderNotesUI(currentModalSlug);
 
@@ -1551,12 +1584,31 @@ document.getElementById('noteSave').addEventListener('click', commitNote);
 document.getElementById('notesList').addEventListener('click', (e)=>{
   if(!e.target.closest('.cn-edit')) return;
   editingNote = true;
+  draftRating = aggFor(currentModalSlug).mine || 0;   // start from the saved score
   renderNotesUI(currentModalSlug);
   document.getElementById('noteText').focus();
 });
 document.getElementById('noteCancel').addEventListener('click', ()=>{
   editingNote = false;
+  draftRating = aggFor(currentModalSlug).mine || 0;   // throw the drafted score away too
   renderNotesUI(currentModalSlug);   // discards the edits by reloading from cache
+});
+
+// the form's star row edits a draft, committed by Update rather than on click
+const noteRatingEl = document.getElementById('noteRating');
+noteRatingEl.addEventListener('mousemove', (e)=> setStarFill(noteRatingEl, ratingValueFromEvent(noteRatingEl, e) / 5));
+noteRatingEl.addEventListener('mouseleave', ()=> setStarFill(noteRatingEl, (draftRating || 0) / 5));
+noteRatingEl.addEventListener('click', (e)=>{
+  draftRating = ratingValueFromEvent(noteRatingEl, e);
+  setStarFill(noteRatingEl, draftRating / 5);
+  noteRatingEl.setAttribute('aria-valuenow', draftRating);
+});
+noteRatingEl.addEventListener('keydown', (e)=>{
+  if(e.key === 'ArrowRight' || e.key === 'ArrowUp'){ e.preventDefault(); draftRating = Math.min(5, (draftRating || 0) + 0.5); }
+  else if(e.key === 'ArrowLeft' || e.key === 'ArrowDown'){ e.preventDefault(); draftRating = Math.max(0.5, (draftRating || 0.5) - 0.5); }
+  else return;
+  setStarFill(noteRatingEl, draftRating / 5);
+  noteRatingEl.setAttribute('aria-valuenow', draftRating);
 });
 document.getElementById('noteText').addEventListener('keydown', (e)=>{
   if((e.metaKey || e.ctrlKey) && e.key === 'Enter'){ e.preventDefault(); commitNote(); }
@@ -1575,7 +1627,8 @@ document.addEventListener('keydown', (e)=>{
      note, and not while the star slider has focus (it uses arrows to rate) */
   if(bookModal.dataset.show === 'true' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){
     const t = e.target;
-    if(t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.id === 'ratingInput') return;
+    if(t.tagName === 'INPUT' || t.tagName === 'TEXTAREA'
+       || t.id === 'ratingInput' || t.id === 'noteRating') return;   // both star rows use arrows
     e.preventDefault();
     stepBook(e.key === 'ArrowRight' ? 1 : -1);
   }
