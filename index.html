@@ -531,9 +531,37 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   width:var(--cw); height:auto;
   transform:scale(.84); opacity:.62;
 }
-.strip .card .cover-img,
-.strip .card .placeholder{height:auto; aspect-ratio:2/3}
 .strip .card.is-active{transform:scale(1); opacity:1}
+/* No wash over the artwork here. The overlay only ever existed so white text
+   could sit ON the cover; with the title moved underneath, the cover can be
+   left alone the way it is in the opened book panel — just a shadow. The card
+   box itself therefore carries no background, radius or shadow of its own;
+   those belong to the image now, so the shadow hugs the cover and not the
+   taller box that includes the caption. */
+.strip .card{background:none; box-shadow:none; border-radius:0; overflow:visible}
+.strip .card .cover-img,
+.strip .card .placeholder{
+  height:auto; aspect-ratio:2/3; display:block;
+  border-radius:5px; box-shadow:var(--shadow-md);
+  transition:box-shadow .38s ease;
+}
+.strip .card.is-active .cover-img,
+.strip .card.is-active .placeholder{box-shadow:var(--shadow-hi)}
+.strip .card .gradient{display:none}
+.strip .card .card-foot{
+  /* Fixed height, and the title clamped to two lines, so every card box is the
+     same size. Without it a three-line title makes its card taller, and since
+     the row centres each card the covers end up sitting at different heights.
+     The full title is spelled out under the row anyway. */
+  position:static; padding:.65rem .15rem 0; color:var(--ink);
+  height:3.9rem; overflow:hidden;
+}
+.strip .card .card-foot .t{
+  font-size:.88rem; line-height:1.25;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.strip .card .card-foot .a{color:var(--ink-soft); opacity:1; font-size:.76rem}
+.strip .card .edit-btn{top:.5rem; bottom:auto}
 @media (max-width:680px){
   .strip{--cw:clamp(150px, 62vw, 260px); gap:.5rem}
 }
