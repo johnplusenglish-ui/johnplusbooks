@@ -1965,22 +1965,25 @@ document.addEventListener('keydown', (e)=>{
 renderPrize('nobel');
 
 
-/* An alternative to the fanned stack: the same covers, squared off, in a row you
-   scroll sideways. Opt in with ?strip on the URL (same idiom as ?edit) so both
-   can be looked at on the real site before either becomes the default. */
-const STRIP_YEARS = new URLSearchParams(location.search).has('strip');
+/* The year view is a sideways gallery: the same cards as the fanned stack it
+   replaced, laid out in a scrollable row with the selected one at full size.
+   The fan is kept as a fallback and everything it needs is still below — open
+   any page with ?fan to get it back (same idiom as ?edit). */
+const FAN_YEARS = new URLSearchParams(location.search).has('fan');
 
 years.forEach(y=>{
   /* The newest year is the one still in progress, so it opens on the most
      recent pick — you land on "what we're reading now". Finished years stay in
-     reading order, which is how a diary reads back. */
+     reading order, which is how a diary reads back.
+     Everything below the ?fan branch builds the original fanned stack; it is no
+     longer the default but is kept working as the fallback. */
   const isCurrentYear = (y === years[0]);
   const items = isCurrentYear
     ? DATA.filter(b=>b.year===y).slice().reverse()
     : DATA.filter(b=>b.year===y);
   const color = YEAR_COLORS[y] || '#333';
 
-  if(STRIP_YEARS){
+  if(!FAN_YEARS){
     const sec = document.createElement('section');
     sec.className = 'year-section';
     sec.id = 'y'+y;
