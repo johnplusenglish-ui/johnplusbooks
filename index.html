@@ -363,6 +363,26 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   font-size:1.15rem; line-height:1; color:var(--ink-soft);
   cursor:pointer; display:flex; align-items:center; justify-content:center;
 }
+/* step through the year's other books without leaving the modal — and without
+   losing your place, see captureAnchor() */
+.book-step{
+  position:absolute; top:.9rem; right:3.4rem;
+  display:flex; gap:.35rem;
+}
+.book-step button{
+  width:34px; height:34px; border-radius:50%; padding:0;
+  border:1px solid var(--line); background:var(--card-bg);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:border-color .15s;
+}
+.book-step button:hover{border-color:var(--yr-color)}
+.book-step svg{
+  width:15px; height:15px;
+  fill:none; stroke:var(--ink-soft); stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+}
+@media (max-width:680px){
+  .book-step{top:auto; bottom:.9rem; right:.9rem}
+}
 .book-close:hover{background:var(--bg)}
 .book-grid{display:flex; gap:2rem; align-items:flex-start}
 .book-grid .m-cover{
@@ -594,6 +614,10 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 <div class="book-modal" id="bookModal" aria-hidden="true">
   <div class="book-panel" role="dialog" aria-modal="true" aria-labelledby="mTitle">
     <button class="book-close" id="bookClose" type="button" aria-label="Close">&times;</button>
+    <div class="book-step" id="bookStep">
+      <button type="button" id="bookPrev" aria-label="Previous book this year"></button>
+      <button type="button" id="bookNext" aria-label="Next book this year"></button>
+    </div>
     <div class="book-grid">
       <div class="m-cover"><img id="mCover" alt=""></div>
       <div class="book-info">
@@ -1372,8 +1396,10 @@ const bookModal   = document.getElementById('bookModal');
 const mTeaser     = document.getElementById('mTeaser');
 const mBlurbs     = document.getElementById('mBlurbs');
 let lastFocused = null;
+let currentModalYear = null;
 
-function openBookModal(b, y){
+function openBookModal(b, y, opts){
+  opts = opts || {};
   const info = BOOKINFO[b.title] || {};
 
   document.getElementById('mCover').src = coverFor(b) || '';
@@ -1411,14 +1437,84 @@ function openBookModal(b, y){
 
   currentModalBook = b;
   currentModalSlug = slug(b);
+  currentModalYear = y;
   editingNote = false;             // a freshly opened book never starts in edit mode
   renderRatingUI(b, currentModalSlug);
   renderNotesUI(currentModalSlug);
 
-  lastFocused = document.activeElement;
+  // only one book in the year (2026 aside, this is rare) — nothing to step to
+  document.getElementById('bookStep').style.display = modalSiblings().length > 1 ? 'flex' : 'none';
+
   bookModal.dataset.show = 'true';
   bookModal.setAttribute('aria-hidden', 'false');
-  document.getElementById('bookClose').focus();
+  /* Stepping keeps focus where it is: re-focusing the close button would also
+     scroll the panel back to the top, undoing the anchor restore. */
+  if(!opts.keepFocus){
+    lastFocused = document.activeElement;
+    document.getElementById('bookClose').focus();
+    document.querySelector('.book-panel').scrollTop = 0;
+  }
+}
+
+/* Stepping between books keeps you where you were reading. Restoring a raw
+   scrollTop doesn't work — teasers, blurb counts and note counts all differ, so
+   the same pixel offset lands somewhere unrelated in the next book. Instead
+   remember WHICH section was at the top of the panel and how far into it you
+   were, then put that same section back under the same point. Sections are
+   listed in DOM order; if the next book doesn't have the one you were in (a
+   book with no press quotes, say) we fall back to the nearest earlier section
+   rather than overshooting past it. */
+const MODAL_SECTIONS = ['mTeaser', 'mBlurbs', 'mNotes'];
+
+function sectionTopIn(panel, el){
+  return el.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop;
+}
+function visibleSection(id){
+  const el = document.getElementById(id);
+  return (el && el.getClientRects().length) ? el : null;
+}
+
+function captureAnchor(){
+  const panel = document.querySelector('.book-panel');
+  if(panel.scrollTop < 40) return null;             // still at the top; just stay there
+  for(let i = MODAL_SECTIONS.length - 1; i >= 0; i--){
+    const el = visibleSection(MODAL_SECTIONS[i]);
+    if(!el) continue;
+    const top = sectionTopIn(panel, el);
+    if(top <= panel.scrollTop + 80) return { index: i, delta: panel.scrollTop - top };
+  }
+  return null;
+}
+
+function restoreAnchor(anchor){
+  const panel = document.querySelector('.book-panel');
+  if(!anchor){ panel.scrollTop = 0; return; }
+  for(let i = anchor.index; i >= 0; i--){
+    const el = visibleSection(MODAL_SECTIONS[i]);
+    if(!el) continue;
+    const want = sectionTopIn(panel, el) + (i === anchor.index ? anchor.delta : 0);
+    panel.scrollTop = Math.min(want, panel.scrollHeight - panel.clientHeight);
+    return;
+  }
+  panel.scrollTop = 0;
+}
+
+// the year's books in carousel order, skipping the non-clickable break cards
+function modalSiblings(){
+  const st = carousels[currentModalYear];
+  return st ? st.items.map((b, i)=>({b, i})).filter(x=>!x.b.break) : [];
+}
+
+function stepBook(dir){
+  const sibs = modalSiblings();
+  if(sibs.length < 2) return;
+  const pos = sibs.findIndex(x => x.b === currentModalBook);
+  if(pos < 0) return;
+  const target = sibs[(pos + dir + sibs.length) % sibs.length];
+  const anchor = captureAnchor();
+  setActive(currentModalYear, target.i);          // keep the carousel behind in sync
+  openBookModal(target.b, currentModalYear, {keepFocus: true});
+  restoreAnchor(anchor);                          // after open, which would otherwise reset scroll
 }
 
 function closeBookModal(){
@@ -1429,6 +1525,10 @@ function closeBookModal(){
   if(lastFocused) lastFocused.focus();
 }
 
+document.getElementById('bookPrev').innerHTML = ICON_CHEV_L;
+document.getElementById('bookNext').innerHTML = ICON_CHEV_R;
+document.getElementById('bookPrev').addEventListener('click', ()=> stepBook(-1));
+document.getElementById('bookNext').addEventListener('click', ()=> stepBook(1));
 document.getElementById('bookClose').addEventListener('click', closeBookModal);
 bookModal.addEventListener('click', (e)=>{ if(e.target === bookModal) closeBookModal(); });
 
@@ -1471,6 +1571,14 @@ ratingInputEl.addEventListener('keydown', (e)=>{
 loadRatings();
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && bookModal.dataset.show === 'true') closeBookModal();
+  /* arrows step between books while the modal is open — but not while typing a
+     note, and not while the star slider has focus (it uses arrows to rate) */
+  if(bookModal.dataset.show === 'true' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){
+    const t = e.target;
+    if(t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.id === 'ratingInput') return;
+    e.preventDefault();
+    stepBook(e.key === 'ArrowRight' ? 1 : -1);
+  }
 });
 
 // ---- edit mode ----
