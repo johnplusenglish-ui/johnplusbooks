@@ -502,23 +502,26 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
    kept getting wrong across browsers. */
 .strip-wrap{flex:1 1 auto; min-height:0; display:flex; align-items:center}
 .strip{
+  --cw:clamp(140px, min(24vw, 34vh), 300px);   /* one card, used for width and for the end padding */
   display:flex; gap:.7rem; align-items:center;
   width:100%; overflow-x:auto; overflow-y:hidden;
-  padding:1.2rem 50% 1.2rem 1.5rem;   /* the right pad lets the last card reach the middle */
+  /* Half a viewport minus half a card at BOTH ends, so every card — the first
+     and the last included — can sit dead centre when it is the selected one.
+     A plain left pad would leave the first card stranded against the edge. */
+  padding:1.2rem calc(50% - var(--cw) / 2);
   scroll-snap-type:x proximity; scrollbar-width:none;
 }
 .strip::-webkit-scrollbar{display:none}
 .strip .card{
   position:relative; flex:0 0 auto; scroll-snap-align:center;
-  width:clamp(140px, min(24vw, 34vh), 300px); height:auto;
+  width:var(--cw); height:auto;
   transform:scale(.84); opacity:.62;
 }
 .strip .card .cover-img,
 .strip .card .placeholder{height:auto; aspect-ratio:2/3}
 .strip .card.is-active{transform:scale(1); opacity:1}
 @media (max-width:680px){
-  .strip{padding-left:1.2rem; gap:.5rem}
-  .strip .card{width:clamp(150px, 52vw, 260px)}
+  .strip{--cw:clamp(150px, 62vw, 260px); gap:.5rem}
 }
 
 /* ---------- export modal ---------- */
