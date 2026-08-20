@@ -653,6 +653,17 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .pod-ep-title{font-size:.92rem; font-weight:700; line-height:1.3}
 .pod-ep-date{font-size:.7rem; color:var(--ink-soft); font-weight:600; letter-spacing:.02em; margin-left:.5rem}
 .pod-ep-teaser{font-size:.84rem; line-height:1.55; color:var(--ink-soft); margin:.3rem 0 0; max-width:56ch}
+.pod-thumb{
+  flex:none; width:48px; aspect-ratio:2/3; object-fit:cover; border-radius:4px;
+  background:#eee; box-shadow:var(--shadow-lo);
+}
+.pod-thumb-blank{background:var(--card-bg); border:1px dashed var(--line)}
+.pod-ep-listen{display:flex; gap:1rem; margin-top:.45rem}
+.pod-ep-listen a{
+  font-size:.76rem; font-weight:700; color:var(--yr-color); text-decoration:none;
+  border-bottom:1px solid currentColor; padding-bottom:1px;
+}
+.pod-ep-listen a:hover{opacity:.75}
 .pod-ep-read{
   display:inline-block; margin-top:.5rem; padding:.28rem .6rem; border-radius:5px; border:none;
   background:color-mix(in srgb, var(--yr-color, var(--ink)) 12%, var(--card-bg)); color:var(--yr-color, var(--ink));
@@ -2149,18 +2160,18 @@ renderPrize('nobel');
    visitor would want to know about. Refresh by re-pulling the feed and
    re-pasting — no different from the yearly prize-winner prepend. */
 const PODCAST_RECENT = [
-  {num:28, title:"Hemingway's Spanish Civil War: For Whom The Bell Tolls", date:"2026-08-17", teaser:"How the Spanish Civil War shaped one of Hemingway's greatest novels, and whether its characters were drawn from people he actually knew."},
-  {num:27, title:"Brave New World: The Dystopia That Came True?", date:"2026-08-10", teaser:"How Huxley satirises Jazz-Age America, and whether Brave New World or 1984 got closer to the real thing.", book42:"Brave New World"},
-  {num:26, title:"Mafia and Mystery: Is 'My Brilliant Friend' the Greatest Novel of the Century?", date:"2026-08-03", teaser:"What the novel reveals about postwar Naples' underworld, and the enduring mystery of who Elena Ferrante really is.", book42:"My Brilliant Friend"},
-  {num:25, title:"The Thirty-Nine Steps: The First James Bond", date:"2026-07-27", teaser:"How the First World War shaped Buchan's Scottish chase thriller, and whether Richard Hannay invented the modern spy hero."},
-  {num:24, title:"Jane Austen, Nazis and Murder: The Ultimate Summer Reading List", date:"2026-07-23", teaser:"Dominic and Tabby's picks for the ultimate summer reading list, and the holidays that shaped them."},
-  {num:23, title:"The Odyssey Retold: Circe, Monsters and Myth", date:"2026-07-20", teaser:"How Madeline Miller reworks Greek myth around a woman's own voice, and why Circe still feels like the defining fantasy novel of its decade.", book42:"Circe"},
-  {num:22, title:"The Leopard: The Greatest Historical Novel Ever Written?", date:"2026-07-13", teaser:"How Lampedusa's own family history shaped his only novel, and why it's considered Italy's great historical epic."},
-  {num:21, title:"The Wind In The Willows: How A Bedtime Story Became An Icon", date:"2026-07-06", teaser:"Why Kenneth Grahame's publishers rejected it at first, and which character on the riverbank Dominic and Tabby would actually be."},
-  {num:20, title:"Game of Thrones: The Horrifying True Story Behind A Song of Ice and Fire", date:"2026-06-29", teaser:"The real medieval conflicts hiding behind Westeros, and whether George R.R. Martin will ever actually finish the series."},
-  {num:19, title:"Little Women: The Secret Sadness of a Classic", date:"2026-06-22", teaser:"How Louisa May Alcott broke the conventions of her time, and whether it's the first real coming-of-age novel."},
-  {num:18, title:"The Code Of The Woosters: The Funniest Book Ever Written?", date:"2026-06-15", teaser:"Why Jeeves and Wooster became literature's great double act, and the wartime broadcasts that still complicate Wodehouse's reputation."},
-  {num:17, title:"Oscar Wilde's Downfall: The Picture of Dorian Gray", date:"2026-06-08", teaser:"The real anxieties of late-Victorian Britain behind Dorian Gray, and the French Decadents who shaped Wilde's thinking."}
+  {num:28, title:"Hemingway's Spanish Civil War: For Whom The Bell Tolls", date:"2026-08-17", teaser:"How the Spanish Civil War shaped one of Hemingway's greatest novels, and whether its characters were drawn from people he actually knew.", thumb:"covers/podcast/bell-tolls.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000783953557", youtube:"bh93I_hFtZ0"},
+  {num:27, title:"Brave New World: The Dystopia That Came True?", date:"2026-08-10", teaser:"How Huxley satirises Jazz-Age America, and whether Brave New World or 1984 got closer to the real thing.", thumb:"covers/2021-april-brave-new-world.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000782071213", book42:"Brave New World"},
+  {num:26, title:"Mafia and Mystery: Is 'My Brilliant Friend' the Greatest Novel of the Century?", date:"2026-08-03", teaser:"What the novel reveals about postwar Naples' underworld, and the enduring mystery of who Elena Ferrante really is.", thumb:"covers/2022-march-my-brilliant-friend.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000779783746", book42:"My Brilliant Friend"},
+  {num:25, title:"The Thirty-Nine Steps: The First James Bond", date:"2026-07-27", teaser:"How the First World War shaped Buchan's Scottish chase thriller, and whether Richard Hannay invented the modern spy hero.", thumb:"covers/podcast/39-steps.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000778618955", youtube:"Y7H-NSNDSVo"},
+  {num:24, title:"Jane Austen, Nazis and Murder: The Ultimate Summer Reading List", date:"2026-07-23", teaser:"Dominic and Tabby's picks for the ultimate summer reading list, and the holidays that shaped them.", thumb:"covers/bookclub-cover.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000778106096", youtube:"za9w1cyVgkQ"},
+  {num:23, title:"The Odyssey Retold: Circe, Monsters and Myth", date:"2026-07-20", teaser:"How Madeline Miller reworks Greek myth around a woman's own voice, and why Circe still feels like the defining fantasy novel of its decade.", thumb:"covers/2024-december-circe.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000777631176", book42:"Circe"},
+  {num:22, title:"The Leopard: The Greatest Historical Novel Ever Written?", date:"2026-07-13", teaser:"How Lampedusa's own family history shaped his only novel, and why it's considered Italy's great historical epic.", thumb:"covers/podcast/leopard.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000776673901", youtube:"xxP4pGVIL5I"},
+  {num:21, title:"The Wind In The Willows: How A Bedtime Story Became An Icon", date:"2026-07-06", teaser:"Why Kenneth Grahame's publishers rejected it at first, and which character on the riverbank Dominic and Tabby would actually be.", thumb:"covers/podcast/wind-willows.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000775721121", youtube:"mo8TWjB64BE"},
+  {num:20, title:"Game of Thrones: The Horrifying True Story Behind A Song of Ice and Fire", date:"2026-06-29", teaser:"The real medieval conflicts hiding behind Westeros, and whether George R.R. Martin will ever actually finish the series.", thumb:"covers/podcast/got.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000774770196"},
+  {num:19, title:"Little Women: The Secret Sadness of a Classic", date:"2026-06-22", teaser:"How Louisa May Alcott broke the conventions of her time, and whether it's the first real coming-of-age novel.", thumb:"covers/podcast/little-women.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000773804839"},
+  {num:18, title:"The Code Of The Woosters: The Funniest Book Ever Written?", date:"2026-06-15", teaser:"Why Jeeves and Wooster became literature's great double act, and the wartime broadcasts that still complicate Wodehouse's reputation.", thumb:"covers/podcast/woosters.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000772877856"},
+  {num:17, title:"Oscar Wilde's Downfall: The Picture of Dorian Gray", date:"2026-06-08", teaser:"The real anxieties of late-Victorian Britain behind Dorian Gray, and the French Decadents who shaped Wilde's thinking.", thumb:"covers/podcast/dorian-gray.jpg", apple:"https://podcasts.apple.com/gb/podcast/the-book-club/id1876049295?i=1000771771470"}
 ];
 const PODCAST_ARCHIVE = [
   {num:10, title:"East Of Eden: Steinbeck, Sin, and Redemption", date:"2026-04-20", book42:"East of Eden"},
@@ -2188,11 +2199,25 @@ function podEpisodeRow(e){
   const readBtn = book
     ? `<button class="pod-ep-read" type="button" style="--yr-color:${YEAR_COLORS[book.year] || PODCAST_COLOR}" data-slug="${slug(book)}">Book42 read this in ${escHTML(book.period)} ${book.year}</button>`
     : '';
+  /* Apple Podcasts gives a real, individual URL per episode (resolved from the
+     show's own iTunes lookup, one per trackId) — that always exists. A YouTube
+     clip link only exists where the channel's own uploads made an unambiguous
+     single match to this episode; several episodes have two near-duplicate
+     clips or none in the fetchable window, and a wrong guess is worse than no
+     link, so those are left without one rather than guessed. */
+  const thumb = e.thumb
+    ? `<img class="pod-thumb" src="${e.thumb}" alt="${escHTML(e.title)}" loading="lazy" decoding="async">`
+    : `<span class="pod-thumb pod-thumb-blank"></span>`;
   return `<li class="pod-ep">
     <span class="pod-num">${e.num}</span>
+    ${thumb}
     <span class="pod-ep-body">
       <span class="pod-ep-title">${escHTML(e.title)}<span class="pod-ep-date">${podDate(e.date)}</span></span>
       ${e.teaser ? `<p class="pod-ep-teaser">${escHTML(e.teaser)}</p>` : ''}
+      <span class="pod-ep-listen">
+        ${e.apple ? `<a href="${e.apple}" target="_blank" rel="noopener">Listen &#8599;</a>` : ''}
+        ${e.youtube ? `<a href="https://www.youtube.com/watch?v=${e.youtube}" target="_blank" rel="noopener">Watch clip &#8599;</a>` : ''}
+      </span>
       ${readBtn}
     </span>
   </li>`;
