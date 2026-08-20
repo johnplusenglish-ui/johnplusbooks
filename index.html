@@ -176,6 +176,67 @@ a{color:inherit}
 }
 .tg-link svg{width:15px; height:15px; fill:currentColor; flex:none}
 
+/* ---------- notifications bell ----------
+   Read state lives entirely in this browser's localStorage (jpbooks-notif-seen),
+   so it's naturally per-visitor: nobody's unread count is visible to anyone else,
+   and there's no account system to build to get that. */
+.notif-wrap{position:relative; flex:none; display:flex}
+.notif-bell{
+  position:relative; flex:none;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px;
+  border-radius:999px; border:1px solid var(--line); background:transparent;
+  color:var(--ink-soft); cursor:pointer; padding:0;
+  transition:color .15s, border-color .15s, background .15s;
+}
+.notif-bell:hover{color:var(--ink); border-color:var(--ink-soft)}
+.notif-bell svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.notif-badge{
+  position:absolute; top:-3px; right:-3px;
+  min-width:16px; height:16px; padding:0 4px;
+  border-radius:999px; background:#c0392b; color:#fff;
+  font-size:.62rem; font-weight:700; line-height:16px; text-align:center;
+  box-shadow:0 0 0 2px var(--bg);
+}
+.notif-panel{
+  position:absolute; top:calc(100% + .6rem); right:0;
+  width:min(360px, calc(100vw - 2rem));
+  background:var(--card-bg); border:1px solid var(--line); border-radius:14px;
+  box-shadow:var(--shadow-md);
+  z-index:40;
+  display:none;
+  overflow:hidden;
+}
+.notif-panel[data-open="true"]{display:block}
+.notif-panel-head{
+  padding:.75rem 1rem .55rem; font-size:.72rem; font-weight:700;
+  text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft);
+  border-bottom:1px solid var(--line);
+}
+.notif-list{max-height:min(60vh,420px); overflow-y:auto}
+.notif-item{
+  display:flex; gap:.7rem; align-items:flex-start; width:100%;
+  padding:.7rem 1rem; border:none; border-bottom:1px solid var(--line);
+  background:none; text-align:left; cursor:pointer; font:inherit; color:inherit;
+}
+.notif-item:last-child{border-bottom:none}
+.notif-item:hover{background:var(--bg)}
+.notif-item[data-unread="true"]{background:color-mix(in srgb, var(--accent) 6%, transparent)}
+.notif-thumb{width:30px; height:42px; object-fit:cover; border-radius:3px; flex:none; background:#eee}
+.notif-body{min-width:0; flex:1}
+.notif-title{font-size:.82rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.notif-meta{font-size:.72rem; color:var(--ink-soft); margin-top:.15rem}
+.notif-note{font-size:.76rem; color:var(--ink); margin-top:.3rem; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.notif-empty{padding:1.4rem 1rem; text-align:center; font-size:.8rem; color:var(--ink-soft)}
+@media (max-width:680px){
+  /* The bell sits well right of centre on a narrow header, so a panel anchored
+     to it and sized by content runs off the left edge of the screen. Anchor to
+     the topbar itself instead and let it span (almost) the full width. */
+  .topbar{position:relative}
+  .notif-wrap{position:static}
+  .notif-panel{left:.75rem; right:.75rem; width:auto}
+}
+
 /* ---------- year section (one full-height panel per year, swapped via tabs) ---------- */
 main#years{flex:1 1 auto; min-height:0; overflow:hidden}
 .year-section{display:none; flex-direction:column; height:100%; padding:1rem 1.5rem 1.25rem; min-height:0}
@@ -991,6 +1052,17 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   <button type="button" class="brand" id="brandHome" aria-label="Back to what we're reading now"><span class="brand-name">book<span class="brand-42">42</span></span> <small>reading diary</small></button>
   <nav class="year-nav" id="yearNav"></nav>
   <select class="year-nav-select" id="yearNavSelect" aria-label="Jump to a section"></select>
+  <div class="notif-wrap">
+    <button type="button" class="notif-bell" id="notifBell" aria-haspopup="true" aria-expanded="false" aria-label="Recent activity" style="display:none">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+    </button>
+    <div class="notif-panel" id="notifPanel" data-open="false">
+      <div class="notif-panel-head">Recent activity</div>
+      <div class="notif-list" id="notifList"></div>
+      <div class="notif-empty" id="notifEmpty">No ratings or notes yet.</div>
+    </div>
+  </div>
   <a class="tg-link" href="https://t.me/book42channel" target="_blank" rel="noopener"
      title="Book42 on Telegram" aria-label="Book42 on Telegram">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
@@ -1196,6 +1268,7 @@ let ratingsVoters = 0;             // how many distinct devices have rated anyth
 let notesCache = {};               // bookSlug -> [{ name, text, rating, at, mine }] newest first
 let currentModalSlug = null;       // which book the open modal's rating row talks to
 let currentModalBook = null;
+let activityCache = [];            // every other device's rating/note, newest first — feeds the notif bell
 
 /* A note lives on the same row as its author's rating: same (book_slug, voter_id)
    primary key, so one person gets one rating and one note per book and a return
@@ -1233,6 +1306,7 @@ async function loadRatings(){
     const me = getVoterId();
     const next = {}, nextNotes = {};
     const voters = new Set();
+    const activity = [];   // every other device's rating/note, for the notif bell — see notesAvailable below
     rows.forEach(r=>{
       if(!VALID_SLUGS.has(r.book_slug)) return;   // not a book on this site
       voters.add(r.voter_id);
@@ -1247,11 +1321,22 @@ async function loadRatings(){
           text, rating: Number(r.rating), at: r.updated_at || '', mine: isMine
         });
       }
+      // notesAvailable also gates whether r.updated_at exists at all (see RATING_COLS
+      // vs NOTE_COLS above) — without it there's no timestamp to judge "new" by.
+      if(notesAvailable && !isMine && r.updated_at){
+        activity.push({
+          slug: r.book_slug, rating: Number(r.rating), comment: text,
+          name: (r.display_name || '').trim() || 'Anonymous', at: r.updated_at
+        });
+      }
     });
     Object.values(nextNotes).forEach(list => list.sort((a,b)=> (b.at||'').localeCompare(a.at||'')));
+    activity.sort((a,b)=> b.at.localeCompare(a.at));
     ratingsCache = next;
     notesCache = nextNotes;
     ratingsVoters = voters.size;
+    activityCache = activity;
+    renderNotifications();
   } catch(e){ /* offline, or not configured yet — the widget just stays hidden this visit */ }
   // a modal may already be open and waiting on this fetch to resolve
   if(currentModalBook){
@@ -1260,6 +1345,97 @@ async function loadRatings(){
   }
   renderFaves();   // the club leaderboard is nothing but this data, sorted
 }
+
+/* ---------- notifications bell ----------
+   "New" is judged against jpbooks-notif-seen, a timestamp in THIS browser's
+   localStorage — so it's inherently per-visitor with no accounts to build.
+   First-ever load seeds it to "now" rather than the dawn of the table, so
+   nobody opens the site once and gets hit with years of backlog. */
+const NOTIF_SEEN_KEY = 'jpbooks-notif-seen';
+function getNotifSeen(){
+  let v = localStorage.getItem(NOTIF_SEEN_KEY);
+  if(!v){
+    v = new Date().toISOString();
+    localStorage.setItem(NOTIF_SEEN_KEY, v);
+  }
+  return v;
+}
+function timeAgo(iso){
+  const ms = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(ms / 60000);
+  if(min < 1) return 'just now';
+  if(min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if(hr < 24) return `${hr}h ago`;
+  const day = Math.floor(hr / 24);
+  if(day < 7) return `${day}d ago`;
+  const wk = Math.floor(day / 7);
+  if(wk < 5) return `${wk}w ago`;
+  return new Date(iso).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+}
+function renderNotifications(){
+  const bell = document.getElementById('notifBell');
+  if(!bell) return;
+  bell.style.display = activityCache.length || RATINGS_ENABLED ? '' : 'none';
+  const seen = getNotifSeen();
+  const unread = activityCache.filter(a => a.at > seen).length;
+  const badge = document.getElementById('notifBadge');
+  badge.textContent = unread > 99 ? '99+' : String(unread);
+  badge.style.display = unread ? '' : 'none';
+
+  const list = document.getElementById('notifList');
+  const empty = document.getElementById('notifEmpty');
+  const items = activityCache.slice(0, 20);
+  empty.style.display = items.length ? 'none' : '';
+  list.innerHTML = items.map(a=>{
+    const book = DATA.find(x => !x.break && slug(x) === a.slug);
+    if(!book) return '';
+    const noteHTML = a.comment
+      ? `<div class="notif-note">&ldquo;${escHTML(a.comment)}&rdquo;</div>`
+      : '';
+    return `<button type="button" class="notif-item" data-unread="${a.at > seen}" data-slug="${escHTML(a.slug)}">
+      <img class="notif-thumb" src="${escHTML(book.cover || '')}" alt="" loading="lazy">
+      <div class="notif-body">
+        <div class="notif-title">${escHTML(book.title)}</div>
+        <div class="notif-meta">${escHTML(a.name)} rated it ${a.rating}★ &middot; ${timeAgo(a.at)}</div>
+        ${noteHTML}
+      </div>
+    </button>`;
+  }).join('');
+}
+function toggleNotifPanel(){
+  const panel = document.getElementById('notifPanel');
+  const bell = document.getElementById('notifBell');
+  const open = panel.dataset.open === 'true';
+  if(open){
+    panel.dataset.open = 'false';
+    bell.setAttribute('aria-expanded', 'false');
+    return;
+  }
+  renderNotifications();   // uses the still-old "seen" value, so this render's unread highlights are accurate
+  panel.dataset.open = 'true';
+  bell.setAttribute('aria-expanded', 'true');
+  localStorage.setItem(NOTIF_SEEN_KEY, new Date().toISOString());
+  document.getElementById('notifBadge').style.display = 'none';
+}
+document.getElementById('notifBell').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  toggleNotifPanel();
+});
+document.getElementById('notifList').addEventListener('click', (e)=>{
+  const item = e.target.closest('.notif-item');
+  if(!item) return;
+  document.getElementById('notifPanel').dataset.open = 'false';
+  document.getElementById('notifBell').setAttribute('aria-expanded', 'false');
+  location.hash = item.dataset.slug;
+});
+document.addEventListener('click', (e)=>{
+  const panel = document.getElementById('notifPanel');
+  if(panel.dataset.open === 'true' && !e.target.closest('.notif-wrap')){
+    panel.dataset.open = 'false';
+    document.getElementById('notifBell').setAttribute('aria-expanded', 'false');
+  }
+});
 
 function aggFor(bslug){
   return ratingsCache[bslug] || (ratingsCache[bslug] = {sum:0, count:0, mine:0});
