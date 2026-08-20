@@ -991,6 +991,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 }
 .note-form input:focus, .note-form textarea:focus{outline:none; border-color:var(--yr-color)}
 .note-form input{max-width:220px}
+.note-name-hint{font-size:.68rem; color:var(--ink-soft); margin-top:-.3rem}
 .note-actions{display:flex; align-items:center; gap:.7rem; flex-wrap:wrap}
 .note-count{font-size:.72rem; color:var(--ink-soft); margin-right:auto}
 .note-state{font-size:.72rem; font-weight:600; color:var(--ink-soft); opacity:0; transition:opacity .2s}
@@ -1125,7 +1126,8 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
                     role="slider" tabindex="0" aria-label="Your rating"
                     aria-valuemin="0.5" aria-valuemax="5" aria-valuenow="0"></span>
             </div>
-            <input type="text" id="noteName" maxlength="40" placeholder="Your name (optional)" autocomplete="name">
+            <input type="text" id="noteName" maxlength="40" placeholder="Your name" autocomplete="name">
+            <span class="note-name-hint">So the club knows who to thank (leave blank to stay anonymous)</span>
             <textarea id="noteText" maxlength="280" rows="2" placeholder="One line on what you thought…"></textarea>
             <div class="note-actions">
               <span class="note-count" id="noteCount">0/280</span>
@@ -1278,6 +1280,7 @@ let activityCache = [];            // every other device's rating/note, newest f
 const NAME_KEY = 'jpbooks-display-name';
 const NOTE_MAX = 280;
 let editingNote = false;   // is the write-form open on top of your existing note?
+let anonConfirmPending = false;   // has "Save" already been pressed once with no name filled in?
 /* The score being edited in the form. Unlike the star row at the top of the
    modal (which commits the instant you click, so a first rating is one tap),
    this one is a draft: it saves with the note on Update, and Cancel throws it
@@ -1576,7 +1579,9 @@ function renderNotesUI(bslug){
   }
   document.getElementById('noteHint').style.display = rated ? 'none' : 'block';
   document.getElementById('noteCancel').style.display = (mine && editingNote) ? 'inline' : 'none';
-  document.getElementById('noteSave').textContent = mine ? 'Update note' : 'Save note';
+  anonConfirmPending = false;
+  const saveBtn = document.getElementById('noteSave');
+  saveBtn.textContent = saveBtn.dataset.normalLabel = mine ? 'Update note' : 'Save note';
 
   const state = document.getElementById('noteState');
   state.dataset.show = 'false';
@@ -1600,6 +1605,16 @@ async function commitNote(){
   const name = document.getElementById('noteName').value.trim().slice(0, 40);
   const prevMine = agg.mine;
   const rating = draftRating || prevMine;   // the score as edited in this form
+
+  /* A nudge, not a wall: writing a note with no name attached needs a second,
+     deliberate tap of Save — staying anonymous is still one click away, it's
+     just no longer the accidental default. Filling in a name (or having
+     nothing to say) skips this entirely. */
+  if(text && !name && !anonConfirmPending){
+    anonConfirmPending = true;
+    btn.textContent = 'Save anonymously?';
+    return;
+  }
   localStorage.setItem(NAME_KEY, name);
 
   /* Same honesty rule the star rating had to learn: never say "Saved" until the
@@ -3052,6 +3067,14 @@ ratingInputEl.addEventListener('click', (e)=> commitRating(ratingValueFromEvent(
 // ---- club notes ----
 document.getElementById('noteText').addEventListener('input', updateNoteCount);
 document.getElementById('noteSave').addEventListener('click', commitNote);
+// typing a name after triggering the anonymous-confirm nudge cancels it —
+// the whole point is that adding a name is the easy way out, not a dead end
+document.getElementById('noteName').addEventListener('input', ()=>{
+  if(!anonConfirmPending) return;
+  anonConfirmPending = false;
+  const btn = document.getElementById('noteSave');
+  btn.textContent = btn.dataset.normalLabel || 'Save note';
+});
 // delegated: the note cards are re-rendered on every change, so the pencil
 // can't hold its own listener
 document.getElementById('notesList').addEventListener('click', (e)=>{
