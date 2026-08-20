@@ -615,6 +615,66 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   .strip{--cw:clamp(150px, 62vw, 260px); gap:.5rem}
 }
 
+/* ---------- podcast tab ---------- */
+.pod-section{overflow:hidden}
+.pod-scroll{flex:1 1 auto; min-height:0; width:100%; overflow-y:auto; padding:.4rem 0 2.5rem}
+.pod-inner{width:100%; max-width:760px; margin:0 auto}
+.pod-head{display:flex; gap:1.4rem; align-items:flex-start; margin-bottom:1.8rem}
+.pod-cover{
+  flex:none; width:110px; border-radius:8px; overflow:hidden; box-shadow:var(--shadow-md);
+}
+.pod-cover img{display:block; width:100%; aspect-ratio:1/1; object-fit:cover}
+.pod-headtext{min-width:0}
+.pod-title{font-size:1.6rem; font-weight:800; letter-spacing:-.02em; margin:.35rem 0 .2rem; line-height:1.15}
+.pod-by{font-size:.86rem; color:var(--ink-soft); font-style:italic}
+.pod-lede{font-size:.86rem; line-height:1.6; color:var(--ink-soft); margin:.7rem 0 0; max-width:56ch}
+.pod-links{display:flex; flex-wrap:wrap; gap:.7rem; margin-top:1rem}
+.pod-link{
+  display:inline-flex; align-items:center; gap:.45rem;
+  padding:.5rem .9rem; border-radius:999px; border:1px solid var(--yr-color);
+  color:var(--yr-color); text-decoration:none; font-size:.82rem; font-weight:700;
+  transition:background .15s, color .15s;
+}
+.pod-link:hover{background:var(--yr-color); color:#fff}
+.pod-link svg{width:15px; height:15px; fill:currentColor}
+
+.pod-eps-head{
+  font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--ink-soft); margin:2rem 0 .9rem;
+}
+.pod-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.7rem}
+.pod-ep{padding:.85rem 0 .85rem 0; border-bottom:1px solid var(--line); display:flex; gap:.9rem}
+.pod-ep:last-child{border-bottom:none}
+.pod-num{
+  flex:none; width:1.7rem; padding-top:.1rem; text-align:right;
+  font-size:.82rem; font-weight:700; color:var(--ink-faint, var(--ink-soft)); font-variant-numeric:tabular-nums;
+}
+.pod-ep-body{min-width:0; flex:1 1 auto}
+.pod-ep-title{font-size:.92rem; font-weight:700; line-height:1.3}
+.pod-ep-date{font-size:.7rem; color:var(--ink-soft); font-weight:600; letter-spacing:.02em; margin-left:.5rem}
+.pod-ep-teaser{font-size:.84rem; line-height:1.55; color:var(--ink-soft); margin:.3rem 0 0; max-width:56ch}
+.pod-ep-read{
+  display:inline-block; margin-top:.5rem; padding:.28rem .6rem; border-radius:5px; border:none;
+  background:color-mix(in srgb, var(--yr-color, var(--ink)) 12%, var(--card-bg)); color:var(--yr-color, var(--ink));
+  font-family:inherit; font-size:.71rem; font-weight:700; cursor:pointer;
+}
+.pod-ep-read:hover{background:color-mix(in srgb, var(--yr-color, var(--ink)) 22%, var(--card-bg))}
+
+.pod-archive{
+  margin-top:2.2rem; padding-top:1.4rem; border-top:1px solid var(--line);
+  font-size:.82rem; line-height:1.7; color:var(--ink-soft);
+}
+.pod-archive b{color:var(--ink); font-weight:700}
+.pod-archive button{
+  border:none; background:none; padding:0; font:inherit; font-weight:700;
+  color:var(--ink); cursor:pointer; border-bottom:1px solid var(--line);
+}
+.pod-archive button:hover{border-bottom-color:currentColor}
+@media (max-width:600px){
+  .pod-head{flex-direction:column; align-items:flex-start}
+  .pod-cover{width:88px}
+}
+
 /* ---------- export modal ---------- */
 .modal-backdrop{
   position:fixed; inset:0; z-index:520;
@@ -1458,6 +1518,15 @@ prizeBtn.style.setProperty('--yr-color', PRIZE_COLORS.nobel);
 prizeBtn.addEventListener('click', ()=>{ showYear('prizes'); syncHash('prizes-' + activePrize); });
 yearNav.appendChild(prizeBtn);
 
+const PODCAST_COLOR = '#b5502e';
+const podcastBtn = document.createElement('button');
+podcastBtn.type = 'button';
+podcastBtn.textContent = 'Podcast';
+podcastBtn.dataset.year = 'podcast';
+podcastBtn.style.setProperty('--yr-color', PODCAST_COLOR);
+podcastBtn.addEventListener('click', ()=>{ showYear('podcast'); syncHash('podcast'); });
+yearNav.appendChild(podcastBtn);
+
 years.forEach(y=>{
   const btn = document.createElement('button');
   btn.type = 'button';
@@ -2066,6 +2135,117 @@ document.addEventListener('keydown', (e)=>{
 });
 
 renderPrize('nobel');
+
+/* ---------- Podcast tab ----------
+   The Book Club (Dominic Sandbrook & Tabitha Syrett, Goalhanger) — a weekly
+   show that does for individual books roughly what Book42 does as a group:
+   picks one, digs into the story behind it. Real episode data pulled from the
+   show's own RSS feed (feeds.megaphone.fm/thebookclub) at build time, same
+   "vendor it, don't fetch it live" rule as everything else on this site — a
+   static page has no business making the visitor's browser hit a podcast feed
+   on every load. RECENT is the last dozen episodes in feed order (newest
+   first); ARCHIVE is older episodes that happen to cover a Book42 pick, kept
+   separate since they're not "recent" but are exactly the crossover a Book42
+   visitor would want to know about. Refresh by re-pulling the feed and
+   re-pasting — no different from the yearly prize-winner prepend. */
+const PODCAST_RECENT = [
+  {num:28, title:"Hemingway's Spanish Civil War: For Whom The Bell Tolls", date:"2026-08-17", teaser:"How the Spanish Civil War shaped one of Hemingway's greatest novels, and whether its characters were drawn from people he actually knew."},
+  {num:27, title:"Brave New World: The Dystopia That Came True?", date:"2026-08-10", teaser:"How Huxley satirises Jazz-Age America, and whether Brave New World or 1984 got closer to the real thing.", book42:"Brave New World"},
+  {num:26, title:"Mafia and Mystery: Is 'My Brilliant Friend' the Greatest Novel of the Century?", date:"2026-08-03", teaser:"What the novel reveals about postwar Naples' underworld, and the enduring mystery of who Elena Ferrante really is.", book42:"My Brilliant Friend"},
+  {num:25, title:"The Thirty-Nine Steps: The First James Bond", date:"2026-07-27", teaser:"How the First World War shaped Buchan's Scottish chase thriller, and whether Richard Hannay invented the modern spy hero."},
+  {num:24, title:"Jane Austen, Nazis and Murder: The Ultimate Summer Reading List", date:"2026-07-23", teaser:"Dominic and Tabby's picks for the ultimate summer reading list, and the holidays that shaped them."},
+  {num:23, title:"The Odyssey Retold: Circe, Monsters and Myth", date:"2026-07-20", teaser:"How Madeline Miller reworks Greek myth around a woman's own voice, and why Circe still feels like the defining fantasy novel of its decade.", book42:"Circe"},
+  {num:22, title:"The Leopard: The Greatest Historical Novel Ever Written?", date:"2026-07-13", teaser:"How Lampedusa's own family history shaped his only novel, and why it's considered Italy's great historical epic."},
+  {num:21, title:"The Wind In The Willows: How A Bedtime Story Became An Icon", date:"2026-07-06", teaser:"Why Kenneth Grahame's publishers rejected it at first, and which character on the riverbank Dominic and Tabby would actually be."},
+  {num:20, title:"Game of Thrones: The Horrifying True Story Behind A Song of Ice and Fire", date:"2026-06-29", teaser:"The real medieval conflicts hiding behind Westeros, and whether George R.R. Martin will ever actually finish the series."},
+  {num:19, title:"Little Women: The Secret Sadness of a Classic", date:"2026-06-22", teaser:"How Louisa May Alcott broke the conventions of her time, and whether it's the first real coming-of-age novel."},
+  {num:18, title:"The Code Of The Woosters: The Funniest Book Ever Written?", date:"2026-06-15", teaser:"Why Jeeves and Wooster became literature's great double act, and the wartime broadcasts that still complicate Wodehouse's reputation."},
+  {num:17, title:"Oscar Wilde's Downfall: The Picture of Dorian Gray", date:"2026-06-08", teaser:"The real anxieties of late-Victorian Britain behind Dorian Gray, and the French Decadents who shaped Wilde's thinking."}
+];
+const PODCAST_ARCHIVE = [
+  {num:10, title:"East Of Eden: Steinbeck, Sin, and Redemption", date:"2026-04-20", book42:"East of Eden"},
+  {num:6, title:"The Secret History: Dark Academia, Greek Myth, and Murder", date:"2026-03-24", book42:"The Secret History"},
+  {num:1, title:"Wuthering Heights: Passion, Violence, and Revenge on the Moors", date:"2026-02-17", book42:"Wuthering Heights"}
+];
+
+const podcastSection = document.createElement('section');
+podcastSection.className = 'year-section pod-section';
+podcastSection.id = 'ypodcast';
+podcastSection.style.setProperty('--yr-color', PODCAST_COLOR);
+
+function podDate(iso){
+  return new Date(iso + 'T00:00:00').toLocaleDateString(undefined, {day:'numeric', month:'short', year:'numeric'});
+}
+// same fuzzy match the Prizes tab uses for its own cross-links — a plain
+// title lookup so "East of Eden" finds the club's own entry without caring
+// about accents or punctuation
+function findBook42(title){
+  return DATA.find(b => !b.break && plainTitle(b.title) === plainTitle(title));
+}
+
+function podEpisodeRow(e){
+  const book = e.book42 ? findBook42(e.book42) : null;
+  const readBtn = book
+    ? `<button class="pod-ep-read" type="button" style="--yr-color:${YEAR_COLORS[book.year] || PODCAST_COLOR}" data-slug="${slug(book)}">Book42 read this in ${escHTML(book.period)} ${book.year}</button>`
+    : '';
+  return `<li class="pod-ep">
+    <span class="pod-num">${e.num}</span>
+    <span class="pod-ep-body">
+      <span class="pod-ep-title">${escHTML(e.title)}<span class="pod-ep-date">${podDate(e.date)}</span></span>
+      ${e.teaser ? `<p class="pod-ep-teaser">${escHTML(e.teaser)}</p>` : ''}
+      ${readBtn}
+    </span>
+  </li>`;
+}
+
+const archiveHTML = PODCAST_ARCHIVE.length ? `<div class="pod-archive">
+  <b>Book42 has come up on the show before, too</b> — episode ${PODCAST_ARCHIVE.map(e=>e.num).join(', ')}:
+  ${PODCAST_ARCHIVE.map(e=>{
+    const book = findBook42(e.book42);
+    const link = book ? `<button type="button" data-slug="${slug(book)}">${escHTML(e.book42)}</button>` : escHTML(e.book42);
+    return `${link} (ep. ${e.num}, ${podDate(e.date)})`;
+  }).join(', ')}.
+</div>` : '';
+
+podcastSection.innerHTML = `
+  <div class="pod-scroll">
+    <div class="pod-inner">
+      <div class="pod-head">
+        <div class="pod-cover"><img src="covers/bookclub-cover.jpg" alt="The Book Club podcast cover"></div>
+        <div class="pod-headtext">
+          <div class="now-kicker" style="color:var(--yr-color)">Off the Book42 shelf</div>
+          <h2 class="pod-title">The Book Club</h2>
+          <div class="pod-by">Dominic Sandbrook &amp; Tabitha Syrett &middot; Goalhanger</div>
+          <p class="pod-lede">A weekly podcast that does for one book at a time what Book42 does as a group &mdash;
+            the history behind it, the writer behind that. New episodes most Mondays since February 2026.</p>
+          <div class="pod-links">
+            <a class="pod-link" href="https://open.spotify.com/show/1yQX55n13t1G8CcOhjfy61" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm4.59 14.4a.62.62 0 0 1-.86.21c-2.35-1.44-5.31-1.76-8.79-.96a.62.62 0 1 1-.28-1.22c3.81-.87 7.08-.5 9.72 1.11.3.18.4.57.21.86Zm1.22-2.72a.78.78 0 0 1-1.07.26c-2.69-1.65-6.79-2.13-9.97-1.17a.78.78 0 1 1-.45-1.49c3.63-1.1 8.14-.57 11.23 1.33.37.23.49.72.26 1.07Zm.11-2.83c-3.23-1.92-8.55-2.09-11.63-1.16a.94.94 0 1 1-.54-1.8c3.54-1.07 9.42-.87 13.13 1.34a.94.94 0 0 1-.96 1.62Z"/></svg>
+              Listen on Spotify
+            </a>
+            <a class="pod-link" href="https://www.youtube.com/@TheBookClubpodhq" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24"><path d="M22 12s0-3.4-.44-5a2.7 2.7 0 0 0-1.9-1.9C18.05 4.66 12 4.66 12 4.66s-6.05 0-7.66.44A2.7 2.7 0 0 0 2.44 7C2 8.6 2 12 2 12s0 3.4.44 5a2.7 2.7 0 0 0 1.9 1.9c1.61.44 7.66.44 7.66.44s6.05 0 7.66-.44a2.7 2.7 0 0 0 1.9-1.9C22 15.4 22 12 22 12ZM10 15.2V8.8L15.5 12Z"/></svg>
+              Watch on YouTube
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="pod-eps-head">Recent episodes</div>
+      <ol class="pod-list">${PODCAST_RECENT.map(podEpisodeRow).join('')}</ol>
+      ${archiveHTML}
+    </div>
+  </div>`;
+yearsRoot.appendChild(podcastSection);
+
+// clicking a "Book42 read this" pill opens the club's own book modal
+podcastSection.addEventListener('click', (e)=>{
+  const el = e.target.closest('[data-slug]');
+  if(!el) return;
+  const b = DATA.find(x => !x.break && slug(x) === el.dataset.slug);
+  if(b) openBookModal(b, b.year);
+});
+
 
 
 /* The year view is a sideways gallery: the same cards as the fanned stack it
@@ -2804,7 +2984,7 @@ function openFromHash(){
     openBookModal(b, b.year);
     return;
   }
-  if(wanted === 'now' || wanted === 'faves' || wanted === 'prizes'){
+  if(wanted === 'now' || wanted === 'faves' || wanted === 'prizes' || wanted === 'podcast'){
     showYear(wanted);
     return;
   }
