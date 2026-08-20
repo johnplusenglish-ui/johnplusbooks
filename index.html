@@ -5,6 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Book42 — the reading diary</title>
 <meta name="description" content="Every monthly pick from Book42, our Telegram book club, since 2021 — a year-by-year gallery.">
+<link rel="canonical" href="https://johnplusbooks.com/">
+<meta name="theme-color" content="#fbf9f5">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<!-- Same two facts as the <title>/description above, just in the shape Telegram,
+     WhatsApp and iMessage look for when unfurling a pasted link. og:image is an
+     absolute URL because unfurlers fetch it server-side, with no page context
+     to resolve a relative one against. -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://johnplusbooks.com/">
+<meta property="og:title" content="Book42 — the reading diary">
+<meta property="og:description" content="Every monthly pick from Book42, our Telegram book club, since 2021 — a year-by-year gallery.">
+<meta property="og:image" content="https://johnplusbooks.com/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Book42 — the reading diary">
+<meta name="twitter:description" content="Every monthly pick from Book42, our Telegram book club, since 2021 — a year-by-year gallery.">
+<meta name="twitter:image" content="https://johnplusbooks.com/og-image.jpg">
 <style>
 /* Outfit, self-hosted — was Google Fonts, but that file is actually a single
    variable font (wght 100-900) reused for every weight Google served, so
@@ -40,6 +60,10 @@
   --shadow-hi:0 24px 60px -18px rgba(20,20,30,.32);
 }
 *{box-sizing:border-box}
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
 html, body{height:100%}
 body{
   margin:0;
@@ -95,7 +119,11 @@ a{color:inherit}
   transition:background .15s, color .15s, border-color .15s;
 }
 .year-nav button[data-active="true"]{
-  background:var(--yr-color, var(--accent));
+  /* White text straight on --yr-color fails contrast for the paler years
+     (2022 teal, 2024 green, 2025 orange all land under 4.5:1) — mixing in 20%
+     black clears every year at once without visibly changing the ones that
+     already passed. */
+  background:color-mix(in srgb, var(--yr-color, var(--accent)) 80%, black);
   border-color:var(--yr-color, var(--accent));
   color:#fff;
 }
@@ -164,6 +192,13 @@ main#years{flex:1 1 auto; min-height:0; overflow:hidden}
 }
 .card.is-active{box-shadow:var(--shadow-hi); cursor:zoom-in}
 .card.is-active.is-break{cursor:default}
+/* Cards are focusable divs (role="button"), so they need their own visible
+   focus ring — the fan's cards clip via overflow:hidden so the ring goes on
+   the box itself; the gallery's are borderless so it goes on the cover image. */
+.card:focus-visible{outline:2px solid var(--yr-color); outline-offset:3px}
+.strip .card{outline:none}
+.strip .card:focus-visible .cover-img,
+.strip .card:focus-visible .placeholder{outline:2px solid var(--yr-color); outline-offset:3px; border-radius:5px}
 .card .cover-img{width:100%; height:100%; object-fit:cover; background:#eee}
 .card .placeholder{
   width:100%; height:100%;
@@ -239,8 +274,16 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .nav-btn:active{transform:scale(.92)}
 .nav-btn svg{width:16px; height:16px; stroke:var(--ink)}
 .dots{display:flex; gap:.4rem; flex-wrap:wrap; max-width:220px; justify-content:center}
-.dot{width:6px; height:6px; border-radius:50%; background:var(--line); cursor:pointer; transition:background .15s, transform .15s}
-.dot[data-active="true"]{background:var(--yr-color); transform:scale(1.5)}
+.dot{
+  width:14px; height:14px; padding:0; border:none; background:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.dot::after{
+  content:''; width:6px; height:6px; border-radius:50%; background:var(--line);
+  transition:background .15s, transform .15s;
+}
+.dot[data-active="true"]::after{background:var(--yr-color); transform:scale(1.5)}
+.dot:focus-visible{outline:2px solid var(--yr-color); outline-offset:2px; border-radius:50%}
 
 .click-hint{
   flex:none;
@@ -307,7 +350,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   font-family:inherit; font-size:.82rem; font-weight:600; cursor:pointer;
   transition:background .15s, color .15s;
 }
-.now-open:hover{background:var(--yr-color); color:#fff}
+.now-open:hover{background:color-mix(in srgb, var(--yr-color) 80%, black); color:#fff}
 .now-next{
   display:flex; align-items:center; gap:.9rem;
   margin-top:2rem; padding-top:1.4rem; border-top:1px solid var(--line);
@@ -319,6 +362,12 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .now-next img{width:34px; height:51px; object-fit:cover; border-radius:3px; background:#eee}
 .now-next-title{font-size:.88rem; font-weight:700}
 .now-next-title span{font-weight:400; font-style:italic; color:var(--ink-soft)}
+.now-about{
+  margin-top:2rem; padding-top:1.2rem; border-top:1px solid var(--line);
+  font-size:.8rem; line-height:1.6; color:var(--ink-soft);
+}
+.now-about a{color:var(--ink-soft); text-decoration:underline; text-underline-offset:2px}
+.now-about a:hover{color:var(--ink)}
 @media (max-width:760px){
   .now-grid{flex-direction:column; align-items:flex-start; gap:1.4rem}
   .now-cover{width:150px}
@@ -798,7 +847,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .note-state[data-error="true"]{color:#c0392b}
 .note-save{
   padding:.45rem .9rem; border-radius:999px; border:1px solid var(--yr-color);
-  background:var(--yr-color); color:#fff;
+  background:color-mix(in srgb, var(--yr-color) 80%, black); color:#fff;
   font-family:inherit; font-size:.78rem; font-weight:600; cursor:pointer;
   transition:opacity .15s;
 }
@@ -848,6 +897,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 <body>
 
 <header class="topbar">
+  <h1 class="sr-only">Book42 — the reading diary</h1>
   <button type="button" class="brand" id="brandHome" aria-label="Back to what we're reading now"><span class="brand-name">book<span class="brand-42">42</span></span> <small>reading diary</small></button>
   <nav class="year-nav" id="yearNav"></nav>
   <a class="tg-link" href="https://t.me/book42channel" target="_blank" rel="noopener"
@@ -1005,7 +1055,7 @@ const BOOKER = [{"y":2025,"name":"David Szalay","book":"Flesh","country":"United
    not on their work items in Wikidata yet, so both came from the books' own
    Wikipedia articles, which state the win outright. All `wiki` links checked
    for 200 before shipping. */
-const PULITZER = [{"y":2025,"name":"Percival Everett","book":"James","country":"United States","pub":2024,"cover":"covers/pulitzer/2025-james.jpg","teaser":"Huckleberry Finn retold by the enslaved man Jim, who has been hiding his literacy, his anger and his real voice from every white person in the book.","wiki":"https://en.wikipedia.org/wiki/James_(novel)","genres":["Historical Fiction","American","Slavery"]},{"y":2024,"name":"Jayne Anne Phillips","book":"Night Watch","country":"United States","pub":2023,"cover":"covers/pulitzer/2024-night-watch.jpg","teaser":"A mother and daughter arrive at a West Virginia asylum in 1874, carrying a silence about the war and the man who put them there.","wiki":"https://en.wikipedia.org/wiki/Night_Watch_(Phillips_novel)","genres":["Historical Fiction","American","Civil War"]},{"y":2023,"name":"Barbara Kingsolver","book":"Demon Copperhead","country":"United States","pub":2022,"cover":"covers/pulitzer/2023-demon-copperhead.jpg","teaser":"David Copperfield transplanted to the Appalachian foster system and the opioid epidemic, narrated by a boy with a very fast mouth.","wiki":"https://en.wikipedia.org/wiki/Demon_Copperhead","genres":["Literary Fiction","American","Appalachia"]},{"y":2023,"name":"Hernán Díaz","book":"Trust","country":"Argentina / United States","pub":2022,"cover":"covers/pulitzer/2023-trust.jpg","teaser":"A 1920s Wall Street fortune told four times over, each version correcting the last, until the question becomes who gets to write the record.","wiki":"https://en.wikipedia.org/wiki/Trust_(novel)","genres":["Literary Fiction","American","Experimental"]},{"y":2022,"name":"Joshua Cohen","book":"The Netanyahus","country":"United States","pub":2021,"cover":"covers/pulitzer/2022-the-netanyahus.jpg","teaser":"A Jewish historian at a small American college hosts a visiting Israeli academic and his impossible family, in a campus farce with real teeth.","wiki":"https://en.wikipedia.org/wiki/The_Netanyahus","genres":["Comedy","American","Campus Novel"]},{"y":2021,"name":"Louise Erdrich","book":"The Night Watchman","country":"United States","pub":2020,"cover":"covers/pulitzer/2021-the-night-watchman.jpg","teaser":"Based on the author's grandfather, a night watchman at a North Dakota factory fights a 1950s bill designed to dissolve his tribe.","wiki":"https://en.wikipedia.org/wiki/The_Night_Watchman_(novel)","genres":["Historical Fiction","American","Native American"]},{"y":2020,"name":"Colson Whitehead","book":"The Nickel Boys","country":"United States","pub":2019,"cover":"covers/pulitzer/2020-the-nickel-boys.jpg","teaser":"Two boys at a brutal Florida reform school in the Jim Crow era take opposite views on how to survive it.","wiki":"https://en.wikipedia.org/wiki/The_Nickel_Boys","genres":["Historical Fiction","American","Jim Crow"]},{"y":2019,"name":"Richard Powers","book":"The Overstory","country":"United States","pub":2018,"cover":"covers/pulitzer/2019-the-overstory.jpg","teaser":"Nine strangers are drawn into the fate of the last virgin forests in North America, in a novel built like a tree.","wiki":"https://en.wikipedia.org/wiki/The_Overstory","genres":["Literary Fiction","American","Nature"]},{"y":2018,"name":"Andrew Sean Greer","book":"Less","country":"United States","pub":2017,"cover":"covers/pulitzer/2018-less.jpg","teaser":"A minor novelist accepts every literary invitation on earth to avoid his ex-boyfriend's wedding, and circles the world into his fiftieth birthday.","wiki":"https://en.wikipedia.org/wiki/Less_(novel)","genres":["Comedy","American","Travel"]},{"y":2017,"name":"Colson Whitehead","book":"The Underground Railroad","country":"United States","pub":2016,"cover":"covers/pulitzer/2017-the-underground-railroad.jpg","teaser":"A girl escapes a Georgia plantation on a railroad that here is literally underground, and each state she surfaces in is a different American nightmare.","wiki":"https://en.wikipedia.org/wiki/The_Underground_Railroad_(novel)","genres":["Historical Fiction","American","Slavery"]},{"y":2016,"name":"Viet Thanh Nguyen","book":"The Sympathizer","country":"United States","pub":2015,"cover":"covers/pulitzer/2016-the-sympathizer.jpg","teaser":"A communist double agent flees Saigon with a South Vietnamese general and keeps spying from Los Angeles, writing it all as a forced confession.","wiki":"https://en.wikipedia.org/wiki/The_Sympathizer","genres":["Literary Fiction","Vietnamese","Spy Fiction"]},{"y":2015,"name":"Anthony Doerr","book":"All the Light We Cannot See","country":"United States","pub":2014,"cover":"covers/pulitzer/2015-all-the-light-we-cannot-see.jpg","teaser":"A blind French girl and a German boy radio operator move toward each other through the war, meeting in the ruins of Saint-Malo.","wiki":"https://en.wikipedia.org/wiki/All_the_Light_We_Cannot_See","genres":["Historical Fiction","American","Second World War"]},{"y":2014,"name":"Donna Tartt","book":"The Goldfinch","country":"United States","pub":2013,"cover":"covers/pulitzer/2014-the-goldfinch.jpg","teaser":"A boy survives the museum bombing that kills his mother and walks out with a small Dutch painting he cannot give back.","wiki":"https://en.wikipedia.org/wiki/The_Goldfinch_(novel)","genres":["Literary Fiction","American","Coming of Age"]},{"y":2013,"name":"Adam Johnson","book":"The Orphan Master's Son","country":"United States","pub":2012,"cover":"covers/pulitzer/2013-the-orphan-master-s-son.jpg","teaser":"A North Korean orphan becomes a kidnapper, a spy and finally a man impersonating a national hero, in a state where the story always outranks the fact.","wiki":"https://en.wikipedia.org/wiki/The_Orphan_Master%27s_Son","genres":["Literary Fiction","American","North Korea"]},{"y":2011,"name":"Jennifer Egan","book":"A Visit from the Goon Squad","country":"United States","pub":2010,"cover":"covers/pulitzer/2011-a-visit-from-the-goon-squad.jpg","teaser":"Thirteen linked chapters circling a record executive and his assistant across forty years, one of them told entirely in slides.","wiki":"https://en.wikipedia.org/wiki/A_Visit_from_the_Goon_Squad","genres":["Literary Fiction","American","Experimental"]},{"y":2010,"name":"Paul Harding","book":"Tinkers","country":"United States","pub":2009,"cover":"covers/pulitzer/2010-tinkers.jpg","teaser":"A dying clock repairer in New England hallucinates his way back through his own father's life. Written in obscurity, published by a tiny press.","wiki":"https://en.wikipedia.org/wiki/Tinkers_(novel)","genres":["Literary Fiction","American","Novella"]},{"y":2009,"name":"Elizabeth Strout","book":"Olive Kitteridge","country":"United States","pub":2008,"cover":"covers/pulitzer/2009-olive-kitteridge.jpg","teaser":"Thirteen stories in one coastal Maine town, with a blunt, difficult retired teacher moving through the edges of all of them.","wiki":"https://en.wikipedia.org/wiki/Olive_Kitteridge","genres":["Short Stories","American","Small Town"]},{"y":2008,"name":"Junot Díaz","book":"The Brief Wondrous Life of Oscar Wao","country":"Dominican Republic / United States","pub":2007,"cover":"covers/pulitzer/2008-the-brief-wondrous-life-of-oscar-wao.jpg","teaser":"An overweight Dominican-American nerd in New Jersey wants to be Tolkien and to be loved, while a family curse from the Trujillo years runs underneath.","wiki":"https://en.wikipedia.org/wiki/The_Brief_Wondrous_Life_of_Oscar_Wao","genres":["Literary Fiction","Dominican","Family Saga"]},{"y":2007,"name":"Cormac McCarthy","book":"The Road","country":"United States","pub":2006,"cover":"covers/pulitzer/2007-the-road.jpg","teaser":"A father and son push a shopping trolley south through a burned America, carrying the fire and very little else.","wiki":"https://en.wikipedia.org/wiki/The_Road","genres":["Post-Apocalyptic","American","Fatherhood"]},{"y":2006,"name":"Geraldine Brooks","book":"March","country":"Australia","pub":2005,"cover":"covers/pulitzer/2006-march.jpg","teaser":"The absent father of Little Women goes to the Civil War as a chaplain, and finds out what he is actually made of.","wiki":"https://en.wikipedia.org/wiki/March_(novel)","genres":["Historical Fiction","American","Civil War"]},{"y":2005,"name":"Marilynne Robinson","book":"Gilead","country":"United States","pub":2004,"cover":"covers/pulitzer/2005-gilead.jpg","teaser":"A dying Iowa preacher writes a long letter to his young son about his father, his grandfather and the friend's child he cannot forgive.","wiki":"https://en.wikipedia.org/wiki/Gilead_(novel)","genres":["Literary Fiction","American","Faith"]},{"y":2004,"name":"Edward P. Jones","book":"The Known World","country":"United States","pub":2003,"cover":"covers/pulitzer/2004-the-known-world.jpg","teaser":"A Black farmer in antebellum Virginia owns slaves himself, and his death unravels the county's arrangements.","wiki":"https://en.wikipedia.org/wiki/The_Known_World","genres":["Historical Fiction","American","Slavery"]},{"y":2003,"name":"Jeffrey Kent Eugenides","book":"Middlesex","country":"United States","pub":2002,"cover":"covers/pulitzer/2003-middlesex.jpg","teaser":"Three generations of a Greek-American family in Detroit, told by Cal, who was raised as Calliope and explains the gene that made him.","wiki":"https://en.wikipedia.org/wiki/Middlesex_(novel)","genres":["Family Saga","American","Coming of Age"]},{"y":2002,"name":"Richard Russo","book":"Empire Falls","country":"United States","pub":2001,"cover":"covers/pulitzer/2002-empire-falls.jpg","teaser":"A diner manager in a dying Maine mill town serves the family that owns everything, and cannot get himself out.","wiki":"https://en.wikipedia.org/wiki/Empire_Falls","genres":["Literary Fiction","American","Small Town"]},{"y":2001,"name":"Michael Chabon","book":"The Amazing Adventures of Kavalier & Clay","country":"United States","pub":2000,"cover":"covers/pulitzer/2001-the-amazing-adventures-of-kavalier-clay.jpg","teaser":"Two cousins invent a comic-book hero in 1939 New York, one of them trying to get his family out of Prague.","wiki":"https://en.wikipedia.org/wiki/The_Amazing_Adventures_of_Kavalier_%26_Clay","genres":["Historical Fiction","American","Comics"]},{"y":2000,"name":"Jhumpa Lahiri","book":"Interpreter of Maladies","country":"India / United Kingdom / United States","pub":1999,"cover":"covers/pulitzer/2000-interpreter-of-maladies.jpg","teaser":"Nine stories of Indian and Indian-American lives, where a marriage or a whole history turns on one small mistranslation.","wiki":"https://en.wikipedia.org/wiki/Interpreter_of_Maladies","genres":["Short Stories","Indian","Migration"]},{"y":1999,"name":"Michael Cunningham","book":"The Hours","country":"United States","pub":1998,"cover":"covers/pulitzer/1999-the-hours.jpg","teaser":"One day each for Virginia Woolf, a 1949 Los Angeles housewife reading her, and a modern New Yorker living out Mrs Dalloway.","wiki":"https://en.wikipedia.org/wiki/The_Hours_(novel)","genres":["Literary Fiction","American","Books About Books"]},{"y":1998,"name":"Philip Roth","book":"American Pastoral","country":"United States","pub":1997,"cover":"covers/pulitzer/1998-american-pastoral.jpg","teaser":"A golden New Jersey businessman's life is detonated by his own daughter, who plants a bomb in a post office in 1968.","wiki":"https://en.wikipedia.org/wiki/American_Pastoral","genres":["Literary Fiction","American","Political"]},{"y":1997,"name":"Steven Millhauser","book":"Martin Dressler","country":"United States","pub":1996,"cover":"covers/pulitzer/1997-martin-dressler.jpg","teaser":"A cigar-shop boy in Gilded Age New York builds ever larger hotels, until his ambition passes the point of anything a guest could want.","wiki":"https://en.wikipedia.org/wiki/Martin_Dressler","genres":["Historical Fiction","American","Gilded Age"]},{"y":1996,"name":"Richard Ford","book":"Independence Day","country":"United States","pub":1995,"cover":"covers/pulitzer/1996-independence-day.jpg","teaser":"A New Jersey estate agent takes his difficult son to two sports halls of fame over one Fourth of July weekend.","wiki":"https://en.wikipedia.org/wiki/Independence_Day_(Ford_novel)","genres":["Literary Fiction","American","Fatherhood"]},{"y":1995,"name":"Carol Shields","book":"The Stone Diaries","country":"United States / Canada","pub":1993,"cover":"covers/pulitzer/1995-the-stone-diaries.jpg","teaser":"The whole life of Daisy Goodwill, told in letters, recipes, photographs and the versions other people keep of her.","wiki":"https://en.wikipedia.org/wiki/The_Stone_Diaries","genres":["Literary Fiction","Canadian","Family Saga"]},{"y":1994,"name":"Annie Proulx","book":"The Shipping News","country":"United States","pub":1993,"cover":"covers/pulitzer/1994-the-shipping-news.jpg","teaser":"A failed newspaperman takes his daughters back to ancestral Newfoundland, and is slowly rebuilt by weather, knots and a local paper's car-wreck column.","wiki":"https://en.wikipedia.org/wiki/The_Shipping_News","genres":["Literary Fiction","American","Newfoundland"]},{"y":1993,"name":"Robert Olen Butler","book":"A Good Scent from a Strange Mountain","country":"United States","pub":1992,"cover":"covers/pulitzer/1993-a-good-scent-from-a-strange-mountain.jpg","teaser":"Fifteen Vietnamese voices resettled in Louisiana, each still carrying the country they left.","wiki":"https://en.wikipedia.org/wiki/A_Good_Scent_from_a_Strange_Mountain","genres":["Short Stories","Vietnamese","Migration"]},{"y":1992,"name":"Jane Smiley","book":"A Thousand Acres","country":"United States","pub":1991,"cover":"covers/pulitzer/1992-a-thousand-acres.jpg","teaser":"King Lear on an Iowa farm: a father divides a thousand acres between his daughters, and what surfaces is far worse than pride.","wiki":"https://en.wikipedia.org/wiki/A_Thousand_Acres","genres":["Literary Fiction","American","Family Saga"]},{"y":1991,"name":"John Updike","book":"Rabbit at Rest","country":"United States","pub":1990,"cover":"covers/pulitzer/1991-rabbit-at-rest.jpg","teaser":"Harry Angstrom in Florida, overweight and out of road, in the last of the four Rabbit novels.","wiki":"https://en.wikipedia.org/wiki/Rabbit_at_Rest","genres":["Literary Fiction","American","Ageing"]},{"y":1990,"name":"Oscar Hijuelos","book":"The Mambo Kings Play Songs of Love","country":"United States","pub":1989,"cover":"covers/pulitzer/1990-the-mambo-kings-play-songs-of-love.jpg","teaser":"Two Cuban brothers bring their band to 1950s New York, play one night on television, and spend the rest of their lives in its shadow.","wiki":"https://en.wikipedia.org/wiki/The_Mambo_Kings_Play_Songs_of_Love","genres":["Literary Fiction","Cuban","Music"]},{"y":1989,"name":"Anne Tyler","book":"Breathing Lessons","country":"United States","pub":1988,"cover":"covers/pulitzer/1989-breathing-lessons.jpg","teaser":"One day's drive to a funeral, in which a Baltimore wife meddles relentlessly in everyone's marriage including her own.","wiki":"https://en.wikipedia.org/wiki/Breathing_Lessons","genres":["Literary Fiction","American","Marriage"]},{"y":1988,"name":"Toni Morrison","book":"Beloved","country":"United States","pub":1987,"cover":"covers/pulitzer/1988-beloved.jpg","teaser":"An escaped slave in Ohio is visited by a young woman who appears to be the daughter she killed rather than see taken back.","wiki":"https://en.wikipedia.org/wiki/Beloved_(novel)","genres":["Literary Fiction","American","Slavery"]},{"y":1987,"name":"Peter Matthew Hillsman Taylor","book":"A Summons to Memphis","country":"United States","pub":1986,"cover":"covers/pulitzer/1987-a-summons-to-memphis.jpg","teaser":"A middle-aged son is called home to stop his elderly father remarrying, by sisters still settling a fifty-year-old family grievance.","wiki":"https://en.wikipedia.org/wiki/A_Summons_to_Memphis","genres":["Literary Fiction","American","Family Saga"]},{"y":1986,"name":"Larry McMurtry","book":"Lonesome Dove","country":"United States","pub":1985,"cover":"covers/pulitzer/1986-lonesome-dove.jpg","teaser":"Two retired Texas Rangers drive cattle to Montana, and the trail takes everything from them one piece at a time.","wiki":"https://en.wikipedia.org/wiki/Lonesome_Dove","genres":["Western","American","Adventure"]},{"y":1985,"name":"Alison Lurie","book":"Foreign Affairs","country":"United States","pub":1984,"cover":"covers/pulitzer/1985-foreign-affairs.jpg","teaser":"Two American academics on sabbatical in London, one fifty-four and unlovely, both conducting affairs that expose exactly who they are.","wiki":"https://en.wikipedia.org/wiki/Foreign_Affairs_(novel)","genres":["Comedy","American","Campus Novel"]},{"y":1984,"name":"William Kennedy","book":"Ironweed","country":"United States","pub":1983,"cover":"covers/pulitzer/1984-ironweed.jpg","teaser":"A former ballplayer, now a drunk on the Albany streets in 1938, is followed everywhere by the dead he believes he killed.","wiki":"https://en.wikipedia.org/wiki/Ironweed_(novel)","genres":["Literary Fiction","American","Depression Era"]}];
+const PULITZER = [{"y":2026,"name":"Daniel Kraus","book":"Angel Down","country":"United States","pub":2025,"cover":"covers/pulitzer/2026-angel-down.jpg","teaser":"Five soldiers on the last days of the Meuse-Argonne offensive find the source of a screaming that's driving the front line mad: an angel, tangled in barbed wire. They desert their post to carry her to safety, in a novel written as a single unbroken sentence.","wiki":"https://en.wikipedia.org/wiki/Angel_Down_(novel)","genres":["Historical Fiction","American","First World War"]},{"y":2025,"name":"Percival Everett","book":"James","country":"United States","pub":2024,"cover":"covers/pulitzer/2025-james.jpg","teaser":"Huckleberry Finn retold by the enslaved man Jim, who has been hiding his literacy, his anger and his real voice from every white person in the book.","wiki":"https://en.wikipedia.org/wiki/James_(novel)","genres":["Historical Fiction","American","Slavery"]},{"y":2024,"name":"Jayne Anne Phillips","book":"Night Watch","country":"United States","pub":2023,"cover":"covers/pulitzer/2024-night-watch.jpg","teaser":"A mother and daughter arrive at a West Virginia asylum in 1874, carrying a silence about the war and the man who put them there.","wiki":"https://en.wikipedia.org/wiki/Night_Watch_(Phillips_novel)","genres":["Historical Fiction","American","Civil War"]},{"y":2023,"name":"Barbara Kingsolver","book":"Demon Copperhead","country":"United States","pub":2022,"cover":"covers/pulitzer/2023-demon-copperhead.jpg","teaser":"David Copperfield transplanted to the Appalachian foster system and the opioid epidemic, narrated by a boy with a very fast mouth.","wiki":"https://en.wikipedia.org/wiki/Demon_Copperhead","genres":["Literary Fiction","American","Appalachia"]},{"y":2023,"name":"Hernán Díaz","book":"Trust","country":"Argentina / United States","pub":2022,"cover":"covers/pulitzer/2023-trust.jpg","teaser":"A 1920s Wall Street fortune told four times over, each version correcting the last, until the question becomes who gets to write the record.","wiki":"https://en.wikipedia.org/wiki/Trust_(novel)","genres":["Literary Fiction","American","Experimental"]},{"y":2022,"name":"Joshua Cohen","book":"The Netanyahus","country":"United States","pub":2021,"cover":"covers/pulitzer/2022-the-netanyahus.jpg","teaser":"A Jewish historian at a small American college hosts a visiting Israeli academic and his impossible family, in a campus farce with real teeth.","wiki":"https://en.wikipedia.org/wiki/The_Netanyahus","genres":["Comedy","American","Campus Novel"]},{"y":2021,"name":"Louise Erdrich","book":"The Night Watchman","country":"United States","pub":2020,"cover":"covers/pulitzer/2021-the-night-watchman.jpg","teaser":"Based on the author's grandfather, a night watchman at a North Dakota factory fights a 1950s bill designed to dissolve his tribe.","wiki":"https://en.wikipedia.org/wiki/The_Night_Watchman_(novel)","genres":["Historical Fiction","American","Native American"]},{"y":2020,"name":"Colson Whitehead","book":"The Nickel Boys","country":"United States","pub":2019,"cover":"covers/pulitzer/2020-the-nickel-boys.jpg","teaser":"Two boys at a brutal Florida reform school in the Jim Crow era take opposite views on how to survive it.","wiki":"https://en.wikipedia.org/wiki/The_Nickel_Boys","genres":["Historical Fiction","American","Jim Crow"]},{"y":2019,"name":"Richard Powers","book":"The Overstory","country":"United States","pub":2018,"cover":"covers/pulitzer/2019-the-overstory.jpg","teaser":"Nine strangers are drawn into the fate of the last virgin forests in North America, in a novel built like a tree.","wiki":"https://en.wikipedia.org/wiki/The_Overstory","genres":["Literary Fiction","American","Nature"]},{"y":2018,"name":"Andrew Sean Greer","book":"Less","country":"United States","pub":2017,"cover":"covers/pulitzer/2018-less.jpg","teaser":"A minor novelist accepts every literary invitation on earth to avoid his ex-boyfriend's wedding, and circles the world into his fiftieth birthday.","wiki":"https://en.wikipedia.org/wiki/Less_(novel)","genres":["Comedy","American","Travel"]},{"y":2017,"name":"Colson Whitehead","book":"The Underground Railroad","country":"United States","pub":2016,"cover":"covers/pulitzer/2017-the-underground-railroad.jpg","teaser":"A girl escapes a Georgia plantation on a railroad that here is literally underground, and each state she surfaces in is a different American nightmare.","wiki":"https://en.wikipedia.org/wiki/The_Underground_Railroad_(novel)","genres":["Historical Fiction","American","Slavery"]},{"y":2016,"name":"Viet Thanh Nguyen","book":"The Sympathizer","country":"United States","pub":2015,"cover":"covers/pulitzer/2016-the-sympathizer.jpg","teaser":"A communist double agent flees Saigon with a South Vietnamese general and keeps spying from Los Angeles, writing it all as a forced confession.","wiki":"https://en.wikipedia.org/wiki/The_Sympathizer","genres":["Literary Fiction","Vietnamese","Spy Fiction"]},{"y":2015,"name":"Anthony Doerr","book":"All the Light We Cannot See","country":"United States","pub":2014,"cover":"covers/pulitzer/2015-all-the-light-we-cannot-see.jpg","teaser":"A blind French girl and a German boy radio operator move toward each other through the war, meeting in the ruins of Saint-Malo.","wiki":"https://en.wikipedia.org/wiki/All_the_Light_We_Cannot_See","genres":["Historical Fiction","American","Second World War"]},{"y":2014,"name":"Donna Tartt","book":"The Goldfinch","country":"United States","pub":2013,"cover":"covers/pulitzer/2014-the-goldfinch.jpg","teaser":"A boy survives the museum bombing that kills his mother and walks out with a small Dutch painting he cannot give back.","wiki":"https://en.wikipedia.org/wiki/The_Goldfinch_(novel)","genres":["Literary Fiction","American","Coming of Age"]},{"y":2013,"name":"Adam Johnson","book":"The Orphan Master's Son","country":"United States","pub":2012,"cover":"covers/pulitzer/2013-the-orphan-master-s-son.jpg","teaser":"A North Korean orphan becomes a kidnapper, a spy and finally a man impersonating a national hero, in a state where the story always outranks the fact.","wiki":"https://en.wikipedia.org/wiki/The_Orphan_Master%27s_Son","genres":["Literary Fiction","American","North Korea"]},{"y":2011,"name":"Jennifer Egan","book":"A Visit from the Goon Squad","country":"United States","pub":2010,"cover":"covers/pulitzer/2011-a-visit-from-the-goon-squad.jpg","teaser":"Thirteen linked chapters circling a record executive and his assistant across forty years, one of them told entirely in slides.","wiki":"https://en.wikipedia.org/wiki/A_Visit_from_the_Goon_Squad","genres":["Literary Fiction","American","Experimental"]},{"y":2010,"name":"Paul Harding","book":"Tinkers","country":"United States","pub":2009,"cover":"covers/pulitzer/2010-tinkers.jpg","teaser":"A dying clock repairer in New England hallucinates his way back through his own father's life. Written in obscurity, published by a tiny press.","wiki":"https://en.wikipedia.org/wiki/Tinkers_(novel)","genres":["Literary Fiction","American","Novella"]},{"y":2009,"name":"Elizabeth Strout","book":"Olive Kitteridge","country":"United States","pub":2008,"cover":"covers/pulitzer/2009-olive-kitteridge.jpg","teaser":"Thirteen stories in one coastal Maine town, with a blunt, difficult retired teacher moving through the edges of all of them.","wiki":"https://en.wikipedia.org/wiki/Olive_Kitteridge","genres":["Short Stories","American","Small Town"]},{"y":2008,"name":"Junot Díaz","book":"The Brief Wondrous Life of Oscar Wao","country":"Dominican Republic / United States","pub":2007,"cover":"covers/pulitzer/2008-the-brief-wondrous-life-of-oscar-wao.jpg","teaser":"An overweight Dominican-American nerd in New Jersey wants to be Tolkien and to be loved, while a family curse from the Trujillo years runs underneath.","wiki":"https://en.wikipedia.org/wiki/The_Brief_Wondrous_Life_of_Oscar_Wao","genres":["Literary Fiction","Dominican","Family Saga"]},{"y":2007,"name":"Cormac McCarthy","book":"The Road","country":"United States","pub":2006,"cover":"covers/pulitzer/2007-the-road.jpg","teaser":"A father and son push a shopping trolley south through a burned America, carrying the fire and very little else.","wiki":"https://en.wikipedia.org/wiki/The_Road","genres":["Post-Apocalyptic","American","Fatherhood"]},{"y":2006,"name":"Geraldine Brooks","book":"March","country":"Australia","pub":2005,"cover":"covers/pulitzer/2006-march.jpg","teaser":"The absent father of Little Women goes to the Civil War as a chaplain, and finds out what he is actually made of.","wiki":"https://en.wikipedia.org/wiki/March_(novel)","genres":["Historical Fiction","American","Civil War"]},{"y":2005,"name":"Marilynne Robinson","book":"Gilead","country":"United States","pub":2004,"cover":"covers/pulitzer/2005-gilead.jpg","teaser":"A dying Iowa preacher writes a long letter to his young son about his father, his grandfather and the friend's child he cannot forgive.","wiki":"https://en.wikipedia.org/wiki/Gilead_(novel)","genres":["Literary Fiction","American","Faith"]},{"y":2004,"name":"Edward P. Jones","book":"The Known World","country":"United States","pub":2003,"cover":"covers/pulitzer/2004-the-known-world.jpg","teaser":"A Black farmer in antebellum Virginia owns slaves himself, and his death unravels the county's arrangements.","wiki":"https://en.wikipedia.org/wiki/The_Known_World","genres":["Historical Fiction","American","Slavery"]},{"y":2003,"name":"Jeffrey Kent Eugenides","book":"Middlesex","country":"United States","pub":2002,"cover":"covers/pulitzer/2003-middlesex.jpg","teaser":"Three generations of a Greek-American family in Detroit, told by Cal, who was raised as Calliope and explains the gene that made him.","wiki":"https://en.wikipedia.org/wiki/Middlesex_(novel)","genres":["Family Saga","American","Coming of Age"]},{"y":2002,"name":"Richard Russo","book":"Empire Falls","country":"United States","pub":2001,"cover":"covers/pulitzer/2002-empire-falls.jpg","teaser":"A diner manager in a dying Maine mill town serves the family that owns everything, and cannot get himself out.","wiki":"https://en.wikipedia.org/wiki/Empire_Falls","genres":["Literary Fiction","American","Small Town"]},{"y":2001,"name":"Michael Chabon","book":"The Amazing Adventures of Kavalier & Clay","country":"United States","pub":2000,"cover":"covers/pulitzer/2001-the-amazing-adventures-of-kavalier-clay.jpg","teaser":"Two cousins invent a comic-book hero in 1939 New York, one of them trying to get his family out of Prague.","wiki":"https://en.wikipedia.org/wiki/The_Amazing_Adventures_of_Kavalier_%26_Clay","genres":["Historical Fiction","American","Comics"]},{"y":2000,"name":"Jhumpa Lahiri","book":"Interpreter of Maladies","country":"India / United Kingdom / United States","pub":1999,"cover":"covers/pulitzer/2000-interpreter-of-maladies.jpg","teaser":"Nine stories of Indian and Indian-American lives, where a marriage or a whole history turns on one small mistranslation.","wiki":"https://en.wikipedia.org/wiki/Interpreter_of_Maladies","genres":["Short Stories","Indian","Migration"]},{"y":1999,"name":"Michael Cunningham","book":"The Hours","country":"United States","pub":1998,"cover":"covers/pulitzer/1999-the-hours.jpg","teaser":"One day each for Virginia Woolf, a 1949 Los Angeles housewife reading her, and a modern New Yorker living out Mrs Dalloway.","wiki":"https://en.wikipedia.org/wiki/The_Hours_(novel)","genres":["Literary Fiction","American","Books About Books"]},{"y":1998,"name":"Philip Roth","book":"American Pastoral","country":"United States","pub":1997,"cover":"covers/pulitzer/1998-american-pastoral.jpg","teaser":"A golden New Jersey businessman's life is detonated by his own daughter, who plants a bomb in a post office in 1968.","wiki":"https://en.wikipedia.org/wiki/American_Pastoral","genres":["Literary Fiction","American","Political"]},{"y":1997,"name":"Steven Millhauser","book":"Martin Dressler","country":"United States","pub":1996,"cover":"covers/pulitzer/1997-martin-dressler.jpg","teaser":"A cigar-shop boy in Gilded Age New York builds ever larger hotels, until his ambition passes the point of anything a guest could want.","wiki":"https://en.wikipedia.org/wiki/Martin_Dressler","genres":["Historical Fiction","American","Gilded Age"]},{"y":1996,"name":"Richard Ford","book":"Independence Day","country":"United States","pub":1995,"cover":"covers/pulitzer/1996-independence-day.jpg","teaser":"A New Jersey estate agent takes his difficult son to two sports halls of fame over one Fourth of July weekend.","wiki":"https://en.wikipedia.org/wiki/Independence_Day_(Ford_novel)","genres":["Literary Fiction","American","Fatherhood"]},{"y":1995,"name":"Carol Shields","book":"The Stone Diaries","country":"United States / Canada","pub":1993,"cover":"covers/pulitzer/1995-the-stone-diaries.jpg","teaser":"The whole life of Daisy Goodwill, told in letters, recipes, photographs and the versions other people keep of her.","wiki":"https://en.wikipedia.org/wiki/The_Stone_Diaries","genres":["Literary Fiction","Canadian","Family Saga"]},{"y":1994,"name":"Annie Proulx","book":"The Shipping News","country":"United States","pub":1993,"cover":"covers/pulitzer/1994-the-shipping-news.jpg","teaser":"A failed newspaperman takes his daughters back to ancestral Newfoundland, and is slowly rebuilt by weather, knots and a local paper's car-wreck column.","wiki":"https://en.wikipedia.org/wiki/The_Shipping_News","genres":["Literary Fiction","American","Newfoundland"]},{"y":1993,"name":"Robert Olen Butler","book":"A Good Scent from a Strange Mountain","country":"United States","pub":1992,"cover":"covers/pulitzer/1993-a-good-scent-from-a-strange-mountain.jpg","teaser":"Fifteen Vietnamese voices resettled in Louisiana, each still carrying the country they left.","wiki":"https://en.wikipedia.org/wiki/A_Good_Scent_from_a_Strange_Mountain","genres":["Short Stories","Vietnamese","Migration"]},{"y":1992,"name":"Jane Smiley","book":"A Thousand Acres","country":"United States","pub":1991,"cover":"covers/pulitzer/1992-a-thousand-acres.jpg","teaser":"King Lear on an Iowa farm: a father divides a thousand acres between his daughters, and what surfaces is far worse than pride.","wiki":"https://en.wikipedia.org/wiki/A_Thousand_Acres","genres":["Literary Fiction","American","Family Saga"]},{"y":1991,"name":"John Updike","book":"Rabbit at Rest","country":"United States","pub":1990,"cover":"covers/pulitzer/1991-rabbit-at-rest.jpg","teaser":"Harry Angstrom in Florida, overweight and out of road, in the last of the four Rabbit novels.","wiki":"https://en.wikipedia.org/wiki/Rabbit_at_Rest","genres":["Literary Fiction","American","Ageing"]},{"y":1990,"name":"Oscar Hijuelos","book":"The Mambo Kings Play Songs of Love","country":"United States","pub":1989,"cover":"covers/pulitzer/1990-the-mambo-kings-play-songs-of-love.jpg","teaser":"Two Cuban brothers bring their band to 1950s New York, play one night on television, and spend the rest of their lives in its shadow.","wiki":"https://en.wikipedia.org/wiki/The_Mambo_Kings_Play_Songs_of_Love","genres":["Literary Fiction","Cuban","Music"]},{"y":1989,"name":"Anne Tyler","book":"Breathing Lessons","country":"United States","pub":1988,"cover":"covers/pulitzer/1989-breathing-lessons.jpg","teaser":"One day's drive to a funeral, in which a Baltimore wife meddles relentlessly in everyone's marriage including her own.","wiki":"https://en.wikipedia.org/wiki/Breathing_Lessons","genres":["Literary Fiction","American","Marriage"]},{"y":1988,"name":"Toni Morrison","book":"Beloved","country":"United States","pub":1987,"cover":"covers/pulitzer/1988-beloved.jpg","teaser":"An escaped slave in Ohio is visited by a young woman who appears to be the daughter she killed rather than see taken back.","wiki":"https://en.wikipedia.org/wiki/Beloved_(novel)","genres":["Literary Fiction","American","Slavery"]},{"y":1987,"name":"Peter Matthew Hillsman Taylor","book":"A Summons to Memphis","country":"United States","pub":1986,"cover":"covers/pulitzer/1987-a-summons-to-memphis.jpg","teaser":"A middle-aged son is called home to stop his elderly father remarrying, by sisters still settling a fifty-year-old family grievance.","wiki":"https://en.wikipedia.org/wiki/A_Summons_to_Memphis","genres":["Literary Fiction","American","Family Saga"]},{"y":1986,"name":"Larry McMurtry","book":"Lonesome Dove","country":"United States","pub":1985,"cover":"covers/pulitzer/1986-lonesome-dove.jpg","teaser":"Two retired Texas Rangers drive cattle to Montana, and the trail takes everything from them one piece at a time.","wiki":"https://en.wikipedia.org/wiki/Lonesome_Dove","genres":["Western","American","Adventure"]},{"y":1985,"name":"Alison Lurie","book":"Foreign Affairs","country":"United States","pub":1984,"cover":"covers/pulitzer/1985-foreign-affairs.jpg","teaser":"Two American academics on sabbatical in London, one fifty-four and unlovely, both conducting affairs that expose exactly who they are.","wiki":"https://en.wikipedia.org/wiki/Foreign_Affairs_(novel)","genres":["Comedy","American","Campus Novel"]}];
 
 function slug(b){
   return (b.year+'-'+b.period+'-'+(b.title||'break')).toLowerCase().replace(/[^a-z0-9]+/g,'-');
@@ -1382,7 +1432,7 @@ if(nowBook){
   nowBtn.textContent = 'Now';
   nowBtn.dataset.year = 'now';
   nowBtn.style.setProperty('--yr-color', YEAR_COLORS[nowBook.year] || '#333');
-  nowBtn.addEventListener('click', ()=> showYear('now'));
+  nowBtn.addEventListener('click', ()=>{ showYear('now'); syncHash('now'); });
   yearNav.appendChild(nowBtn);
 }
 
@@ -1394,7 +1444,7 @@ favBtn.type = 'button';
 favBtn.textContent = 'Favourites';
 favBtn.dataset.year = 'faves';
 favBtn.style.setProperty('--yr-color', FAVES_COLOR);
-favBtn.addEventListener('click', ()=> showYear('faves'));
+favBtn.addEventListener('click', ()=>{ showYear('faves'); syncHash('faves'); });
 yearNav.appendChild(favBtn);
 
 /* One tab for both prizes; the pill takes the colour of whichever is showing,
@@ -1405,7 +1455,7 @@ prizeBtn.type = 'button';
 prizeBtn.textContent = 'Prizes';
 prizeBtn.dataset.year = 'prizes';
 prizeBtn.style.setProperty('--yr-color', PRIZE_COLORS.nobel);
-prizeBtn.addEventListener('click', ()=> showYear('prizes'));
+prizeBtn.addEventListener('click', ()=>{ showYear('prizes'); syncHash('prizes-' + activePrize); });
 yearNav.appendChild(prizeBtn);
 
 years.forEach(y=>{
@@ -1414,7 +1464,7 @@ years.forEach(y=>{
   btn.textContent = y;
   btn.dataset.year = y;
   btn.style.setProperty('--yr-color', YEAR_COLORS[y]);
-  btn.addEventListener('click', ()=> showYear(y));
+  btn.addEventListener('click', ()=>{ showYear(y); syncHash(String(y)); });
   yearNav.appendChild(btn);
 });
 function showYear(y){
@@ -1511,6 +1561,14 @@ if(nowBook){
         ${nextCover ? `<img src="${nextCover}" alt="">` : ''}
         <span class="now-next-title">${escHTML(nowNext.title)} <span>${escHTML(nowNext.author)}</span></span>
       </div>` : ''}
+      <div class="now-about">
+        Book42 is a Telegram book club picking one book a month since 2021 — the Telegram link above is
+        how to join in. This diary is one of three sites from John+English:
+        <a href="https://johnplusenglish.com" target="_blank" rel="noopener">johnplusenglish.com</a> for
+        English lessons and
+        <a href="https://johnplustools.com" target="_blank" rel="noopener">johnplustools.com</a> for
+        classroom tools.
+      </div>
     </div>`;
   yearsRoot.appendChild(sec);
 
@@ -1885,7 +1943,7 @@ function renderPrize(which){
 
 przSwitch.addEventListener('click', (e)=>{
   const b = e.target.closest('[data-prize]');
-  if(b) renderPrize(b.dataset.prize);
+  if(b){ renderPrize(b.dataset.prize); syncHash('prizes-' + b.dataset.prize); }
 });
 
 prizesSection.addEventListener('click', (e)=>{
@@ -2034,8 +2092,13 @@ years.forEach(y=>{
     sec.id = 'y'+y;
     sec.style.setProperty('--yr-color', color);
     const nonBreak = items.filter(b=>!b.break).length;
+    /* Each card is a real focus stop, not just a click target — Tab reaches it,
+       Enter/Space does exactly what a click does (select if it's not the active
+       card, open if it is), and the label says which. A break card gets the
+       same treatment minus the "open" half, since there's no book behind it. */
     const cardHTML = (b, i)=>{
-      if(b.break) return `<div class="card is-break" data-index="${i}">
+      if(b.break) return `<div class="card is-break" data-index="${i}" tabindex="0" role="button"
+          aria-label="${escHTML(b.note || 'Break')}, ${escHTML(b.period)}">
         <div class="placeholder">${ICON_BOOK}
           <div class="p-title">${escHTML(b.note || 'Break')}</div>
           <div class="p-author">${escHTML(b.period)}</div>
@@ -2044,7 +2107,8 @@ years.forEach(y=>{
       const art = cover
         ? `<img class="cover-img" src="${cover}" alt="${escHTML(b.title)} cover" loading="lazy" decoding="async">`
         : `<div class="placeholder">${ICON_BOOK}<div class="p-title">${escHTML(b.title)}</div><div class="p-author">${escHTML(b.author)}</div></div>`;
-      return `<div class="card" data-index="${i}">
+      return `<div class="card" data-index="${i}" tabindex="0" role="button"
+          aria-label="${escHTML(b.title)}, ${escHTML(b.author)}, ${escHTML(b.period)}">
         ${art}
         <div class="gradient"></div>
         <span class="badge">${escHTML(b.period)}</span>
@@ -2053,7 +2117,7 @@ years.forEach(y=>{
           <div class="t">${escHTML(b.title)}</div>
           <div class="a">${escHTML(b.author)}</div>
         </div>
-        <button class="edit-btn" type="button" aria-label="Edit cover">${ICON_PENCIL}</button>
+        <button class="edit-btn" type="button" tabindex="-1" aria-label="Edit cover">${ICON_PENCIL}</button>
       </div>`;
     };
     sec.innerHTML = `
@@ -2079,24 +2143,43 @@ years.forEach(y=>{
     const detailEl = sec.querySelector('.book-detail');
     items.forEach((b, i)=>{
       if(b.break) return;
-      const dot = document.createElement('div');
+      const dot = document.createElement('button');
+      dot.type = 'button';
       dot.className = 'dot';
       dot.dataset.index = i;
+      dot.setAttribute('aria-label', `${b.title}, ${b.period}`);
       dot.addEventListener('click', ()=> setActive(y, i));
       dotsEl.appendChild(dot);
     });
 
     /* One tap selects, a second opens — the same two-stage gesture the fan had,
        where clicking a card off to the side only brought it to the front. */
+    function activateCard(i){
+      if(i === carousels[y].active){ if(!items[i].break) openBookModal(items[i], y); }
+      else setActive(y, i);
+    }
     sec.addEventListener('click', (e)=>{
       if(e.target.closest('.edit-btn')) return;          // wired per card below
       const nav = e.target.closest('[data-dir]');
       if(nav){ setActive(y, carousels[y].active + Number(nav.dataset.dir)); return; }
       const card = e.target.closest('.card');
       if(!card) return;
-      const i = Number(card.dataset.index);
-      if(i === carousels[y].active){ if(!items[i].break) openBookModal(items[i], y); }
-      else setActive(y, i);
+      activateCard(Number(card.dataset.index));
+    });
+    // Enter/Space on a focused card mirrors the click; arrow keys step and
+    // move focus together, so keyboard and pointer land in the same place.
+    sec.addEventListener('keydown', (e)=>{
+      const card = e.target.closest('.card');
+      if(!card) return;
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        activateCard(Number(card.dataset.index));
+      } else if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+        e.preventDefault();
+        const dir = e.key === 'ArrowLeft' ? -1 : 1;
+        setActive(y, carousels[y].active + dir);
+        cardEls[carousels[y].active]?.focus();
+      }
     });
     cardEls.forEach((el, i)=>{
       const btn = el.querySelector('.edit-btn');
@@ -2203,9 +2286,11 @@ years.forEach(y=>{
 
   items.forEach((b,i)=>{
     if(b.break) return;
-    const dot = document.createElement('div');
+    const dot = document.createElement('button');
+    dot.type = 'button';
     dot.className = 'dot';
     dot.dataset.index = i;
+    dot.setAttribute('aria-label', `${b.title}, ${b.period}`);
     dot.addEventListener('click', ()=> setActive(y, i));
     dotsEl.appendChild(dot);
   });
@@ -2350,10 +2435,15 @@ years.forEach(y=>{
 
   // keyboard: left/right arrows step through the year's books
   carouselEl.setAttribute('tabindex', '0');
-  carouselEl.setAttribute('aria-label', `${y} carousel — use left and right arrow keys to browse`);
+  carouselEl.setAttribute('aria-label', `${y} carousel — left and right arrow keys browse, Enter opens the centred book`);
   carouselEl.addEventListener('keydown', (e)=>{
     if(e.key === 'ArrowLeft'){ e.preventDefault(); shift(y, -1); }
     else if(e.key === 'ArrowRight'){ e.preventDefault(); shift(y, 1); }
+    else if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      const b = carousels[y].items[carousels[y].active];
+      if(!b.break) openBookModal(b, y);
+    }
   });
 });
 
@@ -2692,15 +2782,41 @@ document.querySelectorAll('.nav-btn svg, .edit-btn svg').forEach(svg=> svg.style
 
 // ---- deep link straight to one book, e.g. johnplusbooks.com/#2021-january-the-devotion-of-suspect-x ----
 // lets a specific pick be shared on its own (Telegram, etc.) rather than just linking the whole site
+/* The address bar as a bookmark: reflects wherever direct nav (a tab, a year,
+   which prize) just took the visitor, so copying the URL later returns them to
+   the same place. replaceState only — it neither adds a history entry nor
+   fires 'hashchange', so it can't loop back into openFromHash below. A book
+   modal is the more specific link, so it's left alone once one is open. */
+function syncHash(key){
+  if(bookModal.dataset.show === 'true') return;
+  history.replaceState(null, '', '#' + key);
+}
+
 function openFromHash(){
   const wanted = location.hash.slice(1);
   if(!wanted) return;
+  // most specific first: an exact book slug always wins if there is one
   const b = DATA.find(x => !x.break && slug(x) === wanted);
-  if(!b) return;
-  showYear(b.year);
-  const st = carousels[b.year];
-  setActive(b.year, st.items.indexOf(b));
-  openBookModal(b, b.year);
+  if(b){
+    showYear(b.year);
+    const st = carousels[b.year];
+    setActive(b.year, st.items.indexOf(b));
+    openBookModal(b, b.year);
+    return;
+  }
+  if(wanted === 'now' || wanted === 'faves' || wanted === 'prizes'){
+    showYear(wanted);
+    return;
+  }
+  const prizeMatch = wanted.match(/^prizes-(nobel|booker|pulitzer)$/);
+  if(prizeMatch){
+    showYear('prizes');
+    renderPrize(prizeMatch[1]);
+    return;
+  }
+  if(/^\d{4}$/.test(wanted) && years.includes(Number(wanted))){
+    showYear(Number(wanted));
+  }
 }
 // the wordmark is the way back to the front of the site
 document.getElementById('brandHome').addEventListener('click', ()=>{
