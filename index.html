@@ -106,6 +106,25 @@ a{color:inherit}
   padding-block:.3rem; margin-block:-.3rem;
 }
 .year-nav::-webkit-scrollbar{display:none}
+.year-nav-select{display:none}
+@media (max-width:680px){
+  /* On a phone nine-odd pills either wrap into a mess or force a long sideways
+     scroll before the rest of the header (Telegram button) is even reachable.
+     A native <select> is the one dropdown that needs no JS-built menu, no
+     click-outside handling and works with the platform's own picker UI. */
+  .year-nav{display:none}
+  .year-nav-select{
+    display:block; flex:1; min-width:0;
+    appearance:none; -webkit-appearance:none;
+    font:inherit; font-size:.85rem; font-weight:600; color:var(--ink);
+    background:var(--bg)
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%235a5a63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>')
+      no-repeat right .6rem center / 16px;
+    border:1px solid var(--line); border-radius:999px;
+    padding:.42rem 2.1rem .42rem .85rem;
+  }
+  .year-nav-select:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+}
 .year-nav button{
   flex:none;
   appearance:none; font:inherit;
@@ -971,6 +990,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   <h1 class="sr-only">Book42 — the reading diary</h1>
   <button type="button" class="brand" id="brandHome" aria-label="Back to what we're reading now"><span class="brand-name">book<span class="brand-42">42</span></span> <small>reading diary</small></button>
   <nav class="year-nav" id="yearNav"></nav>
+  <select class="year-nav-select" id="yearNavSelect" aria-label="Jump to a section"></select>
   <a class="tg-link" href="https://t.me/book42channel" target="_blank" rel="noopener"
      title="Book42 on Telegram" aria-label="Book42 on Telegram">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z"/></svg>
@@ -1518,6 +1538,16 @@ favBtn.style.setProperty('--yr-color', FAVES_COLOR);
 favBtn.addEventListener('click', ()=>{ showYear('faves'); syncHash('faves'); });
 yearNav.appendChild(favBtn);
 
+years.forEach(y=>{
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = y;
+  btn.dataset.year = y;
+  btn.style.setProperty('--yr-color', YEAR_COLORS[y]);
+  btn.addEventListener('click', ()=>{ showYear(y); syncHash(String(y)); });
+  yearNav.appendChild(btn);
+});
+
 /* One tab for both prizes; the pill takes the colour of whichever is showing,
    so the toggle inside the tab is echoed in the nav. */
 const PRIZE_COLORS = { nobel:'#8a6a12', booker:'#7a2246', pulitzer:'#2c4a7c' };
@@ -1538,21 +1568,30 @@ podcastBtn.style.setProperty('--yr-color', PODCAST_COLOR);
 podcastBtn.addEventListener('click', ()=>{ showYear('podcast'); syncHash('podcast'); });
 yearNav.appendChild(podcastBtn);
 
-years.forEach(y=>{
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.textContent = y;
-  btn.dataset.year = y;
-  btn.style.setProperty('--yr-color', YEAR_COLORS[y]);
-  btn.addEventListener('click', ()=>{ showYear(y); syncHash(String(y)); });
-  yearNav.appendChild(btn);
+/* The dropdown mirrors the pill nav exactly rather than keeping its own list —
+   built once the pills exist, by reading straight off them, so the two can
+   never drift out of sync when a tab is added or reordered later. */
+const yearNavSelect = document.getElementById('yearNavSelect');
+[...yearNav.children].forEach(btn=>{
+  const opt = document.createElement('option');
+  opt.value = btn.dataset.year;
+  opt.textContent = btn.textContent;
+  yearNavSelect.appendChild(opt);
 });
+yearNavSelect.addEventListener('change', ()=>{
+  const key = yearNavSelect.value;
+  const y = /^\d+$/.test(key) ? Number(key) : key;
+  showYear(y);
+  syncHash(key === 'prizes' ? 'prizes-' + activePrize : key);
+});
+
 function showYear(y){
   // y is a year number for the carousels and the string 'now' for the Now tab,
   // so both sides of these comparisons are normalised to strings
   const key = String(y);
   document.querySelectorAll('.year-section').forEach(s=> s.classList.toggle('active', s.id === 'y'+key));
   [...yearNav.children].forEach(btn=> btn.dataset.active = (btn.dataset.year === key));
+  yearNavSelect.value = key;
   // every year's layout() ran once already, but only while its section was
   // still display:none during construction — .carousel had zero height
   // then, so the explicit-pixel-height card sizing above was a no-op. Now
