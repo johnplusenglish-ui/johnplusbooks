@@ -1071,6 +1071,9 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   </a>
   <button class="editmode-btn" id="exportBtn" type="button" style="display:none">Export edits</button>
   <button class="editmode-btn" id="editModeBtn" type="button" style="display:none">Edit covers</button>
+  <button class="editmode-btn" id="backupBtn" type="button" style="display:none">Backup ratings</button>
+  <button class="editmode-btn" id="restoreBtn" type="button" style="display:none">Restore ratings</button>
+  <input type="file" id="restoreFile" accept="application/json" style="display:none">
 </header>
 
 <main id="years"></main>
@@ -3218,6 +3221,76 @@ document.getElementById('copyBtn').addEventListener('click', ()=>{
   navigator.clipboard?.writeText(t.value);
 });
 if(ADMIN_MODE && Object.keys(getOverrides()).length) document.getElementById('exportBtn').style.display = 'inline-block';
+
+/* ---------- backup/restore the ratings table (admin only, ?edit) ----------
+   The whole club's ratings/notes live in one Supabase table behind a public
+   anon key with no accounts and no soft-delete — a bad SQL command in the
+   dashboard, a paused/deleted project, or a client bug writing garbage could
+   lose it with nothing to recover from. Backup is a plain read (same access
+   anyone already has via loadRatings). Restore is a POST with the same
+   merge-duplicates upsert every rating/note write already uses, so replaying
+   a backup can't create duplicate rows — it just overwrites by (book_slug,
+   voter_id). Both stay behind ?edit purely to keep them out of casual
+   visitors' way; the anon key itself is already public in view-source, so
+   this doesn't change what's technically possible, only what's discoverable. */
+if(ADMIN_MODE && RATINGS_ENABLED){
+  document.getElementById('backupBtn').style.display = 'inline-block';
+  document.getElementById('restoreBtn').style.display = 'inline-block';
+}
+document.getElementById('backupBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('backupBtn');
+  btn.disabled = true; btn.textContent = 'Backing up…';
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings?select=*`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const rows = await res.json();
+    const blob = new Blob([JSON.stringify(rows, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `book_ratings-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  } catch(err){
+    alert('Backup failed: ' + err.message);
+  }
+  btn.disabled = false; btn.textContent = 'Backup ratings';
+});
+document.getElementById('restoreBtn').addEventListener('click', ()=>{
+  document.getElementById('restoreFile').click();
+});
+document.getElementById('restoreFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  e.target.value = '';   // picking the same file twice should still fire 'change'
+  if(!file) return;
+  let rows;
+  try{ rows = JSON.parse(await file.text()); }
+  catch(err){ alert('That file is not valid JSON.'); return; }
+  if(!Array.isArray(rows) || !rows.length){ alert('Nothing to restore — the file has no rows.'); return; }
+  if(!confirm(`Restore ${rows.length} row(s) from this file?\n\nAny existing row with the same book + voter will be overwritten with the file's values.`)) return;
+
+  const btn = document.getElementById('restoreBtn');
+  btn.disabled = true; btn.textContent = 'Restoring…';
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify(rows)
+    });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    alert(`Restored ${rows.length} row(s). Reloading the page to pick them up…`);
+    location.reload();
+  } catch(err){
+    alert('Restore failed: ' + err.message);
+    btn.disabled = false; btn.textContent = 'Restore ratings';
+  }
+});
 
 // icon strokes need currentColor fix for chevrons/pencil (inherit stroke)
 document.querySelectorAll('.nav-btn svg, .edit-btn svg').forEach(svg=> svg.style.stroke = 'currentColor');
