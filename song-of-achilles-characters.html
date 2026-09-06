@@ -33,9 +33,8 @@ svg{width:100%;height:auto;display:block}
 .link.ally{stroke:#b59a86;stroke-width:1.6}
 .link.friend{stroke:#b0a591;stroke-width:1.6;stroke-dasharray:2 5}
 .war{stroke:#c58f88;stroke-width:1.6;stroke-dasharray:7 6;fill:none}
-.warlab{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;fill:#a85f57}
-.llabel{font-size:11.5px;fill:#7c7264;font-weight:600}
-.llabel-bg{fill:var(--paper);opacity:.94}
+.warlab{font-size:10px;font-weight:700;letter-spacing:.14em;fill:#a85f57}
+.llabel{font-size:10px;fill:#8a8073;font-weight:700;letter-spacing:.07em}
 .node{cursor:pointer}
 .node rect.card{stroke-width:1.4;stroke-opacity:.55}
 .node .nm{font-weight:700;font-size:15px;fill:var(--ink)}
@@ -107,20 +106,20 @@ const FACTIONS={
 };
 const ORDER=["heart","phthia","house","scyros","greek","troy","camp"];
 const ZONES=[
- {f:"phthia", x:360,y:70, w:440,h:180,lx:376,ly:92},
+ {f:"phthia", x:350,y:70, w:490,h:180,lx:366,ly:92},
  {f:"house",  x:60, y:285,w:270,h:335,lx:76, ly:307},
- {f:"scyros", x:60, y:665,w:430,h:215,lx:76, ly:687},
- {f:"greek",  x:815,y:100,w:325,h:385,lx:831,ly:122},
- {f:"troy",   x:815,y:560,w:325,h:325,lx:831,ly:582},
+ {f:"scyros", x:60, y:665,w:430,h:225,lx:76, ly:687},
+ {f:"greek",  x:815,y:110,w:335,h:395,lx:831,ly:132},
+ {f:"troy",   x:815,y:560,w:335,h:350,lx:831,ly:582},
 ];
 const NODES=[
  {id:"achilles",name:"Achilles",role:"prince of Phthia",f:"heart",x:560,y:340,
   desc:"Prince of Phthia, son of a king and a goddess. Swift, brilliant and famed as the best of the Greeks."},
  {id:"patroclus",name:"Patroclus",role:"the narrator",f:"heart",x:560,y:530,
   desc:"The narrator. A young prince sent away from home in disgrace and raised in Phthia."},
- {id:"peleus",name:"Peleus",role:"king of Phthia",f:"phthia",x:500,y:150,
+ {id:"peleus",name:"Peleus",role:"king of Phthia",f:"phthia",x:470,y:150,
   desc:"The mortal king of Phthia and Achilles's father. He takes the exiled Patroclus into his care."},
- {id:"thetis",name:"Thetis",role:"sea-nymph",f:"phthia",x:690,y:150,
+ {id:"thetis",name:"Thetis",role:"sea-nymph",f:"phthia",x:730,y:150,
   desc:"A sea-nymph and Achilles's divine mother. Cold and watchful, and wary of Patroclus from the first."},
  {id:"chiron",name:"Chiron",role:"the centaur tutor",f:"house",x:195,y:350,
   desc:"The wise centaur of Mount Pelion who teaches the two boys medicine, music and the arts of war."},
@@ -130,25 +129,25 @@ const NODES=[
   desc:"A dependable young charioteer who serves at Achilles's side."},
  {id:"menoitius",name:"Menoitius",role:"Patroclus's father",f:"scyros",x:175,y:775,
   desc:"A hard, disappointed king. Patroclus's father, who sends his son away as a boy."},
- {id:"lycomedes",name:"Lycomedes",role:"king of Scyros",f:"scyros",x:375,y:748,
+ {id:"lycomedes",name:"Lycomedes",role:"king of Scyros",f:"scyros",x:370,y:742,
   desc:"The mild-mannered king of the small island of Scyros."},
- {id:"deidameia",name:"Deidameia",role:"princess of Scyros",f:"scyros",x:375,y:835,
+ {id:"deidameia",name:"Deidameia",role:"princess of Scyros",f:"scyros",x:370,y:852,
   desc:"Lycomedes's lively, headstrong young daughter."},
- {id:"agamemnon",name:"Agamemnon",role:"king of Mycenae",f:"greek",x:912,y:180,
+ {id:"agamemnon",name:"Agamemnon",role:"king of Mycenae",f:"greek",x:900,y:175,
   desc:"King of Mycenae and commander of the gathered Greek army. Proud and jealous of his rank."},
- {id:"menelaus",name:"Menelaus",role:"king of Sparta",f:"greek",x:1055,y:235,
+ {id:"menelaus",name:"Menelaus",role:"king of Sparta",f:"greek",x:1075,y:265,
   desc:"King of Sparta and Agamemnon's brother."},
- {id:"helen",name:"Helen",role:"queen of Sparta",f:"greek",x:1055,y:355,
+ {id:"helen",name:"Helen",role:"queen of Sparta",f:"greek",x:1075,y:385,
   desc:"Queen of Sparta, said to be the most beautiful woman alive. The dispute over her draws the kings to war."},
- {id:"odysseus",name:"Odysseus",role:"king of Ithaca",f:"greek",x:912,y:315,
+ {id:"odysseus",name:"Odysseus",role:"king of Ithaca",f:"greek",x:905,y:320,
   desc:"The clever, watchful king of Ithaca, never without a plan."},
- {id:"diomedes",name:"Diomedes",role:"king of Argos",f:"greek",x:912,y:425,
+ {id:"diomedes",name:"Diomedes",role:"king of Argos",f:"greek",x:905,y:435,
   desc:"A blunt, sharp-tongued king of Argos, often found at Odysseus's side."},
- {id:"hector",name:"Hector",role:"prince of Troy",f:"troy",x:960,y:650,
+ {id:"hector",name:"Hector",role:"prince of Troy",f:"troy",x:960,y:640,
   desc:"Eldest prince of Troy and the city's greatest defender."},
- {id:"priam",name:"Priam",role:"king of Troy",f:"troy",x:960,y:748,
+ {id:"priam",name:"Priam",role:"king of Troy",f:"troy",x:960,y:755,
   desc:"The aged, gracious king of Troy, father of many sons."},
- {id:"paris",name:"Paris",role:"prince of Troy",f:"troy",x:960,y:840,
+ {id:"paris",name:"Paris",role:"prince of Troy",f:"troy",x:960,y:868,
   desc:"A prince of Troy whose choice helped set the war in motion."},
  {id:"briseis",name:"Briseis",role:"a girl in the camp",f:"camp",x:720,y:645,
   desc:"A young woman taken into the Greek camp, who becomes a gentle friend to Patroclus."},
@@ -158,14 +157,14 @@ const LINKS=[
  {a:"peleus",b:"thetis",k:"family",l:"estranged"},
  {a:"peleus",b:"achilles",k:"family",l:"father"},
  {a:"thetis",b:"achilles",k:"family",l:"mother"},
- {a:"chiron",b:"achilles",k:"tutor",l:"tutor",lx:355,ly:334},
- {a:"chiron",b:"patroclus",k:"tutor",l:"tutor",lx:352,ly:452},
- {a:"menoitius",b:"patroclus",k:"family",l:"father",lx:372,ly:645},
+ {a:"chiron",b:"achilles",k:"tutor",l:"tutor"},
+ {a:"chiron",b:"patroclus",k:"tutor",l:"tutor"},
+ {a:"menoitius",b:"patroclus",k:"family",l:"father"},
  {a:"lycomedes",b:"deidameia",k:"family",l:"father"},
  {a:"agamemnon",b:"menelaus",k:"family",l:"brothers"},
  {a:"menelaus",b:"helen",k:"family",l:"married"},
  {a:"odysseus",b:"diomedes",k:"ally",l:"allies"},
- {a:"odysseus",b:"achilles",k:"ally",l:"recruits",lx:735,ly:322},
+ {a:"odysseus",b:"achilles",k:"ally",l:"recruits"},
  {a:"priam",b:"hector",k:"family",l:"father"},
  {a:"priam",b:"paris",k:"family",l:"father"},
  {a:"patroclus",b:"briseis",k:"friend",l:"friends"},
@@ -183,22 +182,32 @@ ZONES.forEach(z=>{const c=col(z.f);
  const t=el("text",{x:z.lx,y:z.ly,class:"zlabel",fill:c});t.textContent=FACTIONS[z.f][0];svg.appendChild(t);});
 
 // war divider between Greek kings and Troy (facing sides, not a node link)
-svg.appendChild(el("path",{d:"M977,485 L977,560",class:"war"}));
-(function(){const w=64;svg.appendChild(el("rect",{x:977-w/2,y:514,width:w,height:17,rx:5,class:"llabel-bg"}));
- const t=el("text",{x:977,y:526,"text-anchor":"middle",class:"warlab"});t.textContent="at war";svg.appendChild(t);})();
+(function(){const x=977;
+ svg.appendChild(el("path",{d:`M${x},506 L${x},520`,class:"war"}));
+ svg.appendChild(el("path",{d:`M${x},540 L${x},554`,class:"war"}));
+ const t=el("text",{x,y:530,"text-anchor":"middle","dominant-baseline":"central",class:"warlab"});
+ t.textContent="AT WAR";svg.appendChild(t);})();
 
 function border(n,tx,ty){const dx=tx-n.x,dy=ty-n.y,hw=NW/2+3,hh=NH/2+3;
  if(!dx&&!dy)return[n.x,n.y];
  const s=Math.min(dx?hw/Math.abs(dx):1e9, dy?hh/Math.abs(dy):1e9);
  return[n.x+dx*s,n.y+dy*s];}
 const linkLayer=el("g",{}),labelLayer=el("g",{});svg.appendChild(linkLayer);svg.appendChild(labelLayer);
+function seg(x1,y1,x2,y2,L){const p=el("path",{d:`M${x1},${y1} L${x2},${y2}`,class:"link "+L.k});
+ p.dataset.a=L.a;p.dataset.b=L.b;linkLayer.appendChild(p);}
 LINKS.forEach(L=>{const A=byId[L.a],B=byId[L.b];
  const[ax,ay]=border(A,B.x,B.y),[bx,by]=border(B,A.x,A.y);
- const ln=el("path",{d:`M${ax},${ay} L${bx},${by}`,class:"link "+L.k});
- ln.dataset.a=L.a;ln.dataset.b=L.b;linkLayer.appendChild(ln);
- if(L.l){const mx=L.lx??(ax+bx)/2,my=L.ly??(ay+by)/2,w=L.l.length*6.4+12;
-  const bg=el("rect",{x:mx-w/2,y:my-9,width:w,height:16,rx:4,class:"llabel-bg"});bg.dataset.a=L.a;bg.dataset.b=L.b;labelLayer.appendChild(bg);
-  const t=el("text",{x:mx,y:my+2.5,"text-anchor":"middle",class:"llabel"});t.dataset.a=L.a;t.dataset.b=L.b;t.textContent=L.l;labelLayer.appendChild(t);}});
+ const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len;
+ const label=(L.l||"").toUpperCase();
+ if(!label){seg(ax,ay,bx,by,L);return;}
+ const lw=label.length*7.4+6, lh=13;
+ // gap sized to the label's extent ALONG the line, so the break is clean at any angle
+ const half=Math.min((Math.abs(lw*ux)+Math.abs(lh*uy))/2+5, len/2-2);
+ const mx=(ax+bx)/2,my=(ay+by)/2;
+ if(half>4){seg(ax,ay,mx-ux*half,my-uy*half,L);seg(mx+ux*half,my+uy*half,bx,by,L);}
+ else{seg(ax,ay,bx,by,L);}
+ const t=el("text",{x:mx,y:my,"text-anchor":"middle","dominant-baseline":"central",class:"llabel"});
+ t.dataset.a=L.a;t.dataset.b=L.b;t.textContent=label;labelLayer.appendChild(t);});
 
 const nodeEls={};
 NODES.forEach(n=>{const c=col(n.f);
