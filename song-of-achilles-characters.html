@@ -43,33 +43,39 @@ border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-height:70p
 .panel p{margin:.4em 0 0;color:var(--soft);font-size:.9rem;max-width:70ch}
 
 /* ---- mobile list ---- */
-.listview{display:none;margin-top:14px}
-.grp{margin-bottom:22px}
-.grp>.gh{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);
-margin:0 2px 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
-.pill{background:var(--card);border:1px solid var(--line);border-radius:14px;
-padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow-lo)}
-.pill h4{margin:0;font-size:1rem;font-weight:700;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
-.pill h4 .role{font-size:.78rem;font-weight:500;color:var(--soft)}
-.pill p{margin:.35em 0 0;font-size:.88rem;color:var(--soft)}
-.rels{margin:.6em 0 0;display:flex;flex-wrap:wrap;gap:5px}
-.rel{font-size:.7rem;background:transparent;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--soft)}
+.listview{display:none;margin-top:6px}
+.grp{margin-bottom:16px}
+.grp>.gh{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);
+margin:0 2px 8px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:6px}
+.grp>.gh .ct{font-weight:500;opacity:.6}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:12px;
+padding:11px 13px;margin-bottom:7px;box-shadow:var(--shadow-lo)}
+.pill h4{margin:0;font-size:.98rem;font-weight:700;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.pill h4 .role{font-size:.74rem;font-weight:500;color:var(--soft)}
+.pill p{margin:.3em 0 0;font-size:.84rem;line-height:1.4;color:var(--soft)}
+.rels{margin:.55em 0 0;display:flex;flex-wrap:wrap;gap:5px}
+.rel{font-size:.68rem;background:transparent;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--soft);white-space:nowrap}
 .rel b{color:var(--ink);font-weight:600}
+.rel .arrow{color:var(--acc);margin:0 1px}
 
-footer{padding:22px 0 56px;color:var(--soft);font-size:.78rem}
+footer{padding:20px 0 50px;color:var(--soft);font-size:.76rem}
 
 @media(max-width:760px){
  .stage,.panel{display:none}
  .listview{display:block}
- h1{font-size:1.55rem}
- header{padding:22px 0 4px}
+ .wrap{padding:0 16px}
+ header{padding:20px 0 2px}
+ .kicker{font-size:.66rem}
+ h1{font-size:1.5rem;line-height:1.1;margin:.22em 0 .16em}
+ .sub{font-size:.85rem;line-height:1.45}
+ .badge{font-size:.7rem;padding:.3rem .7rem;margin-top:11px}
 }
 </style></head>
 <body>
 <header><div class="wrap">
 <div class="kicker">Book 42 &middot; This month's read</div>
-<h1>The Song of Achilles: who's who</h1>
-<p class="sub">The cast of Madeline Miller's novel as the story sets out, and how they relate. On a computer, hover a name to trace its ties; on a phone, scroll the cast by group.</p>
+<h1>Who's who</h1>
+<p class="sub">The cast of The Song of Achilles, Madeline Miller's novel, as the story sets out and how they relate. On a computer, hover a name to trace its ties; on a phone, scroll the cast by group.</p>
 <div class="badge">Spoiler-free: starting relationships only, no plot or fates</div>
 </div></header>
 
@@ -206,9 +212,9 @@ function relsFor(id){const out=[];LINKS.forEach(L=>{
 const lv=document.getElementById("listview");
 GROUP_ORDER.forEach(g=>{const members=NODES.filter(n=>n.g===g);if(!members.length)return;
  const box=document.createElement("div");box.className="grp";
- box.innerHTML=`<div class="gh">${GROUPS[g]}</div>`;
+ box.innerHTML=`<div class="gh">${GROUPS[g]}<span class="ct">${members.length}</span></div>`;
  members.forEach(n=>{const p=document.createElement("div");p.className="pill";
-  const rels=relsFor(n.id).map(([l,nm])=>`<span class="rel">${l} &middot; <b>${nm}</b></span>`).join("");
+  const rels=relsFor(n.id).map(([l,nm])=>`<span class="rel">${l}<span class="arrow">&rarr;</span><b>${nm}</b></span>`).join("");
   p.innerHTML=`<h4>${n.name}<span class="role">${n.role}</span></h4><p>${n.desc}</p>`+(rels?`<div class="rels">${rels}</div>`:"");
   box.appendChild(p);});
  lv.appendChild(box);});
