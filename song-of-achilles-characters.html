@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Song of Achilles Character Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Newsreader:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#211c16;--soft:#6a6153;--cream:#faf6ef;--paper:#fffdf9;--line:#e6ddce;--acc:#8a5a2b;
+--phthia:#b0803f;--house:#7d7a44;--scyros:#5f7488;--greek:#a2603a;--troy:#8a4650;--camp:#8a7f70;--heart:#8a5a2b;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:Outfit,system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+header{padding:30px 0 8px}
+.kicker{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc);font-weight:600}
+h1{font-family:Newsreader,Georgia,serif;font-weight:500;font-size:34px;margin:.18em 0 .12em}
+.sub{color:var(--soft);font-size:15px;max-width:70ch;margin:0}
+.badge{display:inline-block;font-size:12px;font-weight:600;color:#3f6b3f;background:#e8f0e3;border:1px solid #cfe0c6;
+border-radius:20px;padding:3px 11px;margin-top:12px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 15px;margin:16px 0 4px}
+.leg{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--soft);font-weight:500}
+.dot{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+
+/* ---- desktop map ---- */
+.stage{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:6px;margin-top:10px}
+svg{width:100%;height:auto;display:block}
+.zone{fill-opacity:.06;stroke-opacity:.5;stroke-dasharray:5 5;stroke-width:1.4}
+.zlabel{font-size:13px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;opacity:.8}
+.link{fill:none;stroke:#c9bda6}
+.link.bond{stroke:var(--acc);stroke-width:3.4}
+.link.family{stroke:#b9ac92;stroke-width:1.6}
+.link.tutor{stroke:#9fb08f;stroke-width:1.7;stroke-dasharray:1 5;stroke-linecap:round}
+.link.ally{stroke:#b59a86;stroke-width:1.6}
+.link.friend{stroke:#b0a591;stroke-width:1.6;stroke-dasharray:2 5}
+.war{stroke:#c58f88;stroke-width:1.6;stroke-dasharray:7 6;fill:none}
+.warlab{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;fill:#a85f57}
+.llabel{font-size:11.5px;fill:#7c7264;font-weight:600}
+.llabel-bg{fill:var(--paper);opacity:.94}
+.node{cursor:pointer}
+.node rect.card{stroke-width:1.4;stroke-opacity:.55}
+.node .nm{font-weight:700;font-size:15px;fill:var(--ink)}
+.node .rl{font-size:11px;fill:var(--soft)}
+.node:hover rect.card,.node.on rect.card{filter:drop-shadow(0 5px 12px rgba(80,60,30,.20))}
+.dim{opacity:.25}
+.panel{display:flex;gap:15px;align-items:flex-start;margin-top:14px;background:var(--paper);
+border:1px solid var(--line);border-radius:13px;padding:15px 17px;min-height:74px}
+.panel .tag{flex:0 0 auto;font-size:11.5px;font-weight:700;color:#fff;border-radius:6px;padding:3px 9px;margin-top:2px}
+.panel h3{margin:0 0 3px;font-family:Newsreader,serif;font-weight:500;font-size:20px}
+.panel .rlx{color:var(--soft);font-size:12.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.panel p{margin:5px 0 0;color:#4b4335;font-size:14.5px;font-family:Newsreader,serif}
+.hint{color:var(--soft);font-style:italic}
+
+/* ---- mobile list ---- */
+.listview{display:none;margin-top:14px}
+.grp{margin-bottom:20px}
+.grp>.gh{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;letter-spacing:.04em;
+text-transform:uppercase;color:var(--soft);margin:0 2px 9px}
+.pill{background:var(--paper);border:1px solid var(--line);border-radius:12px;
+padding:12px 14px;margin-bottom:9px}
+.pill h4{margin:0;font-size:16.5px;font-weight:700;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pill h4 .role{font-size:12.5px;font-weight:500;color:var(--soft)}
+.pill p{margin:5px 0 0;font-family:Newsreader,serif;font-size:14.5px;color:#4b4335}
+.rels{margin:8px 0 0;display:flex;flex-wrap:wrap;gap:5px}
+.rel{font-size:11.5px;background:var(--cream);border:1px solid var(--line);border-radius:20px;padding:2px 9px;color:var(--soft)}
+.rel b{color:var(--ink);font-weight:600}
+footer{padding:22px 0 56px;color:var(--soft);font-size:12.5px}
+
+@media(max-width:760px){
+ .stage,.panel{display:none}
+ .listview{display:block}
+ h1{font-size:27px}
+ header{padding:22px 0 4px}
+}
+</style></head>
+<body>
+<header><div class="wrap">
+<div class="kicker">Book 42 &middot; This month's read</div>
+<h1>The Song of Achilles: who's who</h1>
+<p class="sub">The cast of Madeline Miller's novel as the story sets out: each character's house or side, and how they relate. On a computer, hover a name to trace its ties; on a phone, scroll the cast by group.</p>
+<div class="badge">Spoiler-free &middot; starting relationships only, no plot or fates</div>
+<div class="legend" id="legend"></div>
+</div></header>
+
+<div class="wrap">
+<div class="stage"><svg id="map" viewBox="0 0 1160 900" role="img" aria-label="Character relationship map"></svg></div>
+<div class="panel" id="panel">
+<div class="tag" id="ptag" style="background:var(--acc)">Start</div>
+<div><h3 id="pname">The two at the centre</h3>
+<div class="rlx" id="prole">Patroclus &amp; Achilles</div>
+<p id="pdesc">A quiet, exiled boy and a golden prince, raised together. Their bond is the thread the whole story is told along. <span class="hint">Hover any name to explore the cast.</span></p></div>
+</div>
+
+<div class="listview" id="listview"></div>
+</div>
+
+<footer><div class="wrap">A companion for the Book 42 club. Faction colours group characters by house or side; no events, outcomes, or later developments are shown.</div></footer>
+
+<script>
+const FACTIONS={
+ heart:["The heart of the story","--heart"],
+ phthia:["House of Phthia","--phthia"],
+ house:["Phthia's household","--house"],
+ scyros:["Patroclus's early life","--scyros"],
+ greek:["The Greek kings","--greek"],
+ troy:["Troy","--troy"],
+ camp:["In the camp","--camp"],
+};
+const ORDER=["heart","phthia","house","scyros","greek","troy","camp"];
+const ZONES=[
+ {f:"phthia", x:360,y:70, w:440,h:180,lx:376,ly:92},
+ {f:"house",  x:60, y:285,w:270,h:335,lx:76, ly:307},
+ {f:"scyros", x:60, y:665,w:430,h:215,lx:76, ly:687},
+ {f:"greek",  x:815,y:100,w:325,h:385,lx:831,ly:122},
+ {f:"troy",   x:815,y:560,w:325,h:325,lx:831,ly:582},
+];
+const NODES=[
+ {id:"achilles",name:"Achilles",role:"prince of Phthia",f:"heart",x:560,y:340,
+  desc:"Prince of Phthia, son of a king and a goddess. Swift, brilliant and famed as the best of the Greeks."},
+ {id:"patroclus",name:"Patroclus",role:"the narrator",f:"heart",x:560,y:530,
+  desc:"The narrator. A young prince sent away from home in disgrace and raised in Phthia."},
+ {id:"peleus",name:"Peleus",role:"king of Phthia",f:"phthia",x:500,y:150,
+  desc:"The mortal king of Phthia and Achilles's father. He takes the exiled Patroclus into his care."},
+ {id:"thetis",name:"Thetis",role:"sea-nymph",f:"phthia",x:690,y:150,
+  desc:"A sea-nymph and Achilles's divine mother. Cold and watchful, and wary of Patroclus from the first."},
+ {id:"chiron",name:"Chiron",role:"the centaur tutor",f:"house",x:195,y:350,
+  desc:"The wise centaur of Mount Pelion who teaches the two boys medicine, music and the arts of war."},
+ {id:"phoinix",name:"Phoinix",role:"old counsellor",f:"house",x:195,y:455,
+  desc:"A trusted elder of Phthia who has served the royal house for many years."},
+ {id:"automedon",name:"Automedon",role:"young charioteer",f:"house",x:195,y:560,
+  desc:"A dependable young charioteer who serves at Achilles's side."},
+ {id:"menoitius",name:"Menoitius",role:"Patroclus's father",f:"scyros",x:175,y:775,
+  desc:"A hard, disappointed king. Patroclus's father, who sends his son away as a boy."},
+ {id:"lycomedes",name:"Lycomedes",role:"king of Scyros",f:"scyros",x:375,y:748,
+  desc:"The mild-mannered king of the small island of Scyros."},
+ {id:"deidameia",name:"Deidameia",role:"princess of Scyros",f:"scyros",x:375,y:835,
+  desc:"Lycomedes's lively, headstrong young daughter."},
+ {id:"agamemnon",name:"Agamemnon",role:"king of Mycenae",f:"greek",x:912,y:180,
+  desc:"King of Mycenae and commander of the gathered Greek army. Proud and jealous of his rank."},
+ {id:"menelaus",name:"Menelaus",role:"king of Sparta",f:"greek",x:1055,y:235,
+  desc:"King of Sparta and Agamemnon's brother."},
+ {id:"helen",name:"Helen",role:"queen of Sparta",f:"greek",x:1055,y:355,
+  desc:"Queen of Sparta, said to be the most beautiful woman alive. The dispute over her draws the kings to war."},
+ {id:"odysseus",name:"Odysseus",role:"king of Ithaca",f:"greek",x:912,y:315,
+  desc:"The clever, watchful king of Ithaca, never without a plan."},
+ {id:"diomedes",name:"Diomedes",role:"king of Argos",f:"greek",x:912,y:425,
+  desc:"A blunt, sharp-tongued king of Argos, often found at Odysseus's side."},
+ {id:"hector",name:"Hector",role:"prince of Troy",f:"troy",x:960,y:650,
+  desc:"Eldest prince of Troy and the city's greatest defender."},
+ {id:"priam",name:"Priam",role:"king of Troy",f:"troy",x:960,y:748,
+  desc:"The aged, gracious king of Troy, father of many sons."},
+ {id:"paris",name:"Paris",role:"prince of Troy",f:"troy",x:960,y:840,
+  desc:"A prince of Troy whose choice helped set the war in motion."},
+ {id:"briseis",name:"Briseis",role:"a girl in the camp",f:"camp",x:720,y:645,
+  desc:"A young woman taken into the Greek camp, who becomes a gentle friend to Patroclus."},
+];
+const LINKS=[
+ {a:"achilles",b:"patroclus",k:"bond",l:"inseparable"},
+ {a:"peleus",b:"thetis",k:"family",l:"estranged"},
+ {a:"peleus",b:"achilles",k:"family",l:"father"},
+ {a:"thetis",b:"achilles",k:"family",l:"mother"},
+ {a:"chiron",b:"achilles",k:"tutor",l:"tutor",lx:355,ly:334},
+ {a:"chiron",b:"patroclus",k:"tutor",l:"tutor",lx:352,ly:452},
+ {a:"menoitius",b:"patroclus",k:"family",l:"father",lx:372,ly:645},
+ {a:"lycomedes",b:"deidameia",k:"family",l:"father"},
+ {a:"agamemnon",b:"menelaus",k:"family",l:"brothers"},
+ {a:"menelaus",b:"helen",k:"family",l:"married"},
+ {a:"odysseus",b:"diomedes",k:"ally",l:"allies"},
+ {a:"odysseus",b:"achilles",k:"ally",l:"recruits",lx:735,ly:322},
+ {a:"priam",b:"hector",k:"family",l:"father"},
+ {a:"priam",b:"paris",k:"family",l:"father"},
+ {a:"patroclus",b:"briseis",k:"friend",l:"friends"},
+];
+const NW=140,NH=48;
+const byId=Object.fromEntries(NODES.map(n=>[n.id,n]));
+const SVGNS="http://www.w3.org/2000/svg";
+const svg=document.getElementById("map");
+const css=getComputedStyle(document.documentElement);
+const col=v=>css.getPropertyValue(FACTIONS[v][1]).trim();
+function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+
+ZONES.forEach(z=>{const c=col(z.f);
+ svg.appendChild(el("rect",{x:z.x,y:z.y,width:z.w,height:z.h,rx:16,class:"zone",fill:c,stroke:c}));
+ const t=el("text",{x:z.lx,y:z.ly,class:"zlabel",fill:c});t.textContent=FACTIONS[z.f][0];svg.appendChild(t);});
+
+// war divider between Greek kings and Troy (facing sides, not a node link)
+svg.appendChild(el("path",{d:"M977,485 L977,560",class:"war"}));
+(function(){const w=64;svg.appendChild(el("rect",{x:977-w/2,y:514,width:w,height:17,rx:5,class:"llabel-bg"}));
+ const t=el("text",{x:977,y:526,"text-anchor":"middle",class:"warlab"});t.textContent="at war";svg.appendChild(t);})();
+
+function border(n,tx,ty){const dx=tx-n.x,dy=ty-n.y,hw=NW/2+3,hh=NH/2+3;
+ if(!dx&&!dy)return[n.x,n.y];
+ const s=Math.min(dx?hw/Math.abs(dx):1e9, dy?hh/Math.abs(dy):1e9);
+ return[n.x+dx*s,n.y+dy*s];}
+const linkLayer=el("g",{}),labelLayer=el("g",{});svg.appendChild(linkLayer);svg.appendChild(labelLayer);
+LINKS.forEach(L=>{const A=byId[L.a],B=byId[L.b];
+ const[ax,ay]=border(A,B.x,B.y),[bx,by]=border(B,A.x,A.y);
+ const ln=el("path",{d:`M${ax},${ay} L${bx},${by}`,class:"link "+L.k});
+ ln.dataset.a=L.a;ln.dataset.b=L.b;linkLayer.appendChild(ln);
+ if(L.l){const mx=L.lx??(ax+bx)/2,my=L.ly??(ay+by)/2,w=L.l.length*6.4+12;
+  const bg=el("rect",{x:mx-w/2,y:my-9,width:w,height:16,rx:4,class:"llabel-bg"});bg.dataset.a=L.a;bg.dataset.b=L.b;labelLayer.appendChild(bg);
+  const t=el("text",{x:mx,y:my+2.5,"text-anchor":"middle",class:"llabel"});t.dataset.a=L.a;t.dataset.b=L.b;t.textContent=L.l;labelLayer.appendChild(t);}});
+
+const nodeEls={};
+NODES.forEach(n=>{const c=col(n.f);
+ const g=el("g",{class:"node",transform:`translate(${n.x-NW/2},${n.y-NH/2})`});
+ g.appendChild(el("rect",{class:"card",width:NW,height:NH,rx:11,fill:c,"fill-opacity":.07,stroke:c}));
+ const nm=el("text",{x:15,y:21,class:"nm"});nm.textContent=n.name;g.appendChild(nm);
+ const rl=el("text",{x:15,y:37,class:"rl"});rl.textContent=n.role;g.appendChild(rl);
+ g.addEventListener("mouseenter",()=>focus(n.id));
+ g.addEventListener("click",()=>focus(n.id));
+ svg.appendChild(g);nodeEls[n.id]=g;});
+
+const P={tag:ptag,name:pname,role:prole,desc:pdesc};
+function focus(id){const n=byId[id];const near=new Set([id]);
+ LINKS.forEach(L=>{if(L.a===id)near.add(L.b);if(L.b===id)near.add(L.a);});
+ NODES.forEach(m=>nodeEls[m.id].classList.toggle("dim",!near.has(m.id)));
+ [...linkLayer.children,...labelLayer.children].forEach(e=>{const on=e.dataset.a===id||e.dataset.b===id;e.classList.toggle("dim",!on);});
+ Object.values(nodeEls).forEach(g=>g.classList.remove("on"));nodeEls[id].classList.add("on");
+ P.tag.textContent=FACTIONS[n.f][0];P.tag.style.background=col(n.f);
+ P.name.textContent=n.name;P.role.textContent=n.role;P.desc.textContent=n.desc;}
+svg.addEventListener("mouseleave",()=>{NODES.forEach(m=>nodeEls[m.id].classList.remove("dim","on"));
+ [...linkLayer.children,...labelLayer.children].forEach(e=>e.classList.remove("dim"));});
+
+// legend
+const leg=document.getElementById("legend");
+ORDER.forEach(f=>{const d=document.createElement("div");d.className="leg";
+ d.innerHTML=`<span class="dot" style="background:${col(f)}"></span>${FACTIONS[f][0]}`;leg.appendChild(d);});
+
+// mobile list view (built from same data)
+function relsFor(id){const out=[];LINKS.forEach(L=>{
+ if(L.a===id)out.push([L.l,byId[L.b].name]);else if(L.b===id)out.push([L.l,byId[L.a].name]);});
+ return out;}
+const lv=document.getElementById("listview");
+ORDER.forEach(f=>{const members=NODES.filter(n=>n.f===f);if(!members.length)return;
+ const g=document.createElement("div");g.className="grp";
+ g.innerHTML=`<div class="gh"><span class="dot" style="background:${col(f)}"></span>${FACTIONS[f][0]}</div>`;
+ members.forEach(n=>{const p=document.createElement("div");p.className="pill";
+  const rels=relsFor(n.id).map(([l,nm])=>`<span class="rel">${l} &middot; <b>${nm}</b></span>`).join("");
+  p.innerHTML=`<h4 style="color:${col(n.f)}">${n.name}<span class="role">${n.role}</span></h4><p>${n.desc}</p>`+(rels?`<div class="rels">${rels}</div>`:"");
+  g.appendChild(p);});
+ lv.appendChild(g);});
+</script>
+</body></html>
