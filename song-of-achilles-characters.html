@@ -7,216 +7,195 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#fbf9f5;--card:#ffffff;--ink:#1b1b1f;--soft:#5a5a63;--line:#e7e3da;--acc:#a3324a;
---shadow-lo:0 1px 2px rgba(20,20,30,.06);--shadow-hi:0 20px 46px -18px rgba(20,20,30,.28);}
+--acc-soft:#fbeef0;--shadow-lo:0 1px 2px rgba(20,20,30,.06);--shadow-hi:0 16px 40px -18px rgba(20,20,30,.30);}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:'Outfit',sans-serif;line-height:1.5}
-.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
-header{padding:30px 0 10px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 22px}
+header{padding:34px 0 4px}
 .kicker{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);font-weight:700}
-h1{font-weight:800;font-size:1.9rem;letter-spacing:-.02em;margin:.3em 0 .2em}
-.sub{color:var(--soft);font-size:.92rem;max-width:70ch;margin:0}
-.badge{display:inline-flex;align-items:center;font-size:.76rem;font-weight:600;color:var(--soft);
-background:transparent;border:1px solid var(--line);border-radius:999px;padding:.35rem .8rem;margin-top:14px}
+h1{font-weight:800;font-size:2rem;letter-spacing:-.022em;margin:.28em 0 .18em}
+.sub{color:var(--soft);font-size:.95rem;max-width:66ch;margin:0}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:16px}
+.badge{display:inline-flex;align-items:center;font-size:.75rem;font-weight:600;color:var(--soft);
+border:1px solid var(--line);border-radius:999px;padding:.34rem .8rem}
+.hint{font-size:.8rem;color:var(--soft)}
+.hint b{color:var(--ink);font-weight:600}
+.clearbtn{font:inherit;font-size:.75rem;font-weight:600;color:var(--acc);background:none;border:0;
+cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;opacity:0;pointer-events:none;transition:opacity .15s}
+.clearbtn.show{opacity:1;pointer-events:auto}
 
-/* ---- desktop map ---- */
-.stage{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px;margin-top:14px}
-svg{width:100%;height:auto;display:block}
-.link{fill:none;stroke:var(--soft);stroke-opacity:.32;stroke-width:1.5}
-.link.bond{stroke:var(--acc);stroke-opacity:1;stroke-width:3}
-.link.tutor{stroke-dasharray:1 5;stroke-linecap:round}
-.link.war{stroke-dasharray:6 6}
-.link.dim{stroke-opacity:.08}
-.link.bond.dim{stroke-opacity:.15}
-.llabel{font-family:'Outfit',sans-serif;font-size:10px;font-weight:700;letter-spacing:.08em;fill:var(--soft)}
-.llabel.dim{opacity:.15}
-.node{cursor:pointer}
-.node rect.card{fill:var(--card);stroke:var(--line);stroke-width:1.3;filter:drop-shadow(0 1px 2px rgba(20,20,30,.05))}
-.node .nm{font-weight:700;font-size:14.5px;fill:var(--ink)}
-.node .rl{font-size:11px;fill:var(--soft);font-weight:500}
-.node:hover rect.card,.node.on rect.card{stroke:var(--acc);filter:drop-shadow(0 10px 22px rgba(20,20,30,.16))}
-.node.dim{opacity:.28}
+main{padding:8px 0 10px}
+.group{margin-top:26px}
+.group-h{display:flex;align-items:baseline;gap:8px;font-size:.72rem;font-weight:700;letter-spacing:.08em;
+text-transform:uppercase;color:var(--soft);margin:0 2px 12px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.group-h .ct{font-weight:500;opacity:.55}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(256px,1fr));gap:12px}
 
-.panel{display:flex;flex-direction:column;gap:4px;margin-top:14px;background:var(--card);
-border:1px solid var(--line);border-radius:14px;padding:16px 18px;min-height:70px;box-shadow:var(--shadow-lo)}
-.panel .rlx{color:var(--acc);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
-.panel h3{margin:.1em 0 0;font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
-.panel p{margin:.4em 0 0;color:var(--soft);font-size:.9rem;max-width:70ch}
+.cast{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;
+padding:14px 15px;box-shadow:var(--shadow-lo);cursor:pointer;transition:border-color .16s,box-shadow .16s,opacity .16s,transform .16s;outline:none}
+.cast:focus-visible{border-color:var(--acc)}
+.cast.heart{background:linear-gradient(var(--acc-soft),var(--acc-soft)) padding-box;border-color:#f0d6da}
+.cast .nm{font-weight:700;font-size:1.05rem;letter-spacing:-.01em}
+.cast .rl{font-size:.78rem;color:var(--soft);font-weight:500;margin-top:1px}
+.cast .ds{font-size:.85rem;color:var(--soft);margin:.5em 0 0}
+.rels{margin:.7em 0 0;display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;gap:0;font-size:.7rem;background:var(--bg);
+border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--soft);white-space:nowrap;transition:background .16s,color .16s,border-color .16s}
+.tag .ar{color:var(--acc);margin:0 4px;font-weight:600}
+.tag b{color:var(--ink);font-weight:600}
+.tag.lit{background:var(--acc);border-color:var(--acc);color:#fff}
+.tag.lit .ar,.tag.lit b{color:#fff}
 
-/* ---- mobile list ---- */
-.listview{display:none;margin-top:6px}
-.grp{margin-bottom:16px}
-.grp>.gh{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft);
-margin:0 2px 8px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;gap:6px}
-.grp>.gh .ct{font-weight:500;opacity:.6}
-.pill{background:var(--card);border:1px solid var(--line);border-radius:12px;
-padding:11px 13px;margin-bottom:7px;box-shadow:var(--shadow-lo)}
-.pill h4{margin:0;font-size:.98rem;font-weight:700;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
-.pill h4 .role{font-size:.74rem;font-weight:500;color:var(--soft)}
-.pill p{margin:.3em 0 0;font-size:.84rem;line-height:1.4;color:var(--soft)}
-.rels{margin:.55em 0 0;display:flex;flex-wrap:wrap;gap:5px}
-.rel{font-size:.68rem;background:transparent;border:1px solid var(--line);border-radius:999px;padding:2px 8px;color:var(--soft);white-space:nowrap}
-.rel b{color:var(--ink);font-weight:600}
-.rel .arrow{color:var(--acc);margin:0 1px}
+.cast:hover,.cast.on{border-color:var(--acc);box-shadow:var(--shadow-hi);transform:translateY(-2px)}
+.cast.on{border-width:1.5px}
+.board.active .cast:not(.on):not(.rel){opacity:.32}
+.board.active .cast.rel{border-color:#e3b6bd}
 
-footer{padding:20px 0 50px;color:var(--soft);font-size:.76rem}
+footer{padding:26px 0 60px;color:var(--soft);font-size:.78rem;margin-top:20px;border-top:1px solid var(--line)}
 
 @media(max-width:760px){
- .stage,.panel{display:none}
- .listview{display:block}
  .wrap{padding:0 16px}
- header{padding:20px 0 2px}
- .kicker{font-size:.66rem}
- h1{font-size:1.5rem;line-height:1.1;margin:.22em 0 .16em}
- .sub{font-size:.85rem;line-height:1.45}
- .badge{font-size:.7rem;padding:.3rem .7rem;margin-top:11px}
+ header{padding:22px 0 2px}
+ h1{font-size:1.6rem;line-height:1.12;margin:.22em 0 .16em}
+ .sub{font-size:.88rem}
+ .grid{grid-template-columns:1fr;gap:9px}
+ .group{margin-top:20px}
+ .cast{padding:12px 13px}
+ .cast .nm{font-size:1rem}
 }
 </style></head>
 <body>
-<header><div class="wrap">
+<div class="wrap">
+<header>
 <div class="kicker">Book 42 &middot; This month's read</div>
 <h1>Who's who</h1>
-<p class="sub">The cast of The Song of Achilles, Madeline Miller's novel, as the story sets out and how they relate. On a computer, hover a name to trace its ties; on a phone, scroll the cast by group.</p>
-<div class="badge">Spoiler-free: starting relationships only, no plot or fates</div>
-</div></header>
-
-<div class="wrap">
-<div class="stage"><svg id="map" viewBox="0 0 1180 900" role="img" aria-label="Character relationship map"></svg></div>
-<div class="panel" id="panel">
-<div class="rlx">How to read this</div>
-<h3 id="pname">Hover or tap a name</h3>
-<p id="pdesc">See how each character connects to the others, and read a short, spoiler-free description.</p>
+<p class="sub">The cast of The Song of Achilles by Madeline Miller, as the story sets out. Spoiler-free: only the starting relationships, no plot or fates.</p>
+<div class="meta">
+<span class="hint"><b>Tap a character</b> to light up everyone they are tied to.</span>
+<button class="clearbtn" id="clear">Clear</button>
 </div>
+</header>
 
-<div class="listview" id="listview"></div>
+<main class="board" id="board"></main>
+
+<footer>A companion for the Book 42 club. Nineteen characters, grouped by house or side. No events or outcomes are shown.</footer>
 </div>
-
-<footer><div class="wrap">A companion for the Book 42 club. No events, outcomes, or later developments are shown.</div></footer>
 
 <script>
-const GROUPS={
- heart:"The two at the centre", phthia:"House of Phthia", house:"Phthia's household",
- early:"Patroclus's early life", greek:"The Greek kings", troy:"Troy", camp:"In the camp",
-};
-const GROUP_ORDER=["heart","phthia","house","early","greek","troy","camp"];
-const NW=156,NH=54;
-const NODES=[
- {id:"achilles",name:"Achilles",role:"prince of Phthia",g:"heart",x:550,y:210,
-  desc:"Prince of Phthia, son of a king and a goddess. Swift, brilliant and famed as the best of the Greeks."},
- {id:"patroclus",name:"Patroclus",role:"the narrator",g:"heart",x:550,y:400,
-  desc:"The narrator. A young prince sent away from home in disgrace and raised in Phthia."},
- {id:"peleus",name:"Peleus",role:"king of Phthia",g:"phthia",x:410,y:75,
-  desc:"The mortal king of Phthia and Achilles's father. He takes the exiled Patroclus into his care."},
- {id:"thetis",name:"Thetis",role:"sea-nymph",g:"phthia",x:690,y:75,
-  desc:"A sea-nymph and Achilles's divine mother. Cold and watchful, and wary of Patroclus from the first."},
- {id:"chiron",name:"Chiron",role:"the centaur tutor",g:"house",x:145,y:260,
-  desc:"The wise centaur of Mount Pelion who teaches the two boys medicine, music and the arts of war."},
- {id:"phoinix",name:"Phoinix",role:"old counsellor",g:"house",x:145,y:380,
-  desc:"A trusted elder of Phthia who has served the royal house for many years."},
- {id:"automedon",name:"Automedon",role:"young charioteer",g:"house",x:145,y:500,
-  desc:"A dependable young charioteer who serves at Achilles's side."},
- {id:"menoitius",name:"Menoitius",role:"Patroclus's father",g:"early",x:145,y:630,
-  desc:"A hard, disappointed king. Patroclus's father, who sends his son away as a boy."},
- {id:"lycomedes",name:"Lycomedes",role:"king of Scyros",g:"early",x:390,y:630,
-  desc:"The mild-mannered king of the small island of Scyros."},
- {id:"deidameia",name:"Deidameia",role:"princess of Scyros",g:"early",x:390,y:760,
-  desc:"Lycomedes's lively, headstrong young daughter."},
- {id:"agamemnon",name:"Agamemnon",role:"king of Mycenae",g:"greek",x:840,y:130,
-  desc:"King of Mycenae and commander of the gathered Greek army. Proud and jealous of his rank."},
- {id:"menelaus",name:"Menelaus",role:"king of Sparta",g:"greek",x:1065,y:55,
-  desc:"King of Sparta and Agamemnon's brother."},
- {id:"helen",name:"Helen",role:"queen of Sparta",g:"greek",x:1065,y:220,
-  desc:"Queen of Sparta, said to be the most beautiful woman alive. The dispute over her draws the kings to war."},
- {id:"odysseus",name:"Odysseus",role:"king of Ithaca",g:"greek",x:840,y:270,
-  desc:"The clever, watchful king of Ithaca, never without a plan."},
- {id:"diomedes",name:"Diomedes",role:"king of Argos",g:"greek",x:840,y:415,
-  desc:"A blunt, sharp-tongued king of Argos, often found at Odysseus's side."},
- {id:"hector",name:"Hector",role:"prince of Troy",g:"troy",x:840,y:575,
-  desc:"Eldest prince of Troy and the city's greatest defender."},
- {id:"priam",name:"Priam",role:"king of Troy",g:"troy",x:840,y:700,
-  desc:"The aged, gracious king of Troy, father of many sons."},
- {id:"paris",name:"Paris",role:"prince of Troy",g:"troy",x:840,y:825,
-  desc:"A prince of Troy whose choice helped set the war in motion."},
- {id:"briseis",name:"Briseis",role:"a girl in the camp",g:"camp",x:690,y:480,
-  desc:"A young woman taken into the Greek camp, who becomes a gentle friend to Patroclus."},
+const GROUPS=[
+ ["heart","The heart of the story"],
+ ["phthia","House of Phthia"],
+ ["house","Phthia's household"],
+ ["early","Patroclus's early life"],
+ ["greek","The Greek kings"],
+ ["troy","Troy"],
+ ["camp","In the camp"],
 ];
+const PEOPLE=[
+ {id:"achilles",name:"Achilles",role:"prince of Phthia",g:"heart",
+  ds:"Son of a king and a goddess. Swift, brilliant, and famed as the best of the Greeks."},
+ {id:"patroclus",name:"Patroclus",role:"the narrator",g:"heart",
+  ds:"The narrator. A young prince sent away from home in disgrace and raised in Phthia."},
+ {id:"peleus",name:"Peleus",role:"king of Phthia",g:"phthia",
+  ds:"The mortal king of Phthia. He takes the exiled Patroclus into his care."},
+ {id:"thetis",name:"Thetis",role:"a sea-nymph",g:"phthia",
+  ds:"Achilles's divine mother. Cold and watchful, and wary of Patroclus from the first."},
+ {id:"chiron",name:"Chiron",role:"the centaur tutor",g:"house",
+  ds:"The wise centaur of Mount Pelion who teaches the two boys medicine, music and war."},
+ {id:"phoinix",name:"Phoinix",role:"old counsellor",g:"house",
+  ds:"A trusted elder of Phthia who has served the royal house for many years."},
+ {id:"automedon",name:"Automedon",role:"young charioteer",g:"house",
+  ds:"A dependable young charioteer who serves at Achilles's side."},
+ {id:"menoitius",name:"Menoitius",role:"a king",g:"early",
+  ds:"A hard, disappointed king. Patroclus's father, who sends his son away as a boy."},
+ {id:"lycomedes",name:"Lycomedes",role:"king of Scyros",g:"early",
+  ds:"The mild-mannered king of the small island of Scyros."},
+ {id:"deidameia",name:"Deidameia",role:"princess of Scyros",g:"early",
+  ds:"Lycomedes's lively, headstrong young daughter."},
+ {id:"agamemnon",name:"Agamemnon",role:"king of Mycenae",g:"greek",
+  ds:"Commander of the gathered Greek army. Proud and jealous of his rank."},
+ {id:"menelaus",name:"Menelaus",role:"king of Sparta",g:"greek",
+  ds:"Agamemnon's brother, whose wife's flight to Troy is the cause of the war."},
+ {id:"helen",name:"Helen",role:"queen of Sparta",g:"greek",
+  ds:"Said to be the most beautiful woman alive. The dispute over her draws the kings to war."},
+ {id:"odysseus",name:"Odysseus",role:"king of Ithaca",g:"greek",
+  ds:"The clever, watchful king of Ithaca, never without a plan."},
+ {id:"diomedes",name:"Diomedes",role:"king of Argos",g:"greek",
+  ds:"A blunt, sharp-tongued king of Argos, often found at Odysseus's side."},
+ {id:"hector",name:"Hector",role:"prince of Troy",g:"troy",
+  ds:"Eldest prince of Troy and the city's greatest defender."},
+ {id:"priam",name:"Priam",role:"king of Troy",g:"troy",
+  ds:"The aged, gracious king of Troy, father of many sons."},
+ {id:"paris",name:"Paris",role:"prince of Troy",g:"troy",
+  ds:"A prince of Troy whose choice helped set the war in motion."},
+ {id:"briseis",name:"Briseis",role:"a captive in the camp",g:"camp",
+  ds:"A young woman taken into the Greek camp, who becomes a gentle friend to Patroclus."},
+];
+// la = how it reads on A's card (pointing at B); lb = on B's card (pointing at A)
 const LINKS=[
- {a:"achilles",b:"patroclus",k:"bond",l:"inseparable"},
- {a:"peleus",b:"thetis",k:"plain",l:"estranged"},
- {a:"peleus",b:"achilles",k:"plain",l:"father"},
- {a:"thetis",b:"achilles",k:"plain",l:"mother"},
- {a:"chiron",b:"achilles",k:"tutor",l:"tutor"},
- {a:"chiron",b:"patroclus",k:"tutor",l:"tutor"},
- {a:"menoitius",b:"patroclus",k:"plain",l:"father"},
- {a:"lycomedes",b:"deidameia",k:"plain",l:"father"},
- {a:"agamemnon",b:"menelaus",k:"plain",l:"brothers"},
- {a:"menelaus",b:"helen",k:"plain",l:"married"},
- {a:"odysseus",b:"diomedes",k:"plain",l:"allies"},
- {a:"odysseus",b:"achilles",k:"plain",l:"recruits"},
- {a:"priam",b:"hector",k:"plain",l:"father"},
- {a:"priam",b:"paris",k:"plain",l:"father"},
- {a:"patroclus",b:"briseis",k:"plain",l:"friends"},
- {a:"diomedes",b:"hector",k:"war",l:"at war"},
+ {a:"achilles",b:"patroclus",la:"inseparable",lb:"inseparable"},
+ {a:"peleus",b:"thetis",la:"estranged",lb:"estranged"},
+ {a:"peleus",b:"achilles",la:"father of",lb:"father"},
+ {a:"thetis",b:"achilles",la:"mother of",lb:"mother"},
+ {a:"chiron",b:"achilles",la:"teaches",lb:"tutor"},
+ {a:"chiron",b:"patroclus",la:"teaches",lb:"tutor"},
+ {a:"menoitius",b:"patroclus",la:"father of",lb:"father"},
+ {a:"lycomedes",b:"deidameia",la:"father of",lb:"father"},
+ {a:"agamemnon",b:"menelaus",la:"brother",lb:"brother"},
+ {a:"menelaus",b:"helen",la:"husband of",lb:"wife"},
+ {a:"odysseus",b:"diomedes",la:"ally",lb:"ally"},
+ {a:"odysseus",b:"achilles",la:"recruits",lb:"recruited by"},
+ {a:"priam",b:"hector",la:"father of",lb:"father"},
+ {a:"priam",b:"paris",la:"father of",lb:"father"},
+ {a:"patroclus",b:"briseis",la:"friend",lb:"friend"},
+ {a:"diomedes",b:"hector",la:"enemy",lb:"enemy"},
 ];
-const byId=Object.fromEntries(NODES.map(n=>[n.id,n]));
-const SVGNS="http://www.w3.org/2000/svg";
-const svg=document.getElementById("map");
-function el(t,a){const e=document.createElementNS(SVGNS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+const byId=Object.fromEntries(PEOPLE.map(p=>[p.id,p]));
+// relations per person: [label, otherId]
+const rels={};PEOPLE.forEach(p=>rels[p.id]=[]);
+LINKS.forEach(L=>{rels[L.a].push([L.la,L.b]);rels[L.b].push([L.lb,L.a]);});
+const neighbours={};PEOPLE.forEach(p=>neighbours[p.id]=new Set(rels[p.id].map(r=>r[1])));
 
-function border(n,tx,ty){const dx=tx-n.x,dy=ty-n.y,hw=NW/2+3,hh=NH/2+3;
- if(!dx&&!dy)return[n.x,n.y];
- const s=Math.min(dx?hw/Math.abs(dx):1e9, dy?hh/Math.abs(dy):1e9);
- return[n.x+dx*s,n.y+dy*s];}
-
-const linkLayer=el("g",{}),labelLayer=el("g",{});svg.appendChild(linkLayer);svg.appendChild(labelLayer);
-function seg(x1,y1,x2,y2,L){const p=el("path",{d:`M${x1},${y1} L${x2},${y2}`,class:"link "+L.k});
- p.dataset.a=L.a;p.dataset.b=L.b;linkLayer.appendChild(p);}
-
-LINKS.forEach(L=>{const A=byId[L.a],B=byId[L.b];
- const[ax,ay]=border(A,B.x,B.y),[bx,by]=border(B,A.x,A.y);
- const dx=bx-ax,dy=by-ay,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len;
- const label=(L.l||"").toUpperCase();
- const mx=(ax+bx)/2,my=(ay+by)/2;
- if(!label){seg(ax,ay,bx,by,L);return;}
- const lw=label.length*6.6+8,lh=13;
- const half=Math.min((Math.abs(lw*ux)+Math.abs(lh*uy))/2+6,len/2-2);
- if(half>4){seg(ax,ay,mx-ux*half,my-uy*half,L);seg(mx+ux*half,my+uy*half,bx,by,L);}
- else{seg(ax,ay,bx,by,L);}
- const t=el("text",{x:mx,y:my,"text-anchor":"middle","dominant-baseline":"central",class:"llabel"});
- t.dataset.a=L.a;t.dataset.b=L.b;t.textContent=label;labelLayer.appendChild(t);});
-
-const nodeEls={};
-NODES.forEach(n=>{
- const g=el("g",{class:"node",transform:`translate(${n.x-NW/2},${n.y-NH/2})`});
- g.appendChild(el("rect",{class:"card",width:NW,height:NH,rx:12}));
- const nm=el("text",{x:16,y:22,class:"nm"});nm.textContent=n.name;g.appendChild(nm);
- const rl=el("text",{x:16,y:39,class:"rl"});rl.textContent=n.role;g.appendChild(rl);
- g.addEventListener("mouseenter",()=>focus(n.id));
- g.addEventListener("click",()=>focus(n.id));
- svg.appendChild(g);nodeEls[n.id]=g;
+const board=document.getElementById("board");
+const cardEls={};
+GROUPS.forEach(([g,label])=>{
+ const members=PEOPLE.filter(p=>p.g===g);if(!members.length)return;
+ const sec=document.createElement("section");sec.className="group";
+ sec.innerHTML=`<div class="group-h">${label}<span class="ct">${members.length}</span></div>`;
+ const grid=document.createElement("div");grid.className="grid";
+ members.forEach(p=>{
+  const c=document.createElement("div");
+  c.className="cast"+(g==="heart"?" heart":"");
+  c.tabIndex=0;c.dataset.id=p.id;
+  const tags=rels[p.id].map(([l,oid])=>
+    `<span class="tag" data-target="${oid}">${l}<span class="ar">&rarr;</span><b>${byId[oid].name}</b></span>`).join("");
+  c.innerHTML=`<div class="nm">${p.name}</div><div class="rl">${p.role}</div>`+
+    `<div class="ds">${p.ds}</div><div class="rels">${tags}</div>`;
+  grid.appendChild(c);cardEls[p.id]=c;
+ });
+ sec.appendChild(grid);board.appendChild(sec);
 });
 
-const P={name:pname,desc:pdesc};
-function focus(id){const n=byId[id];const near=new Set([id]);
- LINKS.forEach(L=>{if(L.a===id)near.add(L.b);if(L.b===id)near.add(L.a);});
- NODES.forEach(m=>nodeEls[m.id].classList.toggle("dim",!near.has(m.id)));
- [...linkLayer.children,...labelLayer.children].forEach(e=>{const on=e.dataset.a===id||e.dataset.b===id;e.classList.toggle("dim",!on);});
- Object.values(nodeEls).forEach(g=>g.classList.remove("on"));nodeEls[id].classList.add("on");
- P.name.textContent=n.name+", "+n.role;P.desc.textContent=n.desc;}
-svg.addEventListener("mouseleave",()=>{NODES.forEach(m=>nodeEls[m.id].classList.remove("dim","on"));
- [...linkLayer.children,...labelLayer.children].forEach(e=>e.classList.remove("dim"));});
+let locked=null;
+const clearBtn=document.getElementById("clear");
+const allCards=Object.values(cardEls);
+const allTags=[...document.querySelectorAll(".tag")];
 
-// mobile list view (same data, no colour coding)
-function relsFor(id){const out=[];LINKS.forEach(L=>{
- if(L.a===id)out.push([L.l,byId[L.b].name]);else if(L.b===id)out.push([L.l,byId[L.a].name]);});
- return out;}
-const lv=document.getElementById("listview");
-GROUP_ORDER.forEach(g=>{const members=NODES.filter(n=>n.g===g);if(!members.length)return;
- const box=document.createElement("div");box.className="grp";
- box.innerHTML=`<div class="gh">${GROUPS[g]}<span class="ct">${members.length}</span></div>`;
- members.forEach(n=>{const p=document.createElement("div");p.className="pill";
-  const rels=relsFor(n.id).map(([l,nm])=>`<span class="rel">${l}<span class="arrow">&rarr;</span><b>${nm}</b></span>`).join("");
-  p.innerHTML=`<h4>${n.name}<span class="role">${n.role}</span></h4><p>${n.desc}</p>`+(rels?`<div class="rels">${rels}</div>`:"");
-  box.appendChild(p);});
- lv.appendChild(box);});
+function apply(id){
+ board.classList.toggle("active",!!id);
+ clearBtn.classList.toggle("show",!!locked);
+ allCards.forEach(c=>{const cid=c.dataset.id;
+  c.classList.toggle("on",id===cid);
+  c.classList.toggle("rel",!!id&&id!==cid&&neighbours[id].has(cid));});
+ allTags.forEach(t=>{const ownerId=t.closest(".cast").dataset.id;
+  t.classList.toggle("lit",!!id&&(ownerId===id||t.dataset.target===id));});
+}
+allCards.forEach(c=>{const id=c.dataset.id;
+ c.addEventListener("mouseenter",()=>{if(!locked)apply(id);});
+ c.addEventListener("click",()=>{locked=(locked===id?null:id);apply(locked);});
+ c.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();locked=(locked===id?null:id);apply(locked);}});
+});
+board.addEventListener("mouseleave",()=>{if(!locked)apply(null);});
+clearBtn.addEventListener("click",()=>{locked=null;apply(null);});
 </script>
 </body></html>
