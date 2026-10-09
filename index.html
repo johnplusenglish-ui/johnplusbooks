@@ -452,6 +452,20 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .now-next img{width:34px; height:51px; object-fit:cover; border-radius:3px; background:#eee}
 .now-next-title{font-size:.88rem; font-weight:700}
 .now-next-title span{font-weight:400; font-style:italic; color:var(--ink-soft)}
+.now-zoom{
+  display:flex; align-items:center; gap:1rem; flex-wrap:wrap; justify-content:space-between;
+  margin-top:2rem; padding:.9rem 1.1rem; border:1px solid var(--line, #e3e0d8); border-radius:12px;
+  background:color-mix(in srgb, var(--yr-color) 7%, #fff);
+}
+.now-zoom-text{font-size:.9rem; line-height:1.4; min-width:0}
+.now-zoom-text b{font-weight:700}
+.now-zoom-text span{display:block; font-size:.78rem; color:var(--ink-soft); margin-top:.15rem}
+.now-zoom-btn{
+  flex:none; display:inline-flex; align-items:center; gap:.45rem; padding:.55rem 1.1rem; border-radius:999px;
+  background:var(--yr-color); color:#fff; font-size:.85rem; font-weight:700; text-decoration:none;
+}
+.now-zoom-btn:hover{background:color-mix(in srgb, var(--yr-color) 80%, black)}
+.now-zoom-btn svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
 .now-about{
   margin-top:2rem; padding-top:1.2rem; border-top:1px solid var(--line);
   font-size:.8rem; line-height:1.6; color:var(--ink-soft);
@@ -1180,10 +1194,17 @@ const YEAR_COLORS = {
      nextTitle  — the following pick once it's announced, or null
      note       — an optional one-liner shown under the countdown */
 const NOW = {
-  title: 'The Song of Achilles',
-  discussion: '2026-10-11T00:00',
-  nextTitle: 'Foster',
-  note: ''
+  title: null,
+  discussion: null,
+  nextTitle: null,
+  note: '',
+  /* Zoom bar across the bottom of the Now tab; hides itself the day after `date`.
+       book — the title being discussed, date — 'YYYY-MM-DD', url — the join link */
+  zoom: {
+    book: 'The Song of Achilles',
+    date: '2026-10-11',
+    url: 'https://us02web.zoom.us/j/81354819373?pwd=lELY5BK7l3a4LqYbmSmL79KHkSN7bo.1'
+  }
 };
 
 /* ---------- John's own shelf ----------
@@ -1854,6 +1875,14 @@ if(nowBook){
   const cd = countdownFor(NOW.discussion);
   const cover = coverFor(nowBook);
   const nextCover = nowNext ? coverFor(nowNext) : null;
+  const zm = NOW.zoom;
+  const zmDay = zm && new Date(zm.date + 'T00:00');
+  const zoomBar = (zm && !isNaN(zmDay) && new Date() < new Date(zmDay.getTime() + 86400000))
+    ? `<div class="now-zoom">
+        <div class="now-zoom-text"><b>${escHTML(zm.book)} discussion on Zoom</b>
+          <span>${zmDay.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'})}</span></div>
+        <a class="now-zoom-btn" href="${escHTML(zm.url)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></svg>Join the Zoom meeting</a>
+      </div>` : '';
 
   const sec = document.createElement('section');
   sec.className = 'year-section now-section';
@@ -1882,6 +1911,7 @@ if(nowBook){
           </div>
         </div>
       </div>
+      ${zoomBar}
       ${nowNext ? `<div class="now-next">
         <span class="now-next-label">Next up</span>
         ${nextCover ? `<img src="${nextCover}" alt="">` : ''}
