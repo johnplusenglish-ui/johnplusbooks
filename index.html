@@ -461,7 +461,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .now-zoom-text b{font-weight:700}
 .now-zoom-text span{display:block; font-size:.78rem; color:var(--ink-soft); margin-top:.15rem}
 .now-zoom-btn{
-  flex:none; display:inline-flex; align-items:center; gap:.45rem; padding:.55rem 1.1rem; border-radius:999px;
+  flex:none; border:0; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:.45rem; padding:.55rem 1.1rem; border-radius:999px;
   background:var(--yr-color); color:#fff; font-size:.85rem; font-weight:700; text-decoration:none;
 }
 .now-zoom-btn:hover{background:color-mix(in srgb, var(--yr-color) 80%, black)}
@@ -811,6 +811,33 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 }
 .modal-actions button.primary{background:var(--ink); color:#fff; border-color:var(--ink)}
 
+/* ---------- zoom sign-up modal ---------- */
+.zoom-box{max-width:440px}
+.zoom-lead{font-size:.82rem; color:var(--ink-soft); line-height:1.5; margin:0 0 .9rem}
+.zoom-form{display:flex; flex-direction:column; gap:.7rem}
+.zoom-form label{display:flex; flex-direction:column; gap:.25rem; font-size:.74rem; font-weight:600; color:var(--ink-soft)}
+.zoom-form input[type=text]{
+  font:inherit; font-size:.9rem; font-weight:400; color:var(--ink); padding:.55rem .7rem;
+  border-radius:9px; border:1px solid var(--line); background:var(--bg);
+}
+.zoom-form input[type=text]:focus{outline:none; border-color:var(--ink)}
+.zoom-attend{border:0; padding:0; margin:0; display:flex; flex-direction:column; gap:.35rem}
+.zoom-attend legend{font-size:.74rem; font-weight:600; color:var(--ink-soft); padding:0; margin-bottom:.25rem}
+.zoom-attend div{display:flex; gap:.5rem}
+.zoom-attend label{
+  flex-direction:row; align-items:center; gap:.45rem; flex:1; font-size:.85rem; font-weight:600; color:var(--ink);
+  padding:.55rem .7rem; border:1px solid var(--line); border-radius:9px; cursor:pointer; background:var(--bg);
+}
+.zoom-attend label:has(input:checked){border-color:var(--ink); background:#fff}
+.zoom-msg{font-size:.8rem; line-height:1.45; min-height:1.1em}
+.zoom-msg.err{color:#b3261e}
+.zoom-done{display:flex; flex-direction:column; gap:.8rem; align-items:flex-start}
+.zoom-done p{margin:0; font-size:.9rem; line-height:1.5}
+.zoom-done a.zoom-go{
+  display:inline-block; padding:.6rem 1.2rem; border-radius:999px; background:var(--ink); color:#fff;
+  font-size:.88rem; font-weight:700; text-decoration:none;
+}
+
 /* ---------- book detail modal ---------- */
 .book-modal{
   /* must clear the carousel cards, which carry inline z-index up to 100 */
@@ -1113,6 +1140,13 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   </div>
 </div>
 
+<div class="modal-backdrop" id="zoomBackdrop">
+  <div class="modal-box zoom-box" role="dialog" aria-modal="true" aria-labelledby="zoomTitle">
+    <div class="modal-title" id="zoomTitle">Join the Zoom discussion</div>
+    <div id="zoomBody"></div>
+  </div>
+</div>
+
 <div class="book-modal" id="bookModal" aria-hidden="true">
   <div class="book-panel" role="dialog" aria-modal="true" aria-labelledby="mTitle">
     <button class="book-close" id="bookClose" type="button" aria-label="Close">&times;</button>
@@ -1199,11 +1233,12 @@ const NOW = {
   nextTitle: null,
   note: '',
   /* Zoom bar across the bottom of the Now tab; hides itself the day after `date`.
-       book — the title being discussed, date — 'YYYY-MM-DD', url — the join link */
+       book — the title being discussed, date — 'YYYY-MM-DD'.
+     The join link is NOT in this file: it lives in Supabase (site_secrets.zoom_link) and is
+     only handed out by join_zoom() to people who sign up and say they are attending. */
   zoom: {
     book: 'The Song of Achilles',
-    date: '2026-10-11',
-    url: 'https://us02web.zoom.us/j/81354819373?pwd=lELY5BK7l3a4LqYbmSmL79KHkSN7bo.1'
+    date: '2026-10-11'
   }
 };
 
@@ -1734,6 +1769,95 @@ function coverFor(b){
   return b.cover || null;
 }
 
+/* ---------- Zoom sign-up gate ----------
+   The link never ships in this file. join_zoom()/zoom_status() are Postgres functions
+   (see book42-zoom-signup.sql) that save the sign-up and return the link only when the
+   person said they are attending. One sign-up per device (voter_id) and per name. */
+async function zoomRpc(fn, args){
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method:'POST',
+    headers:{ apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type':'application/json' },
+    body: JSON.stringify(args)
+  });
+  if(!res.ok) throw new Error(fn + ' ' + res.status);
+  return res.json();
+}
+const zoomBackdrop = document.getElementById('zoomBackdrop');
+const zoomBody = document.getElementById('zoomBody');
+function closeZoomModal(){ zoomBackdrop.removeAttribute('data-show'); }
+zoomBackdrop.addEventListener('click', e=>{ if(e.target === zoomBackdrop) closeZoomModal(); });
+document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && zoomBackdrop.dataset.show) closeZoomModal(); });
+
+function zoomShowResult(r){
+  zoomBody.textContent = '';
+  const wrap = document.createElement('div'); wrap.className = 'zoom-done';
+  const p = document.createElement('p');
+  if(r.status === 'name_taken'){
+    p.textContent = 'That name is already on the list. If it is you, open this page on the device you signed up with.';
+  } else if(r.attending && r.link && /^https:\/\//.test(r.link)){
+    p.textContent = 'You are on the list. Here is your link for the discussion.';
+    wrap.appendChild(p);
+    const a = document.createElement('a'); a.className = 'zoom-go'; a.href = r.link; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = 'Open Zoom'; wrap.appendChild(a);
+    zoomBody.appendChild(wrap); return;
+  } else if(r.attending){
+    p.textContent = 'You are on the list, but the link is not available yet. Please check back shortly.';
+  } else {
+    p.textContent = 'Thanks, you are noted as not attending this time. See you at the next one.';
+  }
+  wrap.appendChild(p); zoomBody.appendChild(wrap);
+}
+
+function zoomShowForm(){
+  zoomBody.innerHTML = `
+    <p class="zoom-lead">Fill in your details to get the Zoom link. One sign-up per person.</p>
+    <form class="zoom-form" id="zoomForm" autocomplete="off">
+      <label>Name<input type="text" name="name" maxlength="80" required></label>
+      <label>Nationality<input type="text" name="nationality" maxlength="60" required></label>
+      <label>Favourite book<input type="text" name="fav" maxlength="120" required></label>
+      <label>Currently reading<input type="text" name="reading" maxlength="120" required></label>
+      <fieldset class="zoom-attend"><legend>Will you attend the Zoom session?</legend>
+        <div><label><input type="radio" name="attend" value="yes" required>Yes</label>
+        <label><input type="radio" name="attend" value="no">No</label></div>
+      </fieldset>
+      <div class="zoom-msg" id="zoomMsg" role="status"></div>
+      <div class="modal-actions"><button type="button" id="zoomCancel">Cancel</button>
+        <button type="submit" class="primary" id="zoomSubmit">Submit</button></div>
+    </form>`;
+  const form = document.getElementById('zoomForm'), msg = document.getElementById('zoomMsg'), btn = document.getElementById('zoomSubmit');
+  document.getElementById('zoomCancel').addEventListener('click', closeZoomModal);
+  form.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const f = new FormData(form), v = k => String(f.get(k) || '').trim();
+    if(!v('name') || !v('nationality') || !v('fav') || !v('reading') || !f.get('attend')){
+      msg.className = 'zoom-msg err'; msg.textContent = 'Please fill in every field.'; return;
+    }
+    btn.disabled = true; msg.className = 'zoom-msg'; msg.textContent = 'Saving…';
+    try{
+      const r = await zoomRpc('join_zoom', {
+        p_voter:getVoterId(), p_name:v('name'), p_nationality:v('nationality'),
+        p_fav_book:v('fav'), p_reading:v('reading'), p_attending:f.get('attend') === 'yes'
+      });
+      zoomShowResult(r);
+    }catch(err){
+      console.error('join_zoom failed', err);
+      btn.disabled = false; msg.className = 'zoom-msg err'; msg.textContent = 'Not saved. Please try again.';
+    }
+  });
+}
+
+async function openZoomModal(){
+  zoomBackdrop.dataset.show = 'true';
+  zoomBody.innerHTML = '<p class="zoom-lead">Checking…</p>';
+  try{
+    const r = await zoomRpc('zoom_status', { p_voter:getVoterId() });
+    if(r.status === 'none') zoomShowForm(); else zoomShowResult(r);
+  }catch(err){
+    console.error('zoom_status failed', err);
+    zoomShowForm();
+  }
+}
+
 const years = [...new Set(DATA.map(b=>b.year))].sort((a,b)=>b-a);
 
 // ---- topbar year nav (Now first, then years newest → oldest) ----
@@ -1880,8 +2004,8 @@ if(nowBook){
   const zoomBar = (zm && !isNaN(zmDay) && new Date() < new Date(zmDay.getTime() + 86400000))
     ? `<div class="now-zoom">
         <div class="now-zoom-text"><b>${escHTML(zm.book)} discussion on Zoom</b>
-          <span>${zmDay.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'})}</span></div>
-        <a class="now-zoom-btn" href="${escHTML(zm.url)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></svg>Join the Zoom meeting</a>
+          <span>${zmDay.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'})} · add your details to get the link</span></div>
+        <button class="now-zoom-btn" type="button" id="zoomJoin"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></svg>Join the Zoom meeting</button>
       </div>` : '';
 
   const sec = document.createElement('section');
@@ -1931,6 +2055,8 @@ if(nowBook){
   const openNow = ()=> openBookModal(nowBook, nowBook.year);
   sec.querySelector('#nowCover').addEventListener('click', openNow);
   sec.querySelector('#nowOpen').addEventListener('click', openNow);
+  const zj = sec.querySelector('#zoomJoin');
+  if(zj) zj.addEventListener('click', openZoomModal);
 }
 
 /* ---------- favourites tab ----------
