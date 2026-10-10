@@ -1801,7 +1801,7 @@ function zoomShowResult(r, who){
     p.textContent = 'That name is already booked. If it is you, open this page on the device you signed up with.';
   } else if(r.attending && r.link && /^https:\/\//.test(r.link)){
     const hi = who ? ', ' + who : '';
-    p.textContent = `Thank you${hi}! Your place is booked for ${NOW.zoom.book} on ${zoomWhen()}. We are so glad you are joining us, and we cannot wait to hear what you think.`;
+    p.textContent = `Thank you${hi}! Your place is booked for ${NOW.zoom.book} on ${zoomWhen()}.`;
     wrap.appendChild(p);
     const a = document.createElement('a'); a.className = 'zoom-go'; a.href = r.link; a.target = '_blank'; a.rel = 'noopener';
     a.textContent = 'Open Zoom'; wrap.appendChild(a);
