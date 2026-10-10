@@ -1142,7 +1142,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 
 <div class="modal-backdrop" id="zoomBackdrop">
   <div class="modal-box zoom-box" role="dialog" aria-modal="true" aria-labelledby="zoomTitle">
-    <div class="modal-title" id="zoomTitle">Join the Zoom discussion</div>
+    <div class="modal-title" id="zoomTitle">Book your place</div>
     <div id="zoomBody"></div>
   </div>
 </div>
@@ -1793,15 +1793,15 @@ function zoomShowResult(r){
   const wrap = document.createElement('div'); wrap.className = 'zoom-done';
   const p = document.createElement('p');
   if(r.status === 'name_taken'){
-    p.textContent = 'That name is already on the list. If it is you, open this page on the device you signed up with.';
+    p.textContent = 'That name is already booked. If it is you, open this page on the device you signed up with.';
   } else if(r.attending && r.link && /^https:\/\//.test(r.link)){
-    p.textContent = 'You are on the list. Here is your link for the discussion.';
+    p.textContent = 'You are booked in. Here is your Zoom link for the discussion.';
     wrap.appendChild(p);
     const a = document.createElement('a'); a.className = 'zoom-go'; a.href = r.link; a.target = '_blank'; a.rel = 'noopener';
     a.textContent = 'Open Zoom'; wrap.appendChild(a);
     zoomBody.appendChild(wrap); return;
   } else if(r.attending){
-    p.textContent = 'You are on the list, but the link is not available yet. Please check back shortly.';
+    p.textContent = 'You are booked in, but the link is not available yet. Please check back shortly.';
   } else {
     p.textContent = 'Thanks, you are noted as not attending this time. See you at the next one.';
   }
@@ -1810,7 +1810,7 @@ function zoomShowResult(r){
 
 function zoomShowForm(){
   zoomBody.innerHTML = `
-    <p class="zoom-lead">Fill in your details to get the Zoom link. One sign-up per person.</p>
+    <p class="zoom-lead">Fill in your details to book your place at the Zoom discussion. One booking per person.</p>
     <form class="zoom-form" id="zoomForm" autocomplete="off">
       <label>Name<input type="text" name="name" maxlength="80" required></label>
       <label>Nationality<input type="text" name="nationality" maxlength="60" required></label>
@@ -2004,8 +2004,8 @@ if(nowBook){
   const zoomBar = (zm && !isNaN(zmDay) && new Date() < new Date(zmDay.getTime() + 86400000))
     ? `<div class="now-zoom">
         <div class="now-zoom-text"><b>${escHTML(zm.book)} discussion on Zoom</b>
-          <span>${zmDay.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'})} · add your details to get the link</span></div>
-        <button class="now-zoom-btn" type="button" id="zoomJoin"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></svg>Join the Zoom meeting</button>
+          <span>${zmDay.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'})} · limited to people who book</span></div>
+        <button class="now-zoom-btn" type="button" id="zoomJoin"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></svg>Book your place</button>
       </div>` : '';
 
   const sec = document.createElement('section');
