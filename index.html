@@ -1233,12 +1233,13 @@ const NOW = {
   nextTitle: null,
   note: '',
   /* Zoom bar across the bottom of the Now tab; hides itself the day after `date`.
-       book — the title being discussed, date — 'YYYY-MM-DD'.
+       book — the title being discussed, date — 'YYYY-MM-DD', time — 'HH:MM' shown as written.
      The join link is NOT in this file: it lives in Supabase (site_secrets.zoom_link) and is
      only handed out by join_zoom() to people who sign up and say they are attending. */
   zoom: {
     book: 'The Song of Achilles',
-    date: '2026-10-11'
+    date: '2026-10-11',
+    time: '16:30'
   }
 };
 
@@ -1782,35 +1783,40 @@ async function zoomRpc(fn, args){
   if(!res.ok) throw new Error(fn + ' ' + res.status);
   return res.json();
 }
+function zoomWhen(){
+  const z = NOW.zoom, d = new Date(z.date + 'T00:00');
+  return d.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'}) + (z.time ? ' at ' + z.time : '');
+}
 const zoomBackdrop = document.getElementById('zoomBackdrop');
 const zoomBody = document.getElementById('zoomBody');
 function closeZoomModal(){ zoomBackdrop.removeAttribute('data-show'); }
 zoomBackdrop.addEventListener('click', e=>{ if(e.target === zoomBackdrop) closeZoomModal(); });
 document.addEventListener('keydown', e=>{ if(e.key === 'Escape' && zoomBackdrop.dataset.show) closeZoomModal(); });
 
-function zoomShowResult(r){
+function zoomShowResult(r, who){
   zoomBody.textContent = '';
   const wrap = document.createElement('div'); wrap.className = 'zoom-done';
   const p = document.createElement('p');
   if(r.status === 'name_taken'){
     p.textContent = 'That name is already booked. If it is you, open this page on the device you signed up with.';
   } else if(r.attending && r.link && /^https:\/\//.test(r.link)){
-    p.textContent = 'You are booked in. Here is your Zoom link for the discussion.';
+    const hi = who ? ', ' + who : '';
+    p.textContent = `Thank you${hi}! Your place is booked for ${NOW.zoom.book} on ${zoomWhen()}. We are so glad you are joining us, and we cannot wait to hear what you think.`;
     wrap.appendChild(p);
     const a = document.createElement('a'); a.className = 'zoom-go'; a.href = r.link; a.target = '_blank'; a.rel = 'noopener';
     a.textContent = 'Open Zoom'; wrap.appendChild(a);
     zoomBody.appendChild(wrap); return;
   } else if(r.attending){
-    p.textContent = 'You are booked in, but the link is not available yet. Please check back shortly.';
+    p.textContent = `You are booked in for ${zoomWhen()}, but the link is not available yet. Please check back shortly.`;
   } else {
-    p.textContent = 'Thanks, you are noted as not attending this time. See you at the next one.';
+    p.textContent = 'Thank you for letting us know' + (who ? ', ' + who : '') + '. You will be missed this time, and we hope to see you at the next one.';
   }
   wrap.appendChild(p); zoomBody.appendChild(wrap);
 }
 
 function zoomShowForm(){
   zoomBody.innerHTML = `
-    <p class="zoom-lead">Fill in your details to book your place at the Zoom discussion. One booking per person.</p>
+    <p class="zoom-lead">Fill in your details to book your place at the Zoom discussion, ${zoomWhen()}. One booking per person.</p>
     <form class="zoom-form" id="zoomForm" autocomplete="off">
       <label>Name<input type="text" name="name" maxlength="80" required></label>
       <label>Nationality<input type="text" name="nationality" maxlength="60" required></label>
@@ -1838,7 +1844,7 @@ function zoomShowForm(){
         p_voter:getVoterId(), p_name:v('name'), p_nationality:v('nationality'),
         p_fav_book:v('fav'), p_reading:v('reading'), p_attending:f.get('attend') === 'yes'
       });
-      zoomShowResult(r);
+      zoomShowResult(r, v('name').split(/\s+/)[0]);
     }catch(err){
       console.error('join_zoom failed', err);
       btn.disabled = false; msg.className = 'zoom-msg err'; msg.textContent = 'Not saved. Please try again.';
@@ -2004,7 +2010,7 @@ if(nowBook){
   const zoomBar = (zm && !isNaN(zmDay) && new Date() < new Date(zmDay.getTime() + 86400000))
     ? `<div class="now-zoom">
         <div class="now-zoom-text"><b>${escHTML(zm.book)} discussion on Zoom</b>
-          <span>${zmDay.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'})} · limited to people who book</span></div>
+          <span>${zoomWhen()} · limited to people who book</span></div>
         <button class="now-zoom-btn" type="button" id="zoomJoin"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></svg>Book your place</button>
       </div>` : '';
 
