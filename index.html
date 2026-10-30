@@ -839,7 +839,11 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .zoom-msg.err{color:#b3261e}
 .zoom-done{display:flex; flex-direction:column; gap:.8rem; align-items:flex-start}
 .zoom-done p{margin:0; font-size:.9rem; line-height:1.5}
-.zoom-done button.zoom-go{border:0; font:inherit; cursor:pointer}
+.zoom-go-row{display:flex; gap:.6rem; flex-wrap:wrap; align-items:center}
+.zoom-copy{
+  font:inherit; font-size:.85rem; font-weight:700; padding:.55rem 1.1rem; border-radius:999px;
+  border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
+}
 .zoom-done .zoom-go{
   display:inline-block; padding:.6rem 1.2rem; border-radius:999px; background:var(--ink); color:#fff;
   font-size:.88rem; font-weight:700; text-decoration:none;
@@ -1242,13 +1246,11 @@ const NOW = {
   /* Zoom bar across the bottom of the Now tab; hides itself the day after `date`.
        book — the title being discussed, date — 'YYYY-MM-DD', time — 'HH:MM' shown as written.
      The join link is NOT in this file: it lives in Supabase (site_secrets, key
-     'zoom_link_<date>') and is only handed out by book_place() to people who book, and only
-     from the time in site_secrets 'zoom_release_<date>' (linkFrom is just the wording shown). */
+     'zoom_link_<date>') and is only handed out by book_place() to people who book. */
   zoom: {
     book: 'Foster',
     date: '2026-11-01',
-    time: '16:30 CET',
-    linkFrom: '16:00 CET'
+    time: '16:30 CET'
   }
 };
 
@@ -1808,20 +1810,19 @@ function zoomShowResult(r, who){
   const p = document.createElement('p');
   if(r.status === 'email_taken'){
     p.textContent = 'That email is already booked. If it is you, open this page on the device you booked with.';
-  } else if(r.early){
-    const d = new Date(NOW.zoom.date + 'T00:00').toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'});
-    const hi = who ? ', ' + who : '';
-    p.textContent = `Thank you${hi}! Your place is booked for ${NOW.zoom.book} on ${zoomWhen()}. The Zoom link appears here from ${NOW.zoom.linkFrom} on ${d}.`;
-    wrap.appendChild(p);
-    const b = document.createElement('button'); b.type = 'button'; b.className = 'zoom-go'; b.textContent = 'Check for the link';
-    b.addEventListener('click', openZoomModal); wrap.appendChild(b);
-    zoomBody.appendChild(wrap); return;
   } else if(r.link && /^https:\/\//.test(r.link)){
     const hi = who ? ', ' + who : '';
-    p.textContent = `Thank you${hi}! Your place is booked for ${NOW.zoom.book} on ${zoomWhen()}.`;
+    p.textContent = `Thank you${hi}! Your place is booked for ${NOW.zoom.book} on ${zoomWhen()}. Please save this link, it is how you join the meeting.`;
     wrap.appendChild(p);
+    const row = document.createElement('div'); row.className = 'zoom-go-row';
     const a = document.createElement('a'); a.className = 'zoom-go'; a.href = r.link; a.target = '_blank'; a.rel = 'noopener';
-    a.textContent = 'Open Zoom'; wrap.appendChild(a);
+    a.textContent = 'Open Zoom'; row.appendChild(a);
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'zoom-copy'; c.textContent = 'Copy link';
+    c.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(r.link); c.textContent = 'Copied'; }
+      catch(e){ c.textContent = 'Press and hold the Open Zoom button to copy'; }
+    });
+    row.appendChild(c); wrap.appendChild(row);
     zoomBody.appendChild(wrap); return;
   } else {
     p.textContent = `You are booked in for ${zoomWhen()}, but the link is not available yet. Please check back shortly.`;
