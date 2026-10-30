@@ -829,6 +829,12 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   padding:.55rem .7rem; border:1px solid var(--line); border-radius:9px; cursor:pointer; background:var(--bg);
 }
 .zoom-attend label:has(input:checked){border-color:var(--ink); background:#fff}
+.zoom-hint{font-size:.76rem; color:var(--ink-soft); margin-top:.1rem}
+.zoom-form input[type=email]{
+  font:inherit; font-size:.9rem; font-weight:400; color:var(--ink); padding:.55rem .7rem;
+  border-radius:9px; border:1px solid var(--line); background:var(--bg);
+}
+.zoom-form input[type=email]:focus{outline:none; border-color:var(--ink)}
 .zoom-msg{font-size:.8rem; line-height:1.45; min-height:1.1em}
 .zoom-msg.err{color:#b3261e}
 .zoom-done{display:flex; flex-direction:column; gap:.8rem; align-items:flex-start}
@@ -1234,11 +1240,11 @@ const NOW = {
   note: '',
   /* Zoom bar across the bottom of the Now tab; hides itself the day after `date`.
        book — the title being discussed, date — 'YYYY-MM-DD', time — 'HH:MM' shown as written.
-     The join link is NOT in this file: it lives in Supabase (site_secrets.zoom_link) and is
-     only handed out by join_zoom() to people who sign up and say they are attending. */
+     The join link is NOT in this file: it lives in Supabase (site_secrets, key
+     'zoom_link_<date>') and is only handed out by book_place() to people who book. */
   zoom: {
-    book: 'The Song of Achilles',
-    date: '2026-10-11',
+    book: 'Foster',
+    date: '2026-11-01',
     time: '16:30 CET'
   }
 };
@@ -1770,10 +1776,10 @@ function coverFor(b){
   return b.cover || null;
 }
 
-/* ---------- Zoom sign-up gate ----------
-   The link never ships in this file. join_zoom()/zoom_status() are Postgres functions
-   (see book42-zoom-signup.sql) that save the sign-up and return the link only when the
-   person said they are attending. One sign-up per device (voter_id) and per name. */
+/* ---------- Meeting booking (gated Zoom link) ----------
+   The link never ships in this file. book_place()/my_booking() are Postgres functions
+   (see book42-booking.sql) that save the booking and return the link. One booking per
+   device (voter_id) and per email, per meeting date. */
 async function zoomRpc(fn, args){
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
     method:'POST',
@@ -1797,57 +1803,55 @@ function zoomShowResult(r, who){
   zoomBody.textContent = '';
   const wrap = document.createElement('div'); wrap.className = 'zoom-done';
   const p = document.createElement('p');
-  if(r.status === 'name_taken'){
-    p.textContent = 'That name is already booked. If it is you, open this page on the device you signed up with.';
-  } else if(r.attending && r.link && /^https:\/\//.test(r.link)){
+  if(r.status === 'email_taken'){
+    p.textContent = 'That email is already booked. If it is you, open this page on the device you booked with.';
+  } else if(r.link && /^https:\/\//.test(r.link)){
     const hi = who ? ', ' + who : '';
     p.textContent = `Thank you${hi}! Your place is booked for ${NOW.zoom.book} on ${zoomWhen()}.`;
     wrap.appendChild(p);
     const a = document.createElement('a'); a.className = 'zoom-go'; a.href = r.link; a.target = '_blank'; a.rel = 'noopener';
     a.textContent = 'Open Zoom'; wrap.appendChild(a);
     zoomBody.appendChild(wrap); return;
-  } else if(r.attending){
-    p.textContent = `You are booked in for ${zoomWhen()}, but the link is not available yet. Please check back shortly.`;
   } else {
-    p.textContent = 'Thank you for letting us know' + (who ? ', ' + who : '') + '. You will be missed this time, and we hope to see you at the next one.';
+    p.textContent = `You are booked in for ${zoomWhen()}, but the link is not available yet. Please check back shortly.`;
   }
   wrap.appendChild(p); zoomBody.appendChild(wrap);
 }
 
 function zoomShowForm(){
   zoomBody.innerHTML = `
-    <p class="zoom-lead">Fill in your details to book your place at the Zoom discussion, ${zoomWhen()}. One booking per person.</p>
-    <form class="zoom-form" id="zoomForm" autocomplete="off">
+    <p class="zoom-lead">Book your place at the ${escHTML(NOW.zoom.book)} discussion, ${zoomWhen()}. One booking per person.</p>
+    <form class="zoom-form" id="zoomForm" autocomplete="off" novalidate>
       <label>Name<input type="text" name="name" maxlength="80" required></label>
-      <label>Nationality<input type="text" name="nationality" maxlength="60" required></label>
-      <label>Favourite book<input type="text" name="fav" maxlength="120" required></label>
-      <label>Currently reading<input type="text" name="reading" maxlength="120" required></label>
-      <fieldset class="zoom-attend"><legend>Will you attend the Zoom session?</legend>
-        <div><label><input type="radio" name="attend" value="yes" required>Yes</label>
-        <label><input type="radio" name="attend" value="no">No</label></div>
+      <label>Email<input type="email" name="email" maxlength="120" required></label>
+      <label>Country<input type="text" name="country" maxlength="60" required></label>
+      <fieldset class="zoom-attend"><legend>Have you read ${escHTML(NOW.zoom.book)}?</legend>
+        <div><label><input type="radio" name="read" value="yes" required>Yes</label>
+        <label><input type="radio" name="read" value="not_yet">Not yet</label></div>
+        <span class="zoom-hint">No pressure to read it, everyone is welcome.</span>
       </fieldset>
       <div class="zoom-msg" id="zoomMsg" role="status"></div>
       <div class="modal-actions"><button type="button" id="zoomCancel">Cancel</button>
-        <button type="submit" class="primary" id="zoomSubmit">Submit</button></div>
+        <button type="submit" class="primary" id="zoomSubmit">Book my place</button></div>
     </form>`;
   const form = document.getElementById('zoomForm'), msg = document.getElementById('zoomMsg'), btn = document.getElementById('zoomSubmit');
   document.getElementById('zoomCancel').addEventListener('click', closeZoomModal);
   form.addEventListener('submit', async e=>{
     e.preventDefault();
     const f = new FormData(form), v = k => String(f.get(k) || '').trim();
-    if(!v('name') || !v('nationality') || !v('fav') || !v('reading') || !f.get('attend')){
-      msg.className = 'zoom-msg err'; msg.textContent = 'Please fill in every field.'; return;
-    }
+    const fail = t => { msg.className = 'zoom-msg err'; msg.textContent = t; };
+    if(!v('name') || !v('email') || !v('country') || !f.get('read')) return fail('Please fill in every field.');
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v('email'))) return fail('That email does not look right.');
     btn.disabled = true; msg.className = 'zoom-msg'; msg.textContent = 'Saving…';
     try{
-      const r = await zoomRpc('join_zoom', {
-        p_voter:getVoterId(), p_name:v('name'), p_nationality:v('nationality'),
-        p_fav_book:v('fav'), p_reading:v('reading'), p_attending:f.get('attend') === 'yes'
+      const r = await zoomRpc('book_place', {
+        p_voter:getVoterId(), p_meeting:NOW.zoom.date, p_name:v('name'), p_email:v('email'),
+        p_country:v('country'), p_read:v('read')
       });
       zoomShowResult(r, v('name').split(/\s+/)[0]);
     }catch(err){
-      console.error('join_zoom failed', err);
-      btn.disabled = false; msg.className = 'zoom-msg err'; msg.textContent = 'Not saved. Please try again.';
+      console.error('book_place failed', err);
+      btn.disabled = false; fail('Not saved. Please try again.');
     }
   });
 }
@@ -1856,10 +1860,10 @@ async function openZoomModal(){
   zoomBackdrop.dataset.show = 'true';
   zoomBody.innerHTML = '<p class="zoom-lead">Checking…</p>';
   try{
-    const r = await zoomRpc('zoom_status', { p_voter:getVoterId() });
+    const r = await zoomRpc('my_booking', { p_voter:getVoterId(), p_meeting:NOW.zoom.date });
     if(r.status === 'none') zoomShowForm(); else zoomShowResult(r);
   }catch(err){
-    console.error('zoom_status failed', err);
+    console.error('my_booking failed', err);
     zoomShowForm();
   }
 }
