@@ -257,6 +257,21 @@ html.ok .gate{display:none}
 .src:disabled{opacity:.45; cursor:default}
 .src .lico{flex:none}
 .src .ltx{flex:1; min-width:0}
+.wipe{display:flex; align-items:center; gap:13px; width:100%; text-align:left; background:var(--surf);
+  border:1px solid var(--line); border-radius:11px; padding:13px 15px; cursor:pointer; transition:.16s;
+  font-family:'Outfit',sans-serif; min-width:0}
+.wipe:hover:not(:disabled){background:var(--surf2); border-color:var(--pink2)}
+.wipe:disabled{opacity:.4; cursor:default}
+.wipe .lico{flex:none; background:rgba(255,92,168,.12)}
+.wipe .lico svg{stroke:var(--pink)}
+.wipe .ltx{flex:1; min-width:0}
+.wipe.armed{border-color:var(--pink2); background:rgba(255,92,168,.1)}
+.wipe.armed .ltx strong{color:var(--pink)}
+.tally{display:flex; gap:18px; flex-wrap:wrap; background:var(--surf); border:1px solid var(--line);
+  border-radius:11px; padding:14px 16px; margin:0}
+.tally div{min-width:0}
+.tally b{display:block; font-size:20px; font-weight:600; line-height:1.1}
+.tally span{display:block; font-size:11.5px; color:var(--dim); letter-spacing:.06em; text-transform:uppercase; margin-top:3px}
 .qbar{display:flex; gap:9px; min-width:0}
 .qbar input{flex:1; min-width:0; background:var(--surf); border:1px solid var(--line2); color:var(--ink);
   font:400 14.5px 'Outfit',sans-serif; padding:11px 13px; border-radius:10px; outline:none}
@@ -349,6 +364,7 @@ footer b{color:var(--mute); font-weight:500}
       <button class="ib pri" id="addBtn"><svg><use href="#i-plus"/></svg>Add</button>
       <button class="ib" id="expBtn" title="Export your library"><svg><use href="#i-down"/></svg></button>
       <button class="ib" id="impBtn" title="Import a library file"><svg><use href="#i-up"/></svg></button>
+      <button class="ib" id="clrBtn" title="Clear tracks you added"><svg><use href="#i-trash"/></svg></button>
       <button class="ib sp" id="spBtn"><svg><use href="#i-spotify"/></svg><span id="spLabel">Connect</span></button>
       <button class="ib" id="lockBtn" title="Lock this room"><svg><use href="#i-lock"/></svg></button>
       <input type="file" id="impFile" accept=".json" style="display:none">
@@ -413,6 +429,17 @@ footer b{color:var(--mute); font-weight:500}
     <button class="ib dg" id="dDel"><svg><use href="#i-trash"/></svg>Remove</button>
   </div>
 </aside>
+
+<div class="modal" id="cmodal">
+  <div class="sheet">
+    <div class="shead">
+      <h3>Clear your tracks</h3>
+      <button class="close" id="cClose"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div class="sbody" id="cBody"></div>
+    <div class="sfoot"><button class="ib" id="cDone">Close</button></div>
+  </div>
+</div>
 
 <div class="modal" id="smodal">
   <div class="sheet">
@@ -979,6 +1006,71 @@ document.getElementById("expBtn").onclick = () => {
   a.click(); URL.revokeObjectURL(a.href);
 };
 document.getElementById("impBtn").onclick = () => document.getElementById("impFile").click();
+/* ---------- clearing, always behind a second click ---------- */
+const cmodal = document.getElementById("cmodal");
+
+function openClear(){
+  const mine = store.added.length, loved = store.loved.length, hidden = store.removed.length;
+  document.getElementById("cBody").innerHTML = `
+    <div class="tally">
+      <div><b>${mine}</b><span>You added</span></div>
+      <div><b>${SEED.length - hidden}</b><span>Came with the room</span></div>
+      <div><b>${loved}</b><span>Loved</span></div>
+    </div>
+    <button class="wipe" id="wMine" ${mine ? "" : "disabled"}>
+      <span class="lico"><svg><use href="#i-trash"/></svg></span>
+      <span class="ltx"><strong>Quick clear</strong>
+        <span>${mine ? `Remove the ${mine} track${mine === 1 ? "" : "s"} you added or imported` : "You have not added any tracks yet"}</span></span>
+    </button>
+    <button class="wipe" id="wAll">
+      <span class="lico"><svg><use href="#i-trash"/></svg></span>
+      <span class="ltx"><strong>Clear all</strong>
+        <span>Back to the original ${SEED.length}: drops your tracks, loves and anything you hid</span></span>
+    </button>
+    <p class="hint">Your Spotify connection is left alone. Export first if you want a copy.</p>`;
+
+  arm(document.getElementById("wMine"), "Remove your tracks", () => {
+    store.added = [];
+    store.loved = store.loved.filter(id => SEED.some(r => idOf(r[0], r[1]) === id));
+    done();
+  });
+  arm(document.getElementById("wAll"), "Reset the whole room", () => {
+    store = {added: [], loved: [], removed: []};
+    done();
+  });
+  cmodal.classList.add("on");
+}
+
+/* first click arms, second click fires; it disarms itself after a few seconds */
+function arm(btn, label, run){
+  if(!btn || btn.disabled) return;
+  let armed = false, timer = null;
+  const txt = btn.querySelector("strong"), sub = btn.querySelector(".ltx span");
+  const was = {t: txt.textContent, s: sub.textContent};
+  const reset = () => {
+    armed = false; clearTimeout(timer); btn.classList.remove("armed");
+    txt.textContent = was.t; sub.textContent = was.s;
+  };
+  btn.onclick = () => {
+    if(armed){ reset(); run(); return; }
+    armed = true; btn.classList.add("armed");
+    txt.textContent = label + "?";
+    sub.textContent = "Click again to confirm. This cannot be undone.";
+    timer = setTimeout(reset, 8000);
+  };
+}
+
+function done(){
+  save(); render();
+  if(drawer.classList.contains("on")) close();
+  openClear();
+}
+
+document.getElementById("clrBtn").onclick = openClear;
+document.getElementById("cClose").onclick = () => cmodal.classList.remove("on");
+document.getElementById("cDone").onclick = () => cmodal.classList.remove("on");
+cmodal.onclick = e => { if(e.target === cmodal) cmodal.classList.remove("on"); };
+
 document.getElementById("impFile").onchange = e => {
   const f = e.target.files[0]; if(!f) return;
   const r = new FileReader();
@@ -1015,7 +1107,8 @@ document.addEventListener("keydown", e => {
     e.preventDefault(); document.getElementById("q").focus();
   }
   if(e.key === "Escape"){
-    if(smodal.classList.contains("on")) smodal.classList.remove("on");
+    if(cmodal.classList.contains("on")) cmodal.classList.remove("on");
+    else if(smodal.classList.contains("on")) smodal.classList.remove("on");
     else if(modal.classList.contains("on")) closeModal();
     else if(drawer.classList.contains("on")) close();
   }
