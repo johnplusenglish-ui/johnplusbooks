@@ -1008,7 +1008,8 @@ document.addEventListener("keydown", e => {
 const SP_ID = "3e6650ae4d6e4eda80cf2262cea2be56";
 const SP_SCOPES = "user-library-read user-top-read user-read-recently-played playlist-read-private";
 const SP_KEY = "soundroom_spotify_v1";
-const REDIRECT = location.origin + location.pathname;
+/* must match the dashboard entry exactly, so normalise /music/index.html to /music/ */
+const REDIRECT = location.origin + location.pathname.replace(/index\.html$/, "");
 
 let auth = null;
 try{ auth = JSON.parse(localStorage.getItem(SP_KEY) || "null"); }catch(e){}
