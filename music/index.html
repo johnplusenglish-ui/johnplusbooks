@@ -147,6 +147,13 @@ select{background:var(--surf); border:1px solid var(--line2); color:var(--ink); 
 .tsub{font-size:12.5px; color:var(--mute); margin:0}
 .tnum{position:absolute; top:18px; right:20px; font-size:26px; font-weight:300; color:rgba(141,149,175,.5); line-height:1}
 
+.sphead{display:flex; align-items:center; gap:9px; margin:34px 0 14px; font-size:12px; font-weight:600;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
+.sphead svg{width:15px; height:15px; stroke:#1ed760; fill:none; stroke-width:2; flex:none}
+.sphead .n{color:var(--mute); letter-spacing:.04em; text-transform:none; font-weight:400; font-size:12.5px}
+.sphead.bad{color:var(--pink); text-transform:none; letter-spacing:.01em; font-size:13.5px; font-weight:400}
+.card.ext{border-style:dashed}
+.card.ext:hover{box-shadow:0 14px 34px rgba(0,0,0,.5), 0 0 0 1px rgba(30,215,96,.35)}
 .empty{text-align:center; padding:70px 20px; color:var(--dim)}
 .empty svg{width:40px; height:40px; stroke:var(--line2); fill:none; stroke-width:1.5; margin-bottom:16px}
 .empty h3{margin:0 0 6px; font-size:17px; font-weight:600; color:var(--mute)}
@@ -405,6 +412,7 @@ footer b{color:var(--mute); font-weight:500}
   <div class="lookup" id="listbar"></div>
   <div class="lookup" id="lookup"></div>
   <div id="main"></div>
+  <div id="spInline"></div>
 </div>
 
 <footer>
@@ -889,7 +897,7 @@ function renderLookup(){
   if(!q){ el.classList.remove("show"); el.innerHTML = ""; return; }
   el.classList.add("show");
   el.innerHTML = `<p>Look up <b>${esc(q)}</b> outside the library</p>
-    <button class="lk" id="spFind"><svg><use href="#i-spotify"/></svg>Search Spotify here</button>
+    <button class="lk" id="spFind"><svg><use href="#i-spotify"/></svg>Search Spotify</button>
     <a class="lk" target="_blank" rel="noopener" href="https://open.spotify.com/search/${enc(q)}"><svg><use href="#i-play"/></svg>Open Spotify</a>
     <a class="lk" target="_blank" rel="noopener" href="https://www.last.fm/music/${enc(q)}/+similar"><svg><use href="#i-spark"/></svg>Similar artists</a>
     <a class="lk" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${enc(q)}"><svg><use href="#i-tv"/></svg>YouTube</a>`;
@@ -939,6 +947,7 @@ function render(){
       open(c.dataset.id);
     });
   }
+  if(state.view === "tracks") inlineSpotify(state.q); else document.getElementById("spInline").innerHTML = "";
 }
 
 function toggleLove(id){
@@ -1363,13 +1372,27 @@ async function token(){
   return auth.access;
 }
 
-async function api(path){
+/* Spotify caps page sizes per app and rejects anything larger with a 400.
+   This app's cap is 10, so start there and clamp every request. */
+let LIMIT_CAP = 10;
+const clampLimit = path => path.replace(/([?&]limit=)(\d+)/,
+  (m, pre, n) => pre + Math.min(parseInt(n, 10), LIMIT_CAP));
+
+async function api(path, retried){
   const t = await token();
-  const r = await fetch(path.startsWith("http") ? path : "https://api.spotify.com/v1/" + path,
-                        {headers: {Authorization: "Bearer " + t}});
+  const url = clampLimit(path.startsWith("http") ? path : "https://api.spotify.com/v1/" + path);
+  const r = await fetch(url, {headers: {Authorization: "Bearer " + t}});
   if(r.status === 401){ auth = null; saveAuth(); paintSp(); throw new Error("session expired, connect again"); }
   if(r.status === 429) throw new Error("Spotify is rate limiting, wait a moment");
-  if(!r.ok) throw new Error("Spotify returned " + r.status);
+  if(!r.ok){
+    let msg = "";
+    try{ msg = (await r.json()).error.message; }catch(e){}
+    if(r.status === 400 && /limit/i.test(msg) && !retried && LIMIT_CAP > 1){
+      LIMIT_CAP = Math.max(1, Math.floor(LIMIT_CAP / 2));
+      return api(path, true);
+    }
+    throw new Error(msg ? `Spotify: ${msg}` : "Spotify returned " + r.status);
+  }
   return r.json();
 }
 
@@ -1382,7 +1405,11 @@ async function apiPost(path, body){
   });
   if(r.status === 401){ auth = null; saveAuth(); paintSp(); throw new Error("session expired, connect again"); }
   if(r.status === 403) throw new Error("Spotify refused: reconnect so the app can create playlists");
-  if(!r.ok) throw new Error("Spotify returned " + r.status);
+  if(!r.ok){
+    let msg = "";
+    try{ msg = (await r.json()).error.message; }catch(e){}
+    throw new Error(msg ? `Spotify: ${msg}` : "Spotify returned " + r.status);
+  }
   return r.status === 204 ? {} : r.json();
 }
 
@@ -1416,8 +1443,8 @@ function catFor(genres){
 
 async function artistGenres(ids){
   const out = {};
-  for(let i = 0; i < ids.length; i += 50){
-    const j = await api("artists?ids=" + ids.slice(i, i + 50).join(","));
+  for(let i = 0; i < ids.length; i += 20){
+    const j = await api("artists?ids=" + ids.slice(i, i + 20).join(","));
     (j.artists || []).forEach(a => { if(a) out[a.id] = a.genres || []; });
   }
   return out;
@@ -1470,13 +1497,13 @@ function spNotice(msg, bad){
 
 const SOURCES = [
   {k: "liked",  i: "i-heart", n: "Liked Songs",      d: "Everything you have saved, newest first",
-   go: () => pages("me/tracks?limit=50", 400).then(r => r.map(x => x.track))},
+   go: () => pages("me/tracks?limit=10", 300).then(r => r.map(x => x.track))},
   {k: "top4",   i: "i-spark", n: "Top tracks, recent", d: "What you have had on in the last month or so",
-   go: () => api("me/top/tracks?limit=50&time_range=short_term").then(j => j.items)},
+   go: () => pages("me/top/tracks?limit=10&time_range=short_term", 50).then(j => j)},
   {k: "top6",   i: "i-spark", n: "Top tracks, all time", d: "Your long-run favourites",
-   go: () => api("me/top/tracks?limit=50&time_range=long_term").then(j => j.items)},
+   go: () => pages("me/top/tracks?limit=10&time_range=long_term", 50).then(j => j)},
   {k: "recent", i: "i-radio", n: "Recently played",  d: "The last 50 things you listened to",
-   go: () => api("me/player/recently-played?limit=50").then(j => j.items.map(x => x.track))}
+   go: () => pages("me/player/recently-played?limit=10", 50).then(r => r.map(x => x.track))}
 ];
 
 /* copy a room playlist onto the Spotify account, always behind a confirm */
@@ -1525,6 +1552,74 @@ async function pushToSpotify(l){
   };
 }
 
+/* ---------- spotify results under the library results ---------- */
+let spSeq = 0;
+const spCache = new Map();
+
+function extCard(t){
+  const a = t.artists.map(x => x.name).join(", ");
+  const id = idOf(t.name, a);
+  const img = (t.album.images || []).slice().sort((x, y) => Math.abs(x.width-400) - Math.abs(y.width-400))[0];
+  const here = LIB.some(x => x.id === id);
+  return `<article class="card ext" data-sp="${esc(t.id)}">
+    <div class="art has" style="background:${grad(a + t.name)}">
+      ${img ? `<img src="${esc(img.url)}" alt="" loading="lazy" decoding="async">` : ""}</div>
+    <h3 class="ctitle">${esc(t.name)}</h3>
+    <p class="cart">${esc(a)}</p>
+    <div class="crow">
+      <span class="cmeta">${(t.album.release_date || "").slice(0, 4)}</span>
+      <button class="addb${here ? " done" : ""}" data-add="${esc(t.id)}" ${here ? "disabled" : ""}>${here ? "In room" : "Add"}</button>
+    </div>
+  </article>`;
+}
+
+async function inlineSpotify(q){
+  const host = document.getElementById("spInline");
+  const term = (q || "").trim();
+  if(!term || term.length < 2 || state.list){ host.innerHTML = ""; return; }
+  if(!auth){ host.innerHTML = ""; return; }
+
+  const key = term.toLowerCase(), seq = ++spSeq;
+  let items = spCache.get(key);
+  if(!items){
+    host.innerHTML = `<p class="sphead"><svg><use href="#i-spotify"/></svg>Searching Spotify</p>`;
+    try{
+      const j = await api("search?" + new URLSearchParams({q: term, type: "track", limit: 10}));
+      items = (j.tracks && j.tracks.items) || [];
+      spCache.set(key, items);
+    }catch(e){
+      if(seq === spSeq) host.innerHTML = `<p class="sphead bad">${esc(e.message)}</p>`;
+      return;
+    }
+  }
+  if(seq !== spSeq) return;
+  if(!items.length){ host.innerHTML = ""; return; }
+
+  host.innerHTML = `<p class="sphead"><svg><use href="#i-spotify"/></svg>On Spotify
+      <span class="n">not in your room yet</span></p>
+    <div class="grid">${items.map(extCard).join("")}</div>`;
+
+  host.querySelectorAll("[data-add]").forEach(b => b.onclick = async e => {
+    e.stopPropagation();
+    b.disabled = true; b.textContent = "Adding";
+    try{
+      const recs = await toRecords([items.find(t => t.id === b.dataset.add)], () => {});
+      if(!recs.length) throw new Error("cannot add that one");
+      const have = new Set(LIB.map(x => x.id));
+      store.added = store.added.concat(recs.filter(r => !have.has(r.id)));
+      save(); render();
+      b.textContent = "In room"; b.classList.add("done");
+    }catch(err){
+      b.disabled = false; b.textContent = "Add";
+      host.querySelector(".sphead").outerHTML = `<p class="sphead bad">${esc(err.message)}</p>`;
+    }
+  });
+  host.querySelectorAll(".card.ext").forEach(c => c.onclick = e => {
+    if(e.target.closest("[data-add]")) return;
+    window.open("https://open.spotify.com/track/" + c.dataset.sp, "_blank", "noopener");
+  });
+}
+
 /* search Spotify from inside the page and add straight to the library */
 async function spSearch(q){
   if(!auth){
@@ -1550,7 +1645,7 @@ async function spSearch(q){
     if(!term) return;
     res.innerHTML = ""; log("Searching Spotify...");
     try{
-      const j = await api("search?" + new URLSearchParams({q: term, type: "track", limit: 20}));
+      const j = await api("search?" + new URLSearchParams({q: term, type: "track", limit: 10}));
       const items = (j.tracks && j.tracks.items) || [];
       if(!items.length){ log("Nothing came back for that.", true); return; }
       const have = new Set(LIB.map(x => x.id));
@@ -1627,7 +1722,7 @@ async function openSpotify(){
 async function pickPlaylist(log, busy){
   log("Loading your playlists...");
   try{
-    const lists = await pages("me/playlists?limit=50", 100);
+    const lists = await pages("me/playlists?limit=10", 100);
     const body = document.getElementById("sBody");
     body.innerHTML = `<p class="log" id="sLog">Pick a playlist.</p>` + lists.map(l =>
       `<button class="src" data-p="${esc(l.id)}" data-n="${esc(l.name)}">
@@ -1643,7 +1738,7 @@ async function pickPlaylist(log, busy){
       body.querySelectorAll(".src").forEach(x => x.disabled = true);
       try{
         lg(`Fetching ${b.dataset.n}...`);
-        const items = await pages(`playlists/${b.dataset.p}/tracks?limit=100`, 400);
+        const items = await pages(`playlists/${b.dataset.p}/tracks?limit=10`, 300);
         merge(await toRecords(items.map(i => i.track), lg), lg);
       }catch(e){ lg(esc(e.message), true); }
       body.querySelectorAll(".src").forEach(x => x.disabled = false);
