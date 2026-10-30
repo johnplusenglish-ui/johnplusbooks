@@ -257,6 +257,23 @@ html.ok .gate{display:none}
 .src:disabled{opacity:.45; cursor:default}
 .src .lico{flex:none}
 .src .ltx{flex:1; min-width:0}
+.qbar{display:flex; gap:9px; min-width:0}
+.qbar input{flex:1; min-width:0; background:var(--surf); border:1px solid var(--line2); color:var(--ink);
+  font:400 14.5px 'Outfit',sans-serif; padding:11px 13px; border-radius:10px; outline:none}
+.qbar input:focus{border-color:var(--blue); box-shadow:0 0 0 3px rgba(61,123,255,.12)}
+.qbar button{flex:none; background:linear-gradient(135deg,var(--blue),#6a5cff); border:0; color:#fff;
+  font:500 14px 'Outfit',sans-serif; padding:11px 17px; border-radius:10px; cursor:pointer}
+.res{display:flex; align-items:center; gap:11px; padding:9px; border-radius:11px; min-width:0}
+.res:hover{background:var(--surf)}
+.res .rart{width:42px; height:42px; border-radius:8px; flex:none; object-fit:cover; background:var(--surf2)}
+.res .rtx{flex:1; min-width:0}
+.res .rtx strong{display:block; font-size:13.6px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.res .rtx span{display:block; font-size:12px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.addb{flex:none; border:1px solid var(--line2); background:var(--bg2); color:var(--mute);
+  font:500 12.5px 'Outfit',sans-serif; padding:7px 13px; border-radius:999px; cursor:pointer; transition:.16s}
+.addb:hover:not(:disabled){border-color:var(--blue); color:var(--ink); background:var(--surf2)}
+.addb:disabled{opacity:.5; cursor:default; border-color:transparent}
+.addb.done{color:#1ed760; border-color:rgba(30,215,96,.4)}
 .log{margin:4px 0 0; font-size:13px; color:var(--mute); line-height:1.6; min-height:20px}
 .log b{color:var(--ink); font-weight:600}
 .log .bad{color:var(--pink)}
@@ -765,9 +782,11 @@ function renderLookup(){
   if(!q){ el.classList.remove("show"); el.innerHTML = ""; return; }
   el.classList.add("show");
   el.innerHTML = `<p>Look up <b>${esc(q)}</b> outside the library</p>
-    <a class="lk" target="_blank" rel="noopener" href="https://open.spotify.com/search/${enc(q)}"><svg><use href="#i-play"/></svg>Spotify</a>
+    <button class="lk" id="spFind"><svg><use href="#i-spotify"/></svg>Search Spotify here</button>
+    <a class="lk" target="_blank" rel="noopener" href="https://open.spotify.com/search/${enc(q)}"><svg><use href="#i-play"/></svg>Open Spotify</a>
     <a class="lk" target="_blank" rel="noopener" href="https://www.last.fm/music/${enc(q)}/+similar"><svg><use href="#i-spark"/></svg>Similar artists</a>
     <a class="lk" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${enc(q)}"><svg><use href="#i-tv"/></svg>YouTube</a>`;
+  el.querySelector("#spFind").onclick = () => spSearch(q);
 }
 
 function render(){
@@ -1179,6 +1198,65 @@ const SOURCES = [
    go: () => api("me/player/recently-played?limit=50").then(j => j.items.map(x => x.track))}
 ];
 
+/* search Spotify from inside the page and add straight to the library */
+async function spSearch(q){
+  if(!auth){
+    spNotice("Connect your Spotify account first, then search again. Use the Connect button up top.");
+    return;
+  }
+  const body = document.getElementById("sBody");
+  document.getElementById("sTitle").textContent = "Search Spotify";
+  document.getElementById("sOut").style.display = "none";
+  body.innerHTML = `<div class="qbar">
+      <input id="sq" value="${esc(q || "")}" placeholder="Song, artist, album" autocomplete="off">
+      <button id="sgo">Search</button>
+    </div>
+    <p class="log" id="sLog">Results you add arrive with their cover, player and genre tags.</p>
+    <div id="sRes"></div>`;
+  smodal.classList.add("on");
+
+  const logEl = document.getElementById("sLog"), res = document.getElementById("sRes");
+  const log = (m, bad) => { logEl.innerHTML = m; logEl.className = "log" + (bad ? " bad" : ""); };
+
+  async function run(){
+    const term = document.getElementById("sq").value.trim();
+    if(!term) return;
+    res.innerHTML = ""; log("Searching Spotify...");
+    try{
+      const j = await api("search?" + new URLSearchParams({q: term, type: "track", limit: 20}));
+      const items = (j.tracks && j.tracks.items) || [];
+      if(!items.length){ log("Nothing came back for that.", true); return; }
+      const have = new Set(LIB.map(x => x.id));
+      log(`<b>${items.length}</b> results for ${esc(term)}.`);
+      res.innerHTML = items.map((t, n) => {
+        const a2 = t.artists.map(x => x.name).join(", ");
+        const img = (t.album.images || []).slice(-1)[0];
+        const here = have.has(idOf(t.name, a2));
+        return `<div class="res">
+          ${img ? `<img class="rart" src="${esc(img.url)}" alt="" loading="lazy">`
+                : `<span class="rart"></span>`}
+          <span class="rtx"><strong>${esc(t.name)}</strong>
+            <span>${esc(a2)} &middot; ${esc(t.album.name)} &middot; ${(t.album.release_date||"").slice(0,4)}</span></span>
+          <button class="addb${here ? " done" : ""}" data-n="${n}" ${here ? "disabled" : ""}>${here ? "In room" : "Add"}</button>
+        </div>`;
+      }).join("");
+      res.querySelectorAll(".addb").forEach(b2 => b2.onclick = async () => {
+        b2.disabled = true; b2.textContent = "Adding";
+        try{
+          const recs = await toRecords([items[b2.dataset.n]], () => {});
+          if(!recs.length) throw new Error("that one cannot be added");
+          merge(recs, log);
+          b2.textContent = "In room"; b2.classList.add("done");
+        }catch(e){ log(esc(e.message), true); b2.disabled = false; b2.textContent = "Add"; }
+      });
+    }catch(e){ log(esc(e.message), true); }
+  }
+
+  document.getElementById("sgo").onclick = run;
+  document.getElementById("sq").addEventListener("keydown", e => { if(e.key === "Enter") run(); });
+  if(q) run(); else document.getElementById("sq").focus();
+}
+
 async function openSpotify(){
   if(!auth){ spNotice("Not connected yet."); return; }
   document.getElementById("sOut").style.display = "";
@@ -1191,7 +1269,12 @@ async function openSpotify(){
       <span class="ltx"><strong>${esc(s.n)}</strong><span>${esc(s.d)}</span></span></button>`).join("") +
     `<button class="src" data-k="lists">
       <span class="lico"><svg><use href="#i-grid"/></svg></span>
-      <span class="ltx"><strong>A playlist</strong><span>Choose from your own playlists</span></span></button>`;
+      <span class="ltx"><strong>A playlist</strong><span>Choose from your own playlists</span></span>
+    </button>
+    <button class="src" data-k="find">
+      <span class="lico"><svg><use href="#i-search"/></svg></span>
+      <span class="ltx"><strong>Search Spotify</strong><span>Find any song and add it one by one</span></span>
+    </button>`;
   smodal.classList.add("on");
 
   const logEl = document.getElementById("sLog");
@@ -1201,6 +1284,7 @@ async function openSpotify(){
   body.querySelectorAll(".src").forEach(btn => btn.onclick = async () => {
     busy(true);
     try{
+      if(btn.dataset.k === "find"){ spSearch(""); return; }
       if(btn.dataset.k === "lists"){ await pickPlaylist(log, busy); return; }
       const src = SOURCES.find(x => x.k === btn.dataset.k);
       log(`Fetching ${src.n.toLowerCase()}...`);
