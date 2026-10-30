@@ -1,0 +1,910 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sound Room</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<link rel="icon" href="../favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<script>
+  /* soft access gate: reveal the room only if this browser has been unlocked before */
+  try{ if(localStorage.getItem("sr_open_v1") === "1") document.documentElement.className = "ok"; }catch(e){}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#06070d; --bg2:#0a0c15; --surf:#0f121d; --surf2:#141827; --surf3:#1a1f33;
+  --line:#1d2236; --line2:#262c45;
+  --ink:#e9edf8; --mute:#8d95af; --dim:#5f6882;
+  --blue:#3d7bff; --blue2:#1fe3ff; --pink:#ff8fc7; --pink2:#ff5ca8;
+  --r:14px; --maxw:1240px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',system-ui,-apple-system,sans-serif;
+  font-weight:400; -webkit-font-smoothing:antialiased;
+  min-height:100vh; overflow-x:hidden;
+}
+body::before{
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(760px 520px at 12% -8%, rgba(61,123,255,.22), transparent 70%),
+    radial-gradient(640px 460px at 92% 4%, rgba(255,92,168,.14), transparent 70%),
+    radial-gradient(900px 600px at 50% 108%, rgba(31,227,255,.09), transparent 70%);
+}
+.wrap{position:relative; z-index:1; max-width:var(--maxw); margin:0 auto; padding:0 20px 90px}
+
+/* ---------- header ---------- */
+header{position:sticky; top:0; z-index:40; backdrop-filter:blur(18px);
+  background:linear-gradient(180deg,rgba(6,7,13,.94),rgba(6,7,13,.74));
+  border-bottom:1px solid var(--line)}
+.hbar{max-width:var(--maxw); margin:0 auto; padding:16px 20px; display:flex; align-items:center; gap:18px; flex-wrap:wrap}
+.brand{display:flex; align-items:center; gap:11px; min-width:0}
+.mark{width:36px; height:36px; border-radius:11px; flex:none; display:grid; place-items:center;
+  background:linear-gradient(140deg,var(--blue),var(--pink2)); box-shadow:0 6px 22px rgba(61,123,255,.38)}
+.mark svg{width:19px; height:19px; stroke:#fff; fill:none; stroke-width:2.1; stroke-linecap:round}
+.bname{font-size:19px; font-weight:600; letter-spacing:-.4px; line-height:1}
+.bsub{font-size:11.5px; color:var(--dim); letter-spacing:.14em; text-transform:uppercase; margin-top:3px}
+
+.search{flex:1 1 300px; min-width:0; position:relative; display:flex; align-items:center}
+.search svg{position:absolute; left:14px; width:17px; height:17px; stroke:var(--dim); fill:none; stroke-width:2; pointer-events:none}
+.search input{width:100%; min-width:0; background:var(--surf); border:1px solid var(--line2); color:var(--ink);
+  font:400 15px 'Outfit',sans-serif; padding:11px 42px 11px 41px; border-radius:11px; outline:none; transition:.18s}
+.search input::placeholder{color:var(--dim)}
+.search input:focus{border-color:rgba(61,123,255,.75); background:var(--surf2); box-shadow:0 0 0 4px rgba(61,123,255,.12)}
+.kbd{position:absolute; right:11px; font-size:11px; color:var(--dim); border:1px solid var(--line2);
+  border-radius:6px; padding:2px 6px; background:var(--bg2)}
+.search input:focus ~ .kbd{opacity:0}
+
+.hbtns{display:flex; gap:8px; flex:none}
+.ib{display:inline-flex; align-items:center; gap:7px; background:var(--surf); border:1px solid var(--line2);
+  color:var(--mute); font:500 13.5px 'Outfit',sans-serif; padding:9px 13px; border-radius:10px; cursor:pointer; transition:.16s}
+.ib svg{width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.ib:hover{color:var(--ink); border-color:var(--blue); background:var(--surf2)}
+.ib.pri{background:linear-gradient(135deg,var(--blue),#6a5cff); border-color:transparent; color:#fff}
+.ib.pri:hover{filter:brightness(1.12)}
+
+/* ---------- views / chips ---------- */
+.views{display:flex; gap:4px; background:var(--surf); border:1px solid var(--line); padding:4px; border-radius:12px; flex:none}
+.views button{background:none; border:0; color:var(--mute); font:500 13.5px 'Outfit',sans-serif;
+  padding:7px 14px; border-radius:9px; cursor:pointer; transition:.16s}
+.views button:hover{color:var(--ink)}
+.views button.on{background:var(--surf3); color:var(--ink); box-shadow:inset 0 0 0 1px var(--line2)}
+
+.chips{display:flex; gap:8px; flex-wrap:wrap; padding:22px 0 4px}
+.chip{background:var(--surf); border:1px solid var(--line); color:var(--mute);
+  font:500 13px 'Outfit',sans-serif; padding:7px 14px; border-radius:999px; cursor:pointer; transition:.16s;
+  display:inline-flex; align-items:center; gap:7px}
+.chip b{font-weight:600; color:var(--dim); font-size:11.5px}
+.chip:hover{color:var(--ink); border-color:var(--line2)}
+.chip.on{color:#fff; border-color:transparent; background:linear-gradient(135deg,rgba(61,123,255,.9),rgba(255,92,168,.78))}
+.chip.on b{color:rgba(255,255,255,.75)}
+.chip.love.on{background:linear-gradient(135deg,var(--pink2),#ff8fc7)}
+
+.bar{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:20px 0 14px; flex-wrap:wrap}
+.count{font-size:13.5px; color:var(--dim)}
+.count b{color:var(--ink); font-weight:600}
+.sortwrap{display:flex; align-items:center; gap:8px}
+.sortwrap span{font-size:12.5px; color:var(--dim)}
+select{background:var(--surf); border:1px solid var(--line2); color:var(--ink); font:500 13px 'Outfit',sans-serif;
+  padding:8px 11px; border-radius:9px; outline:none; cursor:pointer}
+
+/* ---------- lookup strip ---------- */
+.lookup{display:none; align-items:center; gap:10px; flex-wrap:wrap;
+  background:linear-gradient(135deg,rgba(61,123,255,.1),rgba(255,92,168,.07));
+  border:1px solid var(--line2); border-radius:var(--r); padding:13px 16px; margin-bottom:20px}
+.lookup.show{display:flex}
+.lookup p{margin:0; font-size:13.5px; color:var(--mute); flex:1 1 220px; min-width:0}
+.lookup p b{color:var(--ink); font-weight:600}
+.lk{display:inline-flex; align-items:center; gap:6px; text-decoration:none; font:500 12.5px 'Outfit',sans-serif;
+  color:var(--ink); background:var(--surf2); border:1px solid var(--line2); padding:7px 12px; border-radius:999px; transition:.16s}
+.lk svg{width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round}
+.lk:hover{border-color:var(--blue); background:var(--surf3)}
+
+/* ---------- grid + cards ---------- */
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(228px,1fr)); gap:16px}
+.card{background:var(--surf); border:1px solid var(--line); border-radius:var(--r); padding:14px;
+  cursor:pointer; transition:.2s; position:relative; overflow:hidden; min-width:0}
+.card:hover{transform:translateY(-3px); border-color:var(--line2); background:var(--surf2);
+  box-shadow:0 14px 34px rgba(0,0,0,.5), 0 0 0 1px rgba(61,123,255,.3)}
+.art{aspect-ratio:1; border-radius:10px; margin-bottom:13px; display:grid; place-items:center; position:relative; overflow:hidden}
+.art svg{width:38%; height:38%; stroke:rgba(255,255,255,.72); fill:none; stroke-width:1.5; stroke-linecap:round}
+.art::after{content:''; position:absolute; inset:0; background:radial-gradient(circle at 70% 20%,rgba(255,255,255,.16),transparent 60%)}
+.art.has::after,.dart.has::after,.sart.has::after{display:none}
+.art img,.dart img,.sart img{width:100%; height:100%; object-fit:cover; display:block; position:relative; z-index:1}
+.player{width:100%; height:152px; border:0; border-radius:12px; display:block; margin-bottom:10px; background:var(--surf)}
+.ctitle{font-size:14.8px; font-weight:600; line-height:1.3; letter-spacing:-.2px; margin:0 0 4px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.cart{font-size:13px; color:var(--mute); margin:0 0 10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.crow{display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0}
+.cmeta{font-size:11.5px; color:var(--dim); letter-spacing:.06em; text-transform:uppercase; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; min-width:0}
+.heart{flex:none; width:28px; height:28px; border-radius:8px; border:1px solid var(--line2); background:var(--bg2);
+  display:grid; place-items:center; cursor:pointer; transition:.16s}
+.heart svg{width:14px; height:14px; stroke:var(--dim); fill:none; stroke-width:2; stroke-linejoin:round}
+.heart:hover{border-color:var(--pink2)}
+.heart:hover svg{stroke:var(--pink)}
+.heart.on{border-color:transparent; background:rgba(255,92,168,.16)}
+.heart.on svg{stroke:var(--pink); fill:var(--pink2)}
+.badge{position:absolute; top:22px; right:22px; z-index:2; font:600 10px 'Outfit',sans-serif; letter-spacing:.1em;
+  text-transform:uppercase; background:rgba(6,7,13,.76); border:1px solid rgba(255,255,255,.18);
+  color:#fff; padding:4px 8px; border-radius:999px; backdrop-filter:blur(6px)}
+
+/* ---------- category / artist tiles ---------- */
+.tiles{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:16px}
+.tile{background:var(--surf); border:1px solid var(--line); border-radius:var(--r); padding:20px; cursor:pointer;
+  transition:.2s; position:relative; overflow:hidden; min-width:0}
+.tile:hover{transform:translateY(-3px); background:var(--surf2); border-color:var(--line2);
+  box-shadow:0 14px 34px rgba(0,0,0,.5), 0 0 0 1px rgba(255,92,168,.26)}
+.tdot{width:34px; height:34px; border-radius:10px; margin-bottom:16px; display:grid; place-items:center}
+.tdot svg{width:17px; height:17px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round}
+.tname{font-size:16px; font-weight:600; letter-spacing:-.25px; margin:0 0 5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.tsub{font-size:12.5px; color:var(--mute); margin:0}
+.tnum{position:absolute; top:18px; right:20px; font-size:26px; font-weight:300; color:rgba(141,149,175,.5); line-height:1}
+
+.empty{text-align:center; padding:70px 20px; color:var(--dim)}
+.empty svg{width:40px; height:40px; stroke:var(--line2); fill:none; stroke-width:1.5; margin-bottom:16px}
+.empty h3{margin:0 0 6px; font-size:17px; font-weight:600; color:var(--mute)}
+.empty p{margin:0; font-size:13.5px}
+
+/* ---------- drawer ---------- */
+.scrim{position:fixed; inset:0; background:rgba(3,4,8,.72); backdrop-filter:blur(3px); z-index:60;
+  opacity:0; pointer-events:none; transition:.24s}
+.scrim.on{opacity:1; pointer-events:auto}
+.drawer{position:fixed; top:0; right:0; bottom:0; width:440px; max-width:100%; z-index:70;
+  background:var(--bg2); border-left:1px solid var(--line2); transform:translateX(102%); transition:transform .3s cubic-bezier(.4,0,.2,1);
+  display:flex; flex-direction:column; box-shadow:-24px 0 60px rgba(0,0,0,.55)}
+.drawer.on{transform:none}
+.dhead{padding:20px; border-bottom:1px solid var(--line); display:flex; align-items:flex-start; gap:14px}
+.dart{width:72px; height:72px; border-radius:12px; flex:none; display:grid; place-items:center; overflow:hidden; position:relative}
+.dart svg{width:34%; height:34%; stroke:rgba(255,255,255,.76); fill:none; stroke-width:1.5}
+.dmeta{flex:1; min-width:0}
+.dmeta h2{margin:0 0 5px; font-size:19px; font-weight:600; letter-spacing:-.35px; line-height:1.25}
+.dmeta p{margin:0; font-size:14px; color:var(--mute)}
+.dmeta .sm{font-size:12px; color:var(--dim); margin-top:6px; letter-spacing:.05em; text-transform:uppercase}
+.close{flex:none; width:32px; height:32px; border-radius:9px; border:1px solid var(--line2); background:var(--surf);
+  display:grid; place-items:center; cursor:pointer; transition:.16s}
+.close svg{width:15px; height:15px; stroke:var(--mute); fill:none; stroke-width:2.2; stroke-linecap:round}
+.close:hover{border-color:var(--pink2)} .close:hover svg{stroke:var(--ink)}
+.dbody{flex:1; overflow-y:auto; padding:20px}
+.dbody::-webkit-scrollbar{width:8px}
+.dbody::-webkit-scrollbar-thumb{background:var(--line2); border-radius:8px}
+.sect{margin-bottom:26px}
+.sect h4{margin:0 0 12px; font-size:11.5px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; color:var(--dim)}
+.tagrow{display:flex; gap:7px; flex-wrap:wrap}
+.tag{font:500 12px 'Outfit',sans-serif; color:var(--mute); background:var(--surf); border:1px solid var(--line);
+  padding:5px 11px; border-radius:999px; cursor:pointer; transition:.16s}
+.tag:hover{color:var(--ink); border-color:var(--blue)}
+.lrow{display:flex; flex-direction:column; gap:8px}
+.lnk{display:flex; align-items:center; gap:12px; text-decoration:none; background:var(--surf); border:1px solid var(--line);
+  border-radius:11px; padding:12px 14px; transition:.16s; min-width:0}
+.lnk:hover{background:var(--surf2); border-color:var(--line2); transform:translateX(3px)}
+.lico{width:30px; height:30px; border-radius:8px; flex:none; display:grid; place-items:center; background:var(--surf3)}
+.lico svg{width:15px; height:15px; stroke:var(--blue2); fill:none; stroke-width:2; stroke-linecap:round}
+.lnk.sp .lico{background:rgba(30,215,96,.14)} .lnk.sp .lico svg{stroke:#1ed760}
+.lnk.pk .lico{background:rgba(255,92,168,.14)} .lnk.pk .lico svg{stroke:var(--pink)}
+.ltx{flex:1; min-width:0}
+.ltx strong{display:block; font-size:13.8px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.ltx span{display:block; font-size:12px; color:var(--dim); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.lnk > svg.go{width:15px; height:15px; flex:none; stroke:var(--dim); fill:none; stroke-width:2; stroke-linecap:round}
+.simrow{display:flex; align-items:center; gap:12px; padding:10px; border-radius:11px; cursor:pointer; transition:.16s; min-width:0}
+.simrow:hover{background:var(--surf)}
+.sart{width:40px; height:40px; border-radius:9px; flex:none; display:grid; place-items:center}
+.sart svg{width:40%; height:40%; stroke:rgba(255,255,255,.7); fill:none; stroke-width:1.6}
+.stx{flex:1; min-width:0}
+.stx strong{display:block; font-size:13.5px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.stx span{display:block; font-size:12px; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.pct{flex:none; font:600 11px 'Outfit',sans-serif; color:var(--blue2); background:rgba(31,227,255,.1);
+  border:1px solid rgba(31,227,255,.2); padding:3px 8px; border-radius:999px}
+.dfoot{padding:14px 20px; border-top:1px solid var(--line); display:flex; gap:8px}
+.dfoot .ib{flex:1; justify-content:center}
+.ib.dg:hover{border-color:var(--pink2); color:var(--pink)}
+
+/* ---------- modal ---------- */
+.modal{position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center; padding:20px;
+  background:rgba(3,4,8,.78); backdrop-filter:blur(5px)}
+.modal.on{display:flex}
+.sheet{background:var(--bg2); border:1px solid var(--line2); border-radius:18px; width:100%; max-width:470px;
+  max-height:88vh; overflow-y:auto; box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.shead{padding:20px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:12px}
+.shead h3{margin:0; font-size:17.5px; font-weight:600; letter-spacing:-.3px}
+.sbody{padding:20px; display:flex; flex-direction:column; gap:14px}
+.fld{display:flex; flex-direction:column; gap:6px; min-width:0}
+.fld label{font-size:12px; font-weight:500; color:var(--mute); letter-spacing:.04em}
+.fld input,.fld select{background:var(--surf); border:1px solid var(--line2); color:var(--ink);
+  font:400 14.5px 'Outfit',sans-serif; padding:11px 13px; border-radius:10px; outline:none; transition:.16s; width:100%; min-width:0}
+.fld input:focus{border-color:var(--blue); box-shadow:0 0 0 3px rgba(61,123,255,.12)}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.sfoot{padding:16px 20px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end}
+.hint{font-size:12px; color:var(--dim); margin:0}
+
+/* ---------- access gate ---------- */
+html:not(.ok) header, html:not(.ok) .wrap, html:not(.ok) footer{display:none}
+html.ok .gate{display:none}
+.gate{position:fixed; inset:0; z-index:900; display:grid; place-items:center; padding:24px}
+.gcard{width:100%; max-width:380px; text-align:center}
+.gmark{width:58px; height:58px; border-radius:18px; margin:0 auto 22px; display:grid; place-items:center;
+  background:linear-gradient(140deg,var(--blue),var(--pink2)); box-shadow:0 10px 36px rgba(61,123,255,.4)}
+.gmark svg{width:28px; height:28px; stroke:#fff; fill:none; stroke-width:2.1; stroke-linecap:round}
+.gcard h1{margin:0 0 8px; font-size:25px; font-weight:600; letter-spacing:-.5px}
+.gcard p{margin:0 0 26px; font-size:14px; color:var(--mute); line-height:1.55}
+.gform{display:flex; gap:9px; min-width:0}
+.gform input{flex:1; min-width:0; background:var(--surf); border:1px solid var(--line2); color:var(--ink);
+  font:400 15.5px 'Outfit',sans-serif; padding:13px 15px; border-radius:11px; outline:none; transition:.16s; text-align:center; letter-spacing:.08em}
+.gform input::placeholder{color:var(--dim); letter-spacing:.02em}
+.gform input:focus{border-color:var(--blue); background:var(--surf2); box-shadow:0 0 0 4px rgba(61,123,255,.14)}
+.gform button{flex:none; background:linear-gradient(135deg,var(--blue),#6a5cff); border:0; color:#fff;
+  font:500 14.5px 'Outfit',sans-serif; padding:13px 20px; border-radius:11px; cursor:pointer; transition:.16s}
+.gform button:hover{filter:brightness(1.12)}
+.gerr{margin:16px 0 0; font-size:13px; color:var(--pink); min-height:18px; opacity:0; transition:.18s}
+.gerr.show{opacity:1}
+.shake{animation:sh .32s}
+@keyframes sh{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+footer{max-width:var(--maxw); margin:0 auto; padding:30px 20px 50px; border-top:1px solid var(--line);
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; font-size:12.5px; color:var(--dim)}
+footer b{color:var(--mute); font-weight:500}
+
+@media (max-width:760px){
+  .hbar{gap:12px; padding:13px 16px}
+  .views{order:3; width:100%; justify-content:space-between}
+  .views button{flex:1}
+  .hbtns{order:4}
+  .wrap{padding:0 16px 70px}
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px}
+  .drawer{width:100%}
+  .two{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-wave" viewBox="0 0 24 24"><path d="M3 12h2m3-6v12m4-16v20m4-14v8m4-5v2m3 1h1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"/><path d="M19 17.5l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.5 4.6 13a4.7 4.7 0 0 1 6.6-6.7l.8.8.8-.8A4.7 4.7 0 0 1 19.4 13z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-go" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></symbol>
+  <symbol id="i-disc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.4"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.6"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 20h14"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 20V9m0 0 4 4m-4-4L8 13M5 4h14"/></symbol>
+  <symbol id="i-radio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.5"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4m8.4-8.4a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2m14.2-14.2a10 10 0 0 1 0 14.2"/></symbol>
+  <symbol id="i-tv" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="13" rx="2.5"/><path d="M10 9.5l5 3-5 3z"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M4 11V5a1 1 0 0 1 1-1h6l9 9-7 7z"/><circle cx="8" cy="8" r="1.2"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10.5" rx="2.4"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2m-9 0 1 13h10l1-13"/></symbol>
+</svg>
+
+<header>
+  <div class="hbar">
+    <div class="brand">
+      <div class="mark"><svg><use href="#i-wave"/></svg></div>
+      <div>
+        <div class="bname">Sound Room</div>
+        <div class="bsub">Favourites</div>
+      </div>
+    </div>
+
+    <label class="search">
+      <svg><use href="#i-search"/></svg>
+      <input id="q" type="search" placeholder="Search songs, artists, moods..." autocomplete="off">
+      <span class="kbd">/</span>
+    </label>
+
+    <div class="views" id="views">
+      <button data-v="tracks" class="on">Tracks</button>
+      <button data-v="cats">Categories</button>
+      <button data-v="artists">Artists</button>
+    </div>
+
+    <div class="hbtns">
+      <button class="ib pri" id="addBtn"><svg><use href="#i-plus"/></svg>Add</button>
+      <button class="ib" id="expBtn" title="Export your library"><svg><use href="#i-down"/></svg></button>
+      <button class="ib" id="impBtn" title="Import a library file"><svg><use href="#i-up"/></svg></button>
+      <button class="ib" id="lockBtn" title="Lock this room"><svg><use href="#i-lock"/></svg></button>
+      <input type="file" id="impFile" accept=".json" style="display:none">
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="chips" id="chips"></div>
+
+  <div class="bar">
+    <div class="count" id="count"></div>
+    <div class="sortwrap">
+      <span>Sort</span>
+      <select id="sort">
+        <option value="artist">Artist</option>
+        <option value="title">Title</option>
+        <option value="new">Newest release</option>
+        <option value="old">Oldest release</option>
+        <option value="added">Recently added</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="lookup" id="lookup"></div>
+  <div id="main"></div>
+</div>
+
+<footer>
+  <div><b>Sound Room</b> &nbsp;&middot;&nbsp; a personal listening index</div>
+  <div>Everything you add stays in this browser. Export to keep a copy.</div>
+</footer>
+
+<section class="gate" id="gate">
+  <div class="gcard" id="gcard">
+    <div class="gmark"><svg><use href="#i-wave"/></svg></div>
+    <h1>Sound Room</h1>
+    <p>A private listening index. Enter the code to come in.</p>
+    <form class="gform" id="gform" autocomplete="off">
+      <input id="gcode" type="password" placeholder="Access code" autocomplete="off" spellcheck="false" aria-label="Access code">
+      <button type="submit">Enter</button>
+    </form>
+    <p class="gerr" id="gerr">That code is not right. Try again.</p>
+  </div>
+</section>
+
+<div class="scrim" id="scrim"></div>
+
+<aside class="drawer" id="drawer">
+  <div class="dhead">
+    <div class="dart" id="dArt"><svg><use href="#i-disc"/></svg></div>
+    <div class="dmeta">
+      <h2 id="dTitle"></h2>
+      <p id="dArtist"></p>
+      <div class="sm" id="dSub"></div>
+    </div>
+    <button class="close" id="dClose"><svg><use href="#i-x"/></svg></button>
+  </div>
+  <div class="dbody" id="dBody"></div>
+  <div class="dfoot">
+    <button class="ib" id="dLove"><svg><use href="#i-heart"/></svg>Love</button>
+    <button class="ib dg" id="dDel"><svg><use href="#i-trash"/></svg>Remove</button>
+  </div>
+</aside>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <div class="shead">
+      <h3>Add a track</h3>
+      <button class="close" id="mClose"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div class="sbody">
+      <div class="fld"><label for="f-t">Song title</label><input id="f-t" placeholder="Space Song"></div>
+      <div class="fld"><label for="f-a">Artist</label><input id="f-a" placeholder="Beach House"></div>
+      <div class="two">
+        <div class="fld"><label for="f-al">Album</label><input id="f-al" placeholder="Depression Cherry"></div>
+        <div class="fld"><label for="f-y">Year</label><input id="f-y" type="number" placeholder="2015"></div>
+      </div>
+      <div class="fld"><label for="f-c">Category</label><select id="f-c"></select></div>
+      <div class="fld"><label for="f-tags">Moods and tags</label><input id="f-tags" placeholder="dreamy, hazy, late night">
+        <p class="hint">Separate with commas. Tags drive the "more like this" matching.</p>
+      </div>
+    </div>
+    <div class="sfoot">
+      <button class="ib" id="mCancel">Cancel</button>
+      <button class="ib pri" id="mSave"><svg><use href="#i-plus"/></svg>Add to library</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SEED = [
+  ["Bloodbuzz Ohio","The National","High Violet",2010,"Indie & Alternative",["melancholy","baritone","slow burn"]],
+  ["Wake Up","Arcade Fire","Funeral",2004,"Indie & Alternative",["anthemic","euphoric","big chorus"]],
+  ["Weird Fishes / Arpeggi","Radiohead","In Rainbows",2007,"Indie & Alternative",["hypnotic","build","guitar web"]],
+  ["Space Song","Beach House","Depression Cherry",2015,"Indie & Alternative",["dreamy","hazy","late night"]],
+  ["Jackie Down the Line","Fontaines D.C.","Skinty Fia",2022,"Indie & Alternative",["post-punk","irish","driving"]],
+  ["Not","Big Thief","Two Hands",2019,"Indie & Alternative",["raw","cathartic","guitar solo"]],
+  ["The Chain","Fleetwood Mac","Rumours",1977,"Rock & Classics",["harmony","bassline","tension"]],
+  ["Life on Mars?","David Bowie","Hunky Dory",1971,"Rock & Classics",["cinematic","piano","theatrical"]],
+  ["This Must Be the Place","Talking Heads","Speaking in Tongues",1983,"Rock & Classics",["warm","groove","tender"]],
+  ["Gimme Shelter","The Rolling Stones","Let It Bleed",1969,"Rock & Classics",["ominous","swagger","vocal duel"]],
+  ["Ten Years Gone","Led Zeppelin","Physical Graffiti",1975,"Rock & Classics",["layered","wistful","guitar"]],
+  ["Where Is My Mind?","Pixies","Surfer Rosa",1988,"Rock & Classics",["off-kilter","loud-quiet","cult"]],
+  ["Archangel","Burial","Untrue",2007,"Electronic",["nocturnal","garage","ghostly vocal"]],
+  ["Two Thousand and Seventeen","Four Tet","New Energy",2017,"Electronic",["gentle","melodic","shimmer"]],
+  ["Odessa","Caribou","Swim",2010,"Electronic",["liquid","dancefloor","odd groove"]],
+  ["Emerald Rush","Jon Hopkins","Singularity",2018,"Electronic",["euphoric","textured","build"]],
+  ["Something About Us","Daft Punk","Discovery",2001,"Electronic",["soft","vocoder","romantic"]],
+  ["Glue","Bicep","Bicep",2017,"Electronic",["rave","nostalgic","breakbeat"]],
+  ["Sing About Me, I'm Dying of Thirst","Kendrick Lamar","good kid, m.A.A.d city",2012,"Hip-Hop & R&B",["storytelling","epic","heavy"]],
+  ["Can I Kick It?","A Tribe Called Quest","People's Instinctive Travels",1990,"Hip-Hop & R&B",["jazzy","playful","classic"]],
+  ["Nights","Frank Ocean","Blonde",2016,"Hip-Hop & R&B",["beat switch","hazy","late night"]],
+  ["Introvert","Little Simz","Sometimes I Might Be Introvert",2021,"Hip-Hop & R&B",["orchestral","bold","brass"]],
+  ["Wildfires","SAULT","Untitled (Black Is)",2020,"Hip-Hop & R&B",["soulful","spare","protest"]],
+  ["Really Love","D'Angelo","Black Messiah",2014,"Hip-Hop & R&B",["slow","sensual","strings"]],
+  ["Peace Piece","Bill Evans","Everybody Digs Bill Evans",1958,"Jazz & Soul",["solo piano","still","meditative"]],
+  ["Naima","John Coltrane","Giant Steps",1960,"Jazz & Soul",["ballad","tender","saxophone"]],
+  ["Feeling Good","Nina Simone","I Put a Spell on You",1965,"Jazz & Soul",["dramatic","voice","brass"]],
+  ["Journey in Satchidananda","Alice Coltrane","Journey in Satchidananda",1971,"Jazz & Soul",["spiritual","harp","drone"]],
+  ["What's Going On","Marvin Gaye","What's Going On",1971,"Jazz & Soul",["soul","smooth","protest"]],
+  ["Street Fighter Mas","Kamasi Washington","Heaven and Earth",2018,"Jazz & Soul",["modern jazz","swagger","horns"]],
+  ["Pink Moon","Nick Drake","Pink Moon",1972,"Folk & Acoustic",["sparse","fragile","short"]],
+  ["A Case of You","Joni Mitchell","Blue",1971,"Folk & Acoustic",["confessional","dulcimer","lyrical"]],
+  ["Mystery of Love","Sufjan Stevens","Call Me by Your Name",2017,"Folk & Acoustic",["delicate","yearning","fingerpicked"]],
+  ["Look at Miss Ohio","Gillian Welch","Soul Journey",2003,"Folk & Acoustic",["americana","wry","harmony"]],
+  ["The Wild Rover","Lankum","The Livelong Day",2019,"Folk & Acoustic",["drone","irish","heavy folk"]],
+  ["Holocene","Bon Iver","Bon Iver, Bon Iver",2011,"Folk & Acoustic",["vast","layered","winter"]],
+  ["An Ending (Ascent)","Brian Eno","Apollo",1983,"Ambient & Focus",["weightless","pads","cinematic"]],
+  ["Glass","Hania Rani","Esja",2019,"Ambient & Focus",["piano","minimal","clear"]],
+  ["Says","Nils Frahm","Spaces",2013,"Ambient & Focus",["arpeggio","build","live"]],
+  ["Avril 14th","Aphex Twin","Drukqs",2001,"Ambient & Focus",["piano","bittersweet","tiny"]],
+  ["Music for 18 Musicians","Steve Reich","Music for 18 Musicians",1978,"Ambient & Focus",["minimalism","pulse","hypnotic"]],
+  ["Pop 1","GAS","Pop",2000,"Ambient & Focus",["foggy","forest","loop"]],
+  ["Dancing On My Own","Robyn","Body Talk",2010,"Pop",["sad banger","synth","euphoric"]],
+  ["Running Up That Hill","Kate Bush","Hounds of Love",1985,"Pop",["drama","drum machine","voice"]],
+  ["So Hot You're Hurting My Feelings","Caroline Polachek","Pang",2019,"Pop",["art pop","bright","hooky"]],
+  ["Von dutch","Charli XCX","Brat",2024,"Pop",["club","brash","hyperpop"]],
+  ["Run Away with Me","Carly Rae Jepsen","E-MO-TION",2015,"Pop",["sax hook","rush","big chorus"]],
+  ["By Your Side","Sade","Lovers Rock",2000,"Pop",["smooth","warm","devotional"]]
+];
+
+const CATS = ["Indie & Alternative","Rock & Classics","Electronic","Hip-Hop & R&B","Jazz & Soul","Folk & Acoustic","Ambient & Focus","Pop"];
+const CAT_ICON = {"Indie & Alternative":"i-wave","Rock & Classics":"i-disc","Electronic":"i-radio","Hip-Hop & R&B":"i-mic","Jazz & Soul":"i-play","Folk & Acoustic":"i-tag","Ambient & Focus":"i-grid","Pop":"i-spark"};
+const KEY = "soundroom_v1";
+
+/* Spotify track ids and cover art, resolved once at build time from the Spotify Web API.
+   No API key ships with this page: only the finished ids and image URLs. */
+const SP = {};
+const ART = {};
+
+let store = {added:[], loved:[], removed:[]};
+try{ const raw = localStorage.getItem(KEY); if(raw) store = Object.assign(store, JSON.parse(raw)); }catch(e){}
+const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(store)); }catch(e){} };
+
+const idOf = (t,a) => (a+"-"+t).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+
+function library(){
+  const base = SEED.map(r => ({id:idOf(r[0],r[1]), t:r[0], a:r[1], al:r[2], y:r[3], c:r[4], tags:r[5], mine:false, at:0}));
+  const mine = store.added.map(r => ({...r, mine:true}));
+  return base.concat(mine).filter(x => !store.removed.includes(x.id));
+}
+let LIB = library();
+
+const state = {q:"", cat:"all", sort:"artist", view:"tracks"};
+
+/* deterministic artwork gradient: electric blue through soft pink */
+function hash(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))|0; return Math.abs(h); }
+const PAL = [
+  ["#0b2fd4","#1fe3ff"],  /* deep blue to cyan */
+  ["#3d7bff","#b06cff"],  /* electric blue to violet */
+  ["#5a4cff","#ff8fc7"],  /* indigo to soft pink */
+  ["#0a1f8f","#ff5ca8"],  /* navy to hot pink */
+  ["#1fe3ff","#6a5cff"],  /* cyan to indigo */
+  ["#ff8fc7","#6f5bff"],  /* soft pink to indigo */
+  ["#12379e","#36c8ff"],  /* navy to sky */
+  ["#8f4cff","#ffa8d4"],  /* violet to blush */
+  ["#2563ff","#ff6fb3"],  /* blue to pink */
+  ["#071a6b","#3d7bff"]   /* midnight to blue */
+];
+function grad(seed){
+  const h = hash(seed);
+  const [a,b] = PAL[h % PAL.length];
+  const ang = 110 + ((h >> 4) % 80);
+  return `linear-gradient(${ang}deg, ${a}, ${b})`;
+}
+function cover(x){ return x.img || ART[x.id] || ""; }
+function artInner(x){
+  const u = cover(x);
+  return u ? `<img src="${esc(u)}" alt="" loading="lazy" decoding="async">`
+           : `<svg><use href="#${CAT_ICON[x.c]||"i-disc"}"/></svg>`;
+}
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const enc = s => encodeURIComponent(s);
+const isLoved = id => store.loved.includes(id);
+
+/* ---------- external lookup links ---------- */
+function spTrack(x){
+  return SP[x.id] ? `https://open.spotify.com/track/${SP[x.id]}`
+                  : `https://open.spotify.com/search/${enc(x.t+" "+x.a)}/tracks`;
+}
+function spArtist(a){ return `https://open.spotify.com/search/${enc(a)}/artists`; }
+function lfmSimilar(a){ return `https://www.last.fm/music/${enc(a)}/+similar`; }
+function lfmTrackSim(x){ return `https://www.last.fm/music/${enc(x.a)}/_/${enc(x.t)}/+similar`; }
+function yt(x){ return `https://www.youtube.com/results?search_query=${enc(x.a+" "+x.t)}`; }
+
+/* ---------- similarity within the library ---------- */
+function similar(x, n=5){
+  return LIB.filter(o => o.id !== x.id).map(o => {
+    const shared = o.tags.filter(t => x.tags.includes(t)).length;
+    let s = shared*3;
+    if(o.a === x.a) s += 5;
+    if(o.c === x.c) s += 2;
+    if(Math.abs(o.y - x.y) <= 5) s += 1;
+    const max = x.tags.length*3 + 8;
+    return {o, s, pct: Math.min(99, Math.round(s/max*100))};
+  }).filter(r => r.s > 0).sort((a,b) => b.s - a.s || a.o.t.localeCompare(b.o.t)).slice(0,n);
+}
+
+/* ---------- filtering ---------- */
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  let out = LIB.filter(x => {
+    if(state.cat === "loved" && !isLoved(x.id)) return false;
+    if(state.cat !== "all" && state.cat !== "loved" && x.c !== state.cat) return false;
+    if(!q) return true;
+    return (x.t+" "+x.a+" "+x.al+" "+x.c+" "+x.tags.join(" ")).toLowerCase().includes(q);
+  });
+  const by = {
+    artist:(a,b) => a.a.localeCompare(b.a) || a.y - b.y,
+    title:(a,b) => a.t.localeCompare(b.t),
+    new:(a,b) => b.y - a.y,
+    old:(a,b) => a.y - b.y,
+    added:(a,b) => (b.at||0) - (a.at||0) || a.a.localeCompare(b.a)
+  };
+  return out.sort(by[state.sort]);
+}
+
+/* ---------- render ---------- */
+function renderChips(){
+  const counts = {};
+  LIB.forEach(x => counts[x.c] = (counts[x.c]||0) + 1);
+  let h = `<button class="chip ${state.cat==="all"?"on":""}" data-c="all">All <b>${LIB.length}</b></button>`;
+  h += `<button class="chip love ${state.cat==="loved"?"on":""}" data-c="loved">Loved <b>${store.loved.length}</b></button>`;
+  CATS.concat(Object.keys(counts).filter(c => !CATS.includes(c))).forEach(c => {
+    if(!counts[c]) return;
+    h += `<button class="chip ${state.cat===c?"on":""}" data-c="${esc(c)}">${esc(c)} <b>${counts[c]}</b></button>`;
+  });
+  const el = document.getElementById("chips");
+  el.innerHTML = h;
+  el.querySelectorAll(".chip").forEach(b => b.onclick = () => { state.cat = b.dataset.c; render(); });
+}
+
+function cardHTML(x){
+  return `<article class="card" data-id="${x.id}">
+    ${x.mine?'<span class="badge">Mine</span>':''}
+    <div class="art ${cover(x)?"has":""}" style="background:${grad(x.a+x.t)}">${artInner(x)}</div>
+    <h3 class="ctitle">${esc(x.t)}</h3>
+    <p class="cart">${esc(x.a)}</p>
+    <div class="crow">
+      <span class="cmeta">${x.y} &middot; ${esc(x.c.split(" ")[0])}</span>
+      <button class="heart ${isLoved(x.id)?"on":""}" data-love="${x.id}" title="Love this">
+        <svg><use href="#i-heart"/></svg></button>
+    </div>
+  </article>`;
+}
+
+function renderTracks(list){
+  if(!list.length) return emptyHTML();
+  return `<div class="grid">${list.map(cardHTML).join("")}</div>`;
+}
+
+function renderCats(){
+  const counts = {};
+  LIB.forEach(x => (counts[x.c] = counts[x.c] || []).push(x));
+  const keys = Object.keys(counts).sort((a,b) => counts[b].length - counts[a].length);
+  if(!keys.length) return emptyHTML();
+  return `<div class="tiles">${keys.map(c => {
+    const artists = [...new Set(counts[c].map(x => x.a))];
+    return `<article class="tile" data-cat="${esc(c)}">
+      <span class="tnum">${counts[c].length}</span>
+      <div class="tdot" style="background:${grad(c)}"><svg><use href="#${CAT_ICON[c]||"i-disc"}"/></svg></div>
+      <h3 class="tname">${esc(c)}</h3>
+      <p class="tsub">${artists.length} artist${artists.length===1?"":"s"} &middot; ${esc(artists.slice(0,2).join(", "))}${artists.length>2?" and more":""}</p>
+    </article>`;
+  }).join("")}</div>`;
+}
+
+function renderArtists(){
+  const q = state.q.trim().toLowerCase();
+  const by = {};
+  LIB.forEach(x => {
+    if(q && !(x.a+" "+x.t+" "+x.tags.join(" ")).toLowerCase().includes(q)) return;
+    (by[x.a] = by[x.a] || []).push(x);
+  });
+  const keys = Object.keys(by).sort((a,b) => by[b].length - by[a].length || a.localeCompare(b));
+  if(!keys.length) return emptyHTML();
+  return `<div class="tiles">${keys.map(a => {
+    const ts = by[a];
+    return `<article class="tile" data-artist="${esc(a)}">
+      <span class="tnum">${ts.length}</span>
+      <div class="tdot" style="background:${grad(a)}"><svg><use href="#i-mic"/></svg></div>
+      <h3 class="tname">${esc(a)}</h3>
+      <p class="tsub">${esc(ts.map(x => x.t).slice(0,2).join(", "))}${ts.length>2?" and more":""}</p>
+    </article>`;
+  }).join("")}</div>`;
+}
+
+function emptyHTML(){
+  return `<div class="empty"><svg><use href="#i-search"/></svg>
+    <h3>Nothing in the library matches</h3>
+    <p>Try a different word, or look it up outside the library above.</p></div>`;
+}
+
+function renderLookup(){
+  const el = document.getElementById("lookup");
+  const q = state.q.trim();
+  if(!q){ el.classList.remove("show"); el.innerHTML = ""; return; }
+  el.classList.add("show");
+  el.innerHTML = `<p>Look up <b>${esc(q)}</b> outside the library</p>
+    <a class="lk" target="_blank" rel="noopener" href="https://open.spotify.com/search/${enc(q)}"><svg><use href="#i-play"/></svg>Spotify</a>
+    <a class="lk" target="_blank" rel="noopener" href="https://www.last.fm/music/${enc(q)}/+similar"><svg><use href="#i-spark"/></svg>Similar artists</a>
+    <a class="lk" target="_blank" rel="noopener" href="https://www.youtube.com/results?search_query=${enc(q)}"><svg><use href="#i-tv"/></svg>YouTube</a>`;
+}
+
+function render(){
+  LIB = library();
+  renderChips();
+  renderLookup();
+  document.getElementById("views").querySelectorAll("button")
+    .forEach(b => b.classList.toggle("on", b.dataset.v === state.view));
+
+  const list = filtered();
+  const main = document.getElementById("main");
+  const cnt = document.getElementById("count");
+
+  if(state.view === "cats"){
+    main.innerHTML = renderCats();
+    cnt.innerHTML = `<b>${Object.keys(LIB.reduce((a,x)=>(a[x.c]=1,a),{})).length}</b> categories across <b>${LIB.length}</b> tracks`;
+    main.querySelectorAll(".tile").forEach(t => t.onclick = () => {
+      state.cat = t.dataset.cat; state.view = "tracks"; render();
+    });
+  } else if(state.view === "artists"){
+    main.innerHTML = renderArtists();
+    cnt.innerHTML = `<b>${new Set(LIB.map(x=>x.a)).size}</b> artists in the library`;
+    main.querySelectorAll(".tile").forEach(t => t.onclick = () => {
+      state.q = t.dataset.artist; document.getElementById("q").value = t.dataset.artist;
+      state.view = "tracks"; state.cat = "all"; render();
+    });
+  } else {
+    main.innerHTML = renderTracks(list);
+    cnt.innerHTML = `<b>${list.length}</b> track${list.length===1?"":"s"}${state.cat!=="all"?" in "+esc(state.cat==="loved"?"Loved":state.cat):""}`;
+    main.querySelectorAll(".card").forEach(c => c.onclick = e => {
+      const lv = e.target.closest("[data-love]");
+      if(lv){ toggleLove(lv.dataset.love); return; }
+      open(c.dataset.id);
+    });
+  }
+}
+
+function toggleLove(id){
+  const i = store.loved.indexOf(id);
+  if(i > -1) store.loved.splice(i,1); else store.loved.push(id);
+  save(); render();
+  if(current && current.id === id) paintLove();
+}
+
+/* ---------- drawer ---------- */
+let current = null;
+const drawer = document.getElementById("drawer"), scrim = document.getElementById("scrim");
+
+function paintLove(){
+  const b = document.getElementById("dLove");
+  const on = isLoved(current.id);
+  b.innerHTML = `<svg><use href="#i-heart"/></svg>${on?"Loved":"Love"}`;
+  b.style.color = on ? "var(--pink)" : "";
+  b.style.borderColor = on ? "var(--pink2)" : "";
+}
+
+function open(id){
+  const x = LIB.find(v => v.id === id); if(!x) return;
+  current = x;
+  const dA = document.getElementById("dArt");
+  dA.style.background = grad(x.a+x.t);
+  dA.className = "dart" + (cover(x) ? " has" : "");
+  dA.innerHTML = artInner(x);
+  document.getElementById("dTitle").textContent = x.t;
+  document.getElementById("dArtist").textContent = x.a;
+  document.getElementById("dSub").textContent = `${x.al} &middot; ${x.y}`.replace("&middot;","·");
+  document.getElementById("dDel").style.display = x.mine ? "" : "none";
+  paintLove();
+
+  const sim = similar(x);
+  document.getElementById("dBody").innerHTML = `
+    <div class="sect">
+      <h4>Listen</h4>
+      ${SP[x.id] ? `<iframe class="player" loading="lazy" title="Spotify player"
+        src="https://open.spotify.com/embed/track/${SP[x.id]}?theme=0"
+        allow="clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>` : ""}
+      <div class="lrow">
+        <a class="lnk sp" target="_blank" rel="noopener" href="${spTrack(x)}">
+          <span class="lico"><svg><use href="#i-play"/></svg></span>
+          <span class="ltx"><strong>Play on Spotify</strong><span>${esc(x.t)} by ${esc(x.a)}</span></span>
+          <svg class="go"><use href="#i-go"/></svg></a>
+        <a class="lnk sp" target="_blank" rel="noopener" href="${spArtist(x.a)}">
+          <span class="lico"><svg><use href="#i-mic"/></svg></span>
+          <span class="ltx"><strong>Artist on Spotify</strong><span>Discography and Fans also like</span></span>
+          <svg class="go"><use href="#i-go"/></svg></a>
+        <a class="lnk" target="_blank" rel="noopener" href="${yt(x)}">
+          <span class="lico"><svg><use href="#i-tv"/></svg></span>
+          <span class="ltx"><strong>Watch on YouTube</strong><span>Video, live versions, covers</span></span>
+          <svg class="go"><use href="#i-go"/></svg></a>
+      </div>
+    </div>
+
+    <div class="sect">
+      <h4>Find more like it</h4>
+      <div class="lrow">
+        <a class="lnk pk" target="_blank" rel="noopener" href="${lfmTrackSim(x)}">
+          <span class="lico"><svg><use href="#i-spark"/></svg></span>
+          <span class="ltx"><strong>Similar songs</strong><span>Tracks that sit next to this one</span></span>
+          <svg class="go"><use href="#i-go"/></svg></a>
+        <a class="lnk pk" target="_blank" rel="noopener" href="${lfmSimilar(x.a)}">
+          <span class="lico"><svg><use href="#i-radio"/></svg></span>
+          <span class="ltx"><strong>Similar artists</strong><span>Bands in the same orbit as ${esc(x.a)}</span></span>
+          <svg class="go"><use href="#i-go"/></svg></a>
+      </div>
+    </div>
+
+    ${sim.length ? `<div class="sect">
+      <h4>More like this in your library</h4>
+      ${sim.map(r => `<div class="simrow" data-go="${r.o.id}">
+        <span class="sart ${cover(r.o)?"has":""}" style="background:${grad(r.o.a+r.o.t)}">${artInner(r.o)}</span>
+        <span class="stx"><strong>${esc(r.o.t)}</strong><span>${esc(r.o.a)} &middot; ${r.o.y}</span></span>
+        <span class="pct">${r.pct}%</span>
+      </div>`).join("")}
+    </div>` : ""}
+
+    <div class="sect">
+      <h4>Tags</h4>
+      <div class="tagrow">
+        <button class="tag" data-tag="${esc(x.c)}">${esc(x.c)}</button>
+        ${x.tags.map(t => `<button class="tag" data-tag="${esc(t)}">${esc(t)}</button>`).join("")}
+      </div>
+    </div>`;
+
+  document.getElementById("dBody").querySelectorAll("[data-go]")
+    .forEach(r => r.onclick = () => open(r.dataset.go));
+  document.getElementById("dBody").querySelectorAll("[data-tag]")
+    .forEach(b => b.onclick = () => {
+      state.q = b.dataset.tag; state.cat = "all"; state.view = "tracks";
+      document.getElementById("q").value = b.dataset.tag;
+      close(); render();
+    });
+
+  drawer.classList.add("on"); scrim.classList.add("on");
+  document.getElementById("dBody").scrollTop = 0;
+}
+function close(){ drawer.classList.remove("on"); scrim.classList.remove("on"); current = null; }
+
+document.getElementById("dClose").onclick = close;
+scrim.onclick = close;
+document.getElementById("dLove").onclick = () => current && toggleLove(current.id);
+document.getElementById("dDel").onclick = () => {
+  if(!current) return;
+  store.added = store.added.filter(a => a.id !== current.id);
+  store.loved = store.loved.filter(i => i !== current.id);
+  save(); close(); render();
+};
+
+/* ---------- add modal ---------- */
+const modal = document.getElementById("modal");
+const sel = document.getElementById("f-c");
+sel.innerHTML = CATS.map(c => `<option>${esc(c)}</option>`).join("");
+
+function openModal(){ modal.classList.add("on"); document.getElementById("f-t").focus(); }
+function closeModal(){
+  modal.classList.remove("on");
+  ["f-t","f-a","f-al","f-y","f-tags"].forEach(i => document.getElementById(i).value = "");
+}
+document.getElementById("addBtn").onclick = openModal;
+document.getElementById("mClose").onclick = closeModal;
+document.getElementById("mCancel").onclick = closeModal;
+modal.onclick = e => { if(e.target === modal) closeModal(); };
+
+document.getElementById("mSave").onclick = () => {
+  const t = document.getElementById("f-t").value.trim();
+  const a = document.getElementById("f-a").value.trim();
+  if(!t || !a){ document.getElementById(t?"f-a":"f-t").focus(); return; }
+  const rec = {
+    id: idOf(t,a), t, a,
+    al: document.getElementById("f-al").value.trim() || "Single",
+    y: parseInt(document.getElementById("f-y").value,10) || new Date().getFullYear(),
+    c: sel.value,
+    tags: document.getElementById("f-tags").value.split(",").map(s => s.trim()).filter(Boolean),
+    at: Date.now()
+  };
+  store.removed = store.removed.filter(i => i !== rec.id);
+  store.added = store.added.filter(x => x.id !== rec.id).concat([rec]);
+  save(); closeModal();
+  state.view = "tracks"; state.cat = "all"; state.sort = "added";
+  document.getElementById("sort").value = "added";
+  render();
+  setTimeout(() => open(rec.id), 120);
+};
+
+/* ---------- export / import ---------- */
+document.getElementById("expBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify(store,null,2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "sound-room-library.json";
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById("impBtn").onclick = () => document.getElementById("impFile").click();
+document.getElementById("impFile").onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const d = JSON.parse(r.result);
+      store.added = Array.isArray(d.added) ? d.added : store.added;
+      store.loved = Array.isArray(d.loved) ? d.loved : store.loved;
+      store.removed = Array.isArray(d.removed) ? d.removed : store.removed;
+      save(); render();
+    }catch(err){}
+  };
+  r.readAsText(f);
+  e.target.value = "";
+};
+
+/* ---------- controls ---------- */
+let tm;
+document.getElementById("q").oninput = e => {
+  clearTimeout(tm);
+  tm = setTimeout(() => {
+    state.q = e.target.value;
+    /* the category grid has nothing to search, so a query drops you into the tracks */
+    if(state.q.trim() && state.view === "cats") state.view = "tracks";
+    render();
+  }, 110);
+};
+document.getElementById("sort").onchange = e => { state.sort = e.target.value; render(); };
+document.getElementById("views").querySelectorAll("button")
+  .forEach(b => b.onclick = () => { state.view = b.dataset.v; render(); });
+
+document.addEventListener("keydown", e => {
+  if(e.key === "/" && document.activeElement.id !== "q" && !modal.classList.contains("on")){
+    e.preventDefault(); document.getElementById("q").focus();
+  }
+  if(e.key === "Escape"){
+    if(modal.classList.contains("on")) closeModal();
+    else if(drawer.classList.contains("on")) close();
+  }
+});
+
+/* ---------- access gate ---------- */
+const CODE_SHA = "6cd041774b4251633c19a4431f852bc735e5c681122f4f5364d8ef905d7481e3";
+
+async function sha256(str){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2,"0")).join("");
+}
+function unlock(){
+  try{ localStorage.setItem("sr_open_v1","1"); }catch(e){}
+  document.documentElement.classList.add("ok");
+  render();
+  setTimeout(() => document.getElementById("q").focus(), 60);
+}
+function reject(){
+  const err = document.getElementById("gerr"), card = document.getElementById("gcard");
+  err.classList.add("show"); card.classList.remove("shake");
+  void card.offsetWidth; card.classList.add("shake");
+  const i = document.getElementById("gcode"); i.value = ""; i.focus();
+}
+document.getElementById("gform").addEventListener("submit", async e => {
+  e.preventDefault();
+  const v = document.getElementById("gcode").value.trim().toLowerCase();
+  if(!v) return;
+  try{
+    if(await sha256(v) === CODE_SHA) unlock(); else reject();
+  }catch(err){ reject(); }
+});
+document.getElementById("lockBtn").onclick = () => {
+  try{ localStorage.removeItem("sr_open_v1"); }catch(e){}
+  document.documentElement.classList.remove("ok");
+  document.getElementById("gcode").value = "";
+  document.getElementById("gerr").classList.remove("show");
+  close(); closeModal();
+};
+if(!document.documentElement.classList.contains("ok")){
+  setTimeout(() => document.getElementById("gcode").focus(), 120);
+}
+
+render();
+</script>
+</body>
+</html>
