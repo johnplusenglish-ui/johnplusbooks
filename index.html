@@ -1404,6 +1404,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   .tg-link{padding:.42rem .55rem}
 }
 </style>
+<link rel="preconnect" href="https://covers.openlibrary.org" crossorigin>
 </head>
 <body>
 
@@ -4363,6 +4364,31 @@ async function syncMember(){
     });
     if(!ins.ok) throw new Error('members ' + ins.status);
   }
+  healCovers();        // quietly, in the background: nothing waits on it
+}
+
+/* Profiles filled in before covers were copied still point at Open Library.
+   The next time that member signs in, their own covers quietly move across. */
+async function healCovers(){
+  if(!profile) return;
+  const isRemote = u => /^https:\/\/covers\.openlibrary\.org\//.test(u || '');
+  const now = profile.now_reading;
+  const recs = recsOf(profile);
+  if(!isRemote(now && now.cover) && !recs.some(b => isRemote(b.cover))) return;
+  try{
+    const fields = {};
+    if(isRemote(now && now.cover)){
+      fields.now_reading = Object.assign({}, now, { cover: await mirrorCover(now.cover) });
+    }
+    if(recs.some(b => isRemote(b.cover))){
+      fields.recommends = [];
+      for(const b of recs){
+        fields.recommends.push(isRemote(b.cover) ? Object.assign({}, b, { cover: await mirrorCover(b.cover) }) : b);
+      }
+    }
+    await saveProfile(fields);
+    await loadProfiles();
+  }catch(err){ console.error('cover move failed', err); }
 }
 
 async function saveProfile(fields){
@@ -4393,6 +4419,48 @@ function squareThumb(file, size){
     img.onerror = ()=> reject(new Error('not an image'));
     img.src = URL.createObjectURL(file);
   });
+}
+
+/* A cover left pointing at Open Library took about two seconds to appear,
+   against 0.1s for a picture we serve ourselves. So the moment a book is
+   chosen, its cover is copied, shrunk and kept with the profile photos. The
+   name starts with the member's own id, which is what the storage rules allow.
+   If any of it fails the original address is kept: a slow cover beats none. */
+async function mirrorCover(url){
+  if(!url || !/^https:\/\/covers\.openlibrary\.org\//.test(url)) return url;
+  try{
+    const live = await liveSession();
+    if(!live) return url;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('cover ' + res.status);
+    const blob = await res.blob();
+    const img = new Image();
+    img.src = URL.createObjectURL(blob);
+    await img.decode();
+    const w = 240, h = Math.round(img.height * (w / img.width));
+    const cv = document.createElement('canvas');
+    cv.width = w; cv.height = h;
+    cv.getContext('2d').drawImage(img, 0, 0, w, h);
+    URL.revokeObjectURL(img.src);
+    const small = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.82));
+    if(!small) throw new Error('no blob');
+    const path = `${live.user_id}.book-${Date.now()}.jpg`;
+    const up = await fetch(`${AUTH_SUPABASE_URL}/storage/v1/object/avatars/${path}`, {
+      method:'POST',
+      headers:{
+        apikey: AUTH_SUPABASE_KEY,
+        Authorization: `Bearer ${live.access_token}`,
+        'Content-Type':'image/jpeg',
+        'x-upsert':'true'
+      },
+      body: small
+    });
+    if(!up.ok) throw new Error('upload ' + up.status);
+    return `${AUTH_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`;
+  }catch(err){
+    console.error('cover copy failed', err);
+    return url;
+  }
 }
 
 async function uploadAvatar(file){
@@ -4871,12 +4939,16 @@ acctBody.addEventListener('click', async (e)=>{
     btn.disabled = true;
     const toRecs = slot.dataset.slot === 'recommends';
     try{
+      const kept = {
+        title: chosen.title, author: chosen.author, year: chosen.year,
+        cover: await mirrorCover(chosen.cover)
+      };
       if(toRecs){
         const recs = recsOf(profile).filter(b => !(b.title === chosen.title && b.author === chosen.author));
-        await saveProfile({ recommends: recs.concat([{ title:chosen.title, author:chosen.author, year:chosen.year, cover:chosen.cover }]) });
+        await saveProfile({ recommends: recs.concat([kept]) });
         acctFindHits = []; acctFindQ = '';      // the finder stays open for the next one
       } else {
-        await saveProfile({ [slot.dataset.slot]: { title:chosen.title, author:chosen.author, year:chosen.year, cover:chosen.cover } });
+        await saveProfile({ [slot.dataset.slot]: kept });
         acctFinding = null; acctFindHits = []; acctFindQ = '';
       }
       await loadProfiles();
