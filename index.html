@@ -176,6 +176,72 @@ a{color:inherit}
 }
 .tg-link svg{width:15px; height:15px; fill:currentColor; flex:none}
 
+/* ---------- member account ----------
+   Signing in is optional: it exists so one person's scores follow them from
+   phone to laptop. The account does not own the ratings — it owns the
+   voter_id the ratings were always keyed by (see club_members). */
+.acct-wrap{position:relative; flex:none; display:flex}
+.acct-btn{
+  flex:none; display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px;
+  border-radius:999px; border:1px solid var(--line); background:transparent;
+  color:var(--ink-soft); cursor:pointer; padding:0;
+  transition:color .15s, border-color .15s, background .15s;
+}
+.acct-btn:hover{color:var(--ink); border-color:var(--ink-soft)}
+.acct-btn[data-in="true"]{color:var(--accent); border-color:var(--accent)}
+.acct-btn svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.acct-panel{
+  position:absolute; top:calc(100% + .5rem); right:0; z-index:60;
+  width:min(340px, calc(100vw - 1.5rem));
+  background:#fff; border:1px solid var(--line); border-radius:12px;
+  box-shadow:0 14px 40px rgba(0,0,0,.14);
+  display:none; overflow:hidden;
+}
+.acct-panel[data-open="true"]{display:block}
+.acct-head{
+  padding:.7rem .85rem; border-bottom:1px solid var(--line);
+  font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
+}
+.acct-body{padding:.85rem; display:flex; flex-direction:column; gap:.6rem; max-height:min(70vh,520px); overflow-y:auto}
+.acct-lede{margin:0; font-size:.8rem; line-height:1.5; color:var(--ink-soft)}
+.acct-body label{font-size:.72rem; font-weight:600; color:var(--ink-soft)}
+.acct-body input{
+  width:100%; font:inherit; font-size:.88rem; color:var(--ink);
+  border:1px solid var(--line); border-radius:8px; padding:.45rem .6rem; background:#fff;
+}
+.acct-body input:focus{outline:none; border-color:var(--ink-soft)}
+.acct-go{
+  align-self:flex-start; font:inherit; font-size:.82rem; font-weight:600;
+  border:1px solid var(--accent); background:var(--accent); color:#fff;
+  border-radius:999px; padding:.42rem 1rem; cursor:pointer;
+}
+.acct-go[disabled]{opacity:.55; cursor:default}
+.acct-quiet{
+  align-self:flex-start; font:inherit; font-size:.78rem; color:var(--ink-soft);
+  background:none; border:none; padding:0; cursor:pointer; text-decoration:underline;
+}
+.acct-msg{margin:0; font-size:.78rem; line-height:1.45; color:var(--ink-soft)}
+.acct-msg[data-bad="true"]{color:var(--accent)}
+.acct-who{font-size:.85rem; font-weight:700; word-break:break-all}
+.acct-stats{display:flex; gap:1.2rem; padding:.2rem 0 .1rem}
+.acct-stat b{display:block; font-size:1.15rem; font-weight:800; line-height:1.1}
+.acct-stat span{font-size:.7rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em}
+.acct-mine{display:flex; flex-direction:column; border-top:1px solid var(--line); margin-top:.2rem}
+.acct-mine button{
+  display:flex; align-items:baseline; gap:.5rem; width:100%; text-align:left;
+  font:inherit; background:none; border:none; border-bottom:1px solid var(--line);
+  padding:.45rem 0; cursor:pointer; color:inherit;
+}
+.acct-mine button:last-child{border-bottom:none}
+.acct-mine button:hover{color:var(--accent)}
+.acct-mine .am-title{flex:1; min-width:0; font-size:.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.acct-mine .am-score{font-size:.8rem; font-weight:700; color:var(--accent)}
+@media (max-width:680px){
+  .acct-wrap{position:static}
+  .acct-panel{left:.75rem; right:.75rem; width:auto}
+}
+
 /* ---------- search ----------
    Same pill + dropdown shape as the bell beside it; the panel is a plain list
    of picks, and choosing one just sets the hash, so the existing router does
@@ -1186,6 +1252,15 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   <button type="button" class="brand" id="brandHome" aria-label="Back to what we're reading now"><span class="brand-name">book<span class="brand-42">42</span></span> <small>reading diary</small></button>
   <nav class="year-nav" id="yearNav"></nav>
   <select class="year-nav-select" id="yearNavSelect" aria-label="Jump to a section"></select>
+  <div class="acct-wrap">
+    <button type="button" class="acct-btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" aria-label="Your account">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c.9-3.6 3.9-5.5 7.5-5.5s6.6 1.9 7.5 5.5"/></svg>
+    </button>
+    <div class="acct-panel" id="acctPanel" data-open="false">
+      <div class="acct-head" id="acctHead">Your reading</div>
+      <div class="acct-body" id="acctBody"></div>
+    </div>
+  </div>
   <div class="search-wrap">
     <button type="button" class="search-btn" id="searchBtn" aria-haspopup="true" aria-expanded="false" aria-label="Search the books">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -3657,6 +3732,260 @@ document.getElementById('brandHome').addEventListener('click', ()=>{
 });
 
 openFromHash();
+/* ---------- member accounts ----------
+   Sign-in is by a six-digit code emailed through Supabase auth: no passwords
+   to keep, and nothing to type twice on a phone. What the account actually
+   stores is the voter_id this person's ratings already use (club_members), so
+   signing in on a second device adopts the first device's scores rather than
+   starting a rival set. Staying signed out keeps the old behaviour exactly. */
+const SESSION_KEY = 'jpbooks-session';
+let session = null;
+
+function readSession(){
+  try{ return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }catch(e){ return null; }
+}
+function writeSession(s){
+  session = s;
+  if(s) localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  else localStorage.removeItem(SESSION_KEY);
+  acctBtn.dataset.in = !!s;
+}
+
+async function authPost(path, body){
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
+    method:'POST',
+    headers:{ apikey:SUPABASE_ANON_KEY, 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.msg || data.error_description || data.error || ('auth ' + res.status));
+  return data;
+}
+
+function sessionFrom(data){
+  return {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: Date.now() + ((data.expires_in || 3600) * 1000) - 60000,
+    user_id: data.user && data.user.id,
+    email: data.user && data.user.email
+  };
+}
+
+/* Tokens last an hour; this swaps a stale one for a fresh pair before any
+   request that needs it, and signs out quietly if the refresh is rejected. */
+async function liveSession(){
+  if(!session) return null;
+  if(Date.now() < session.expires_at) return session;
+  try{
+    const data = await authPost('token?grant_type=refresh_token', { refresh_token: session.refresh_token });
+    writeSession(sessionFrom(data));
+    return session;
+  }catch(e){
+    writeSession(null);
+    return null;
+  }
+}
+
+async function memberFetch(path, opts){
+  const live = await liveSession();
+  if(!live) throw new Error('signed out');
+  opts = opts || {};
+  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method: opts.method || 'GET',
+    headers: Object.assign({
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${live.access_token}`,
+      'Content-Type': 'application/json'
+    }, opts.headers || {}),
+    body: opts.body
+  });
+}
+
+/* First sign-in claims this device's voter_id for the account; every later one
+   adopts whatever the account already holds. */
+async function syncMember(){
+  const live = await liveSession();
+  if(!live) return;
+  const res = await memberFetch(`club_members?user_id=eq.${live.user_id}&select=voter_id,display_name`);
+  if(!res.ok) throw new Error('members ' + res.status);
+  const rows = await res.json();
+  if(rows.length){
+    localStorage.setItem(VOTER_KEY, rows[0].voter_id);
+    if(rows[0].display_name) localStorage.setItem(NAME_KEY, rows[0].display_name);
+  } else {
+    const ins = await memberFetch('club_members', {
+      method:'POST',
+      headers:{ Prefer:'return=minimal' },
+      body: JSON.stringify({
+        user_id: live.user_id, voter_id: getVoterId(),
+        display_name: localStorage.getItem(NAME_KEY) || null, email: live.email || null
+      })
+    });
+    if(!ins.ok) throw new Error('members ' + ins.status);
+  }
+}
+
+async function saveMemberName(name){
+  const live = await liveSession();
+  if(!live) return;
+  await memberFetch(`club_members?user_id=eq.${live.user_id}`, {
+    method:'PATCH', headers:{ Prefer:'return=minimal' },
+    body: JSON.stringify({ display_name: name || null })
+  });
+}
+
+/* ---- the account panel ---- */
+const acctBtn   = document.getElementById('acctBtn');
+const acctPanel = document.getElementById('acctPanel');
+const acctBody  = document.getElementById('acctBody');
+const acctHead  = document.getElementById('acctHead');
+let acctStage = 'email';        // email -> code -> in
+let acctEmail = '';
+
+function myBooks(){
+  return DATA.filter(b => !b.break && aggFor(slug(b)).mine)
+             .map(b => ({ book:b, score: aggFor(slug(b)).mine }))
+             .sort((a,b) => b.score - a.score);
+}
+
+function renderAcct(msg, bad){
+  const note = msg ? `<p class="acct-msg" data-bad="${!!bad}">${escHTML(msg)}</p>` : '';
+  if(session){
+    const mine = myBooks();
+    const avg = mine.length ? (mine.reduce((t,r)=>t+r.score,0) / mine.length) : 0;
+    acctHead.textContent = 'Your reading';
+    acctBody.innerHTML = `
+      <div class="acct-who">${escHTML(session.email || '')}</div>
+      <div class="acct-stats">
+        <span class="acct-stat"><b>${mine.length}</b><span>rated</span></span>
+        <span class="acct-stat"><b>${mine.length ? avg.toFixed(1) : '—'}</b><span>average</span></span>
+      </div>
+      <label for="acctName">The name shown on your notes</label>
+      <input type="text" id="acctName" maxlength="40" autocomplete="name" value="${escHTML(localStorage.getItem(NAME_KEY) || '')}">
+      <button type="button" class="acct-go" id="acctSaveName">Save name</button>
+      ${note}
+      ${mine.length ? `<div class="acct-mine">${mine.map(r=>
+        `<button type="button" data-slug="${escHTML(slug(r.book))}">
+          <span class="am-title">${escHTML(r.book.title)}</span>
+          <span class="am-score">${r.score}</span>
+        </button>`).join('')}</div>`
+        : '<p class="acct-lede">Score a book and it will show up here.</p>'}
+      <button type="button" class="acct-quiet" id="acctOut">Sign out</button>`;
+    return;
+  }
+  acctHead.textContent = 'Sign in';
+  if(acctStage === 'code'){
+    acctBody.innerHTML = `
+      <p class="acct-lede">We sent a six-digit code to ${escHTML(acctEmail)}. It is good for an hour.</p>
+      <label for="acctCode">Your code</label>
+      <input type="text" id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456">
+      <button type="button" class="acct-go" id="acctVerify">Sign in</button>
+      ${note}
+      <button type="button" class="acct-quiet" id="acctBack">Use a different email</button>`;
+  } else {
+    acctBody.innerHTML = `
+      <p class="acct-lede">Sign in to keep your scores and notes together on every device you read on. No password, just a code by email.</p>
+      <label for="acctEmail">Your email</label>
+      <input type="email" id="acctEmail" autocomplete="email" placeholder="you@example.com" value="${escHTML(acctEmail)}">
+      <button type="button" class="acct-go" id="acctSend">Email me a code</button>
+      ${note}`;
+  }
+}
+
+function openAcct(){
+  acctPanel.dataset.open = 'true';
+  acctBtn.setAttribute('aria-expanded', 'true');
+  renderAcct();
+  const first = acctBody.querySelector('input');
+  if(first) first.focus();
+}
+function closeAcct(){
+  acctPanel.dataset.open = 'false';
+  acctBtn.setAttribute('aria-expanded', 'false');
+}
+
+acctBtn.addEventListener('click', (e)=>{
+  e.stopPropagation();
+  if(acctPanel.dataset.open === 'true') closeAcct(); else openAcct();
+});
+document.addEventListener('click', (e)=>{
+  if(acctPanel.dataset.open === 'true' && !e.target.closest('.acct-wrap')) closeAcct();
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape' && acctPanel.dataset.open === 'true'){ closeAcct(); acctBtn.focus(); }
+});
+
+acctBody.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+
+  if(btn.id === 'acctSend'){
+    const email = acctBody.querySelector('#acctEmail').value.trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return renderAcct('That email does not look right.', true);
+    btn.disabled = true; renderAcct('Sending…');
+    try{
+      await authPost('otp', { email, create_user:true });
+      acctEmail = email; acctStage = 'code'; renderAcct();
+    }catch(err){
+      console.error('otp failed', err);
+      acctStage = 'email'; acctEmail = email;
+      renderAcct('Could not send the code. Please try again in a minute.', true);
+    }
+    return;
+  }
+
+  if(btn.id === 'acctVerify'){
+    const token = acctBody.querySelector('#acctCode').value.trim();
+    if(!token) return renderAcct('Enter the code from the email.', true);
+    btn.disabled = true; renderAcct('Checking…');
+    try{
+      const data = await authPost('verify', { email: acctEmail, token, type:'email' });
+      writeSession(sessionFrom(data));
+    }catch(err){
+      console.error('verify failed', err);
+      acctStage = 'code';
+      renderAcct('That code was not accepted. Check it and try again.', true);
+      return;
+    }
+    /* signed in either way: a failure past this point is the members table,
+       not the code, and saying so beats sending them round the loop again */
+    acctStage = 'in';
+    try{
+      await syncMember();
+      await loadRatings();      // re-reads "mine" against the adopted voter_id
+      renderAcct();
+    }catch(err){
+      console.error('member sync failed', err);
+      renderAcct('Signed in, but your scores could not be linked up yet.', true);
+    }
+    return;
+  }
+
+  if(btn.id === 'acctBack'){ acctStage = 'email'; renderAcct(); return; }
+
+  if(btn.id === 'acctSaveName'){
+    const name = acctBody.querySelector('#acctName').value.trim().slice(0, 40);
+    localStorage.setItem(NAME_KEY, name);
+    btn.disabled = true;
+    try{ await saveMemberName(name); renderAcct('Saved.'); }
+    catch(err){ console.error('name save failed', err); renderAcct('Not saved. Please try again.', true); }
+    return;
+  }
+
+  if(btn.id === 'acctOut'){
+    writeSession(null);
+    acctStage = 'email'; acctEmail = '';
+    renderAcct();
+    return;
+  }
+
+  if(btn.dataset.slug){ closeAcct(); chooseSearch(btn.dataset.slug); }
+});
+
+writeSession(readSession());
+if(session) liveSession().then(live => { if(live) syncMember().then(loadRatings).catch(()=>{}); });
+
 /* ---------- search ----------
    Matches on title, author, country and the year/month a book was read, with
    accents folded away so "garcia marquez" finds García Márquez. Picking a
