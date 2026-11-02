@@ -3816,6 +3816,21 @@ async function authPost(path, body){
   return data;
 }
 
+const AUTH_RETURN = location.origin + location.pathname;
+
+async function sessionFromTokens(access_token, refresh_token, expires_in){
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers:{ apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${access_token}` }
+  });
+  const user = res.ok ? await res.json() : {};
+  if(!user.id) throw new Error('bad token');
+  return {
+    access_token, refresh_token,
+    expires_at: Date.now() + ((Number(expires_in) || 3600) * 1000) - 60000,
+    user_id: user.id, email: user.email
+  };
+}
+
 function sessionFrom(data){
   return {
     access_token: data.access_token,
@@ -3943,8 +3958,9 @@ const acctBtn   = document.getElementById('acctBtn');
 const acctPanel = document.getElementById('acctPanel');
 const acctBody  = document.getElementById('acctBody');
 const acctHead  = document.getElementById('acctHead');
-let acctMode  = 'signin';     // signin | signup | code | sent
+let acctMode  = 'signin';     // signin | signup | forgot | sent | reset
 let acctEmail = '';
+let acctSentMsg = '';
 
 function myBooks(){
   return DATA.filter(b => !b.break && aggFor(slug(b)).mine)
@@ -3954,6 +3970,21 @@ function myBooks(){
 
 function renderAcct(msg, bad){
   const note = msg ? `<p class="acct-msg" data-bad="${!!bad}">${escHTML(msg)}</p>` : '';
+
+  /* a recovery link signs you in before you pick the new password, so this
+     stage has to come ahead of the signed-in view */
+  if(acctMode === 'reset'){
+    acctHead.textContent = 'New password';
+    acctBody.innerHTML = `
+      <p class="acct-lede">Choose a new password and you are back in.</p>
+      <form class="acct-form" id="acctForm" autocomplete="on">
+        <label for="acctNewPass">New password</label>
+        <input type="password" id="acctNewPass" autocomplete="new-password" minlength="8" placeholder="At least 8 characters">
+        <button type="submit" class="acct-go">Save it</button>
+      </form>
+      ${note}`;
+    return;
+  }
 
   if(session){
     const p = profile || {};
@@ -3990,17 +4021,25 @@ function renderAcct(msg, bad){
     return;
   }
 
-  if(acctMode === 'code'){
-    acctHead.textContent = 'Sign in';
+  if(acctMode === 'forgot'){
+    acctHead.textContent = 'Reset your password';
     acctBody.innerHTML = `
-      <p class="acct-lede">We sent a six-digit code to ${escHTML(acctEmail)}. It lasts an hour.</p>
+      <p class="acct-lede">We will email you a link that brings you back here and lets you set a new password.</p>
       <form class="acct-form" id="acctForm" autocomplete="on">
-        <label for="acctCode">Your code</label>
-        <input type="text" id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456">
-        <button type="submit" class="acct-go" id="acctVerify">Sign in</button>
+        <label for="acctEmail">Your email</label>
+        <input type="email" id="acctEmail" autocomplete="username" placeholder="you@example.com" value="${escHTML(acctEmail)}">
+        <button type="submit" class="acct-go">Email me a link</button>
       </form>
       ${note}
-      <button type="button" class="acct-quiet" id="acctBack">Back</button>`;
+      <button type="button" class="acct-quiet" id="acctBack">Back to signing in</button>`;
+    return;
+  }
+
+  if(acctMode === 'sent'){
+    acctHead.textContent = 'Check your email';
+    acctBody.innerHTML = `
+      <p class="acct-lede">${escHTML(acctSentMsg)}</p>
+      <button type="button" class="acct-quiet" id="acctBack">Back to signing in</button>`;
     return;
   }
 
@@ -4025,7 +4064,7 @@ function renderAcct(msg, bad){
       <button type="submit" class="acct-go" id="acctGo">${up ? 'Make my profile' : 'Sign in'}</button>
     </form>
     ${note}
-    <button type="button" class="acct-quiet" id="acctCodeInstead">${up ? 'Sign in with a code instead' : 'Forgotten your password? Email me a code'}</button>`;
+    ${up ? '' : '<button type="button" class="acct-quiet" id="acctForgot">Forgotten your password?</button>'}`;
 }
 
 function openAcct(){
@@ -4069,21 +4108,41 @@ async function finishSignIn(){
 
 async function acctSubmit(){
   const emailEl = acctBody.querySelector('#acctEmail');
-  const codeEl  = acctBody.querySelector('#acctCode');
 
-  if(codeEl){
-    const token = codeEl.value.trim();
-    if(!token) return renderAcct('Enter the code from the email.', true);
-    renderAcct('Checking…');
+  if(acctMode === 'reset'){
+    const pass = acctBody.querySelector('#acctNewPass').value;
+    if(pass.length < 8) return renderAcct('A password needs at least 8 characters.', true);
+    renderAcct('Saving…');
     try{
-      const data = await authPost('verify', { email: acctEmail, token, type:'email' });
-      writeSession(sessionFrom(data));
+      const live = await liveSession();
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        method:'PUT',
+        headers:{ apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${live.access_token}`, 'Content-Type':'application/json' },
+        body: JSON.stringify({ password: pass })
+      });
+      if(!res.ok) throw new Error('password ' + res.status);
+      acctMode = 'in';
+      return finishSignIn();
     }catch(err){
-      console.error('verify failed', err);
-      renderAcct('That code was not accepted. Check it and try again.', true);
+      console.error('password change failed', err);
+      renderAcct('That password was not accepted. Try a different one.', true);
       return;
     }
-    return finishSignIn();
+  }
+
+  if(acctMode === 'forgot'){
+    const email = (emailEl.value || '').trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return renderAcct('That email does not look right.', true);
+    renderAcct('Sending…');
+    try{
+      await authPost(`recover?redirect_to=${encodeURIComponent(AUTH_RETURN)}`, { email });
+      acctSentMsg = `We sent a link to ${email}. Open it on this device and you can set a new password.`;
+      acctMode = 'sent'; renderAcct();
+    }catch(err){
+      console.error('recover failed', err);
+      renderAcct('Could not send that. Please try again in a minute.', true);
+    }
+    return;
   }
 
   const email = (emailEl.value || '').trim();
@@ -4097,12 +4156,14 @@ async function acctSubmit(){
   renderAcct(up ? 'Making your profile…' : 'Signing in…');
   try{
     const data = up
-      ? await authPost('signup', { email, password: pass })
+      ? await authPost(`signup?redirect_to=${encodeURIComponent(AUTH_RETURN)}`, { email, password: pass })
       : await authPost('token?grant_type=password', { email, password: pass });
     if(!data.access_token){
-      // the project still asks people to confirm their email before first use
-      acctMode = 'signin';
-      renderAcct('Check your email to confirm the address, then sign in.');
+      /* the project asks people to confirm the address first (it is shared with
+         johnplusnews, where that is already how sign-up works) */
+      if(up && name.trim()) localStorage.setItem(NAME_KEY, name.trim().slice(0, 40));
+      acctSentMsg = `We sent a link to ${email}. Open it and your profile is ready.`;
+      acctMode = 'sent'; renderAcct();
       return;
     }
     writeSession(sessionFrom(data));
@@ -4113,7 +4174,7 @@ async function acctSubmit(){
     acctMode = up ? 'signup' : 'signin';
     renderAcct(up
       ? 'Could not make that profile. The email may already have one, so try signing in.'
-      : 'That email and password did not match. Try again, or ask for a code.', true);
+      : 'That email and password did not match. Try again, or reset your password.', true);
   }
 }
 
@@ -4143,18 +4204,10 @@ acctBody.addEventListener('click', async (e)=>{
   if(btn.id === 'acctBack'){ acctMode = 'signin'; renderAcct(); return; }
   if(btn.id === 'acctPhotoBtn'){ acctBody.querySelector('#acctPhoto').click(); return; }
 
-  if(btn.id === 'acctCodeInstead'){
-    const email = (acctBody.querySelector('#acctEmail').value || '').trim();
-    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return renderAcct('Put your email in first, then ask for a code.', true);
-    acctEmail = email;
-    renderAcct('Sending…');
-    try{
-      await authPost('otp', { email, create_user:true });
-      acctMode = 'code'; renderAcct();
-    }catch(err){
-      console.error('otp failed', err);
-      renderAcct('Could not send the code. Please try again in a minute.', true);
-    }
+  if(btn.id === 'acctForgot'){
+    const field = acctBody.querySelector('#acctEmail');
+    acctEmail = (field && field.value || '').trim();
+    acctMode = 'forgot'; renderAcct();
     return;
   }
 
@@ -4181,8 +4234,40 @@ acctBody.addEventListener('click', async (e)=>{
   if(btn.dataset.slug){ closeAcct(); chooseSearch(btn.dataset.slug); }
 });
 
+/* Coming back from a confirmation or password-reset email: Supabase hands the
+   tokens over in the address bar. Take them, tidy the address so a book link
+   still works afterwards, and carry on. */
+async function authFromAddress(){
+  const raw = location.hash.slice(1);
+  if(!raw || raw.indexOf('access_token=') < 0 && raw.indexOf('error_code=') < 0) return false;
+  const q = new URLSearchParams(raw);
+  history.replaceState(null, '', location.pathname + location.search);
+  if(q.get('error_code')){
+    acctMode = 'signin';
+    openAcct();
+    renderAcct(q.get('error_code') === 'otp_expired'
+      ? 'That link has expired. Ask for a new one.'
+      : 'That link did not work. Ask for a new one.', true);
+    return true;
+  }
+  try{
+    writeSession(await sessionFromTokens(q.get('access_token'), q.get('refresh_token'), q.get('expires_in')));
+    const recovery = q.get('type') === 'recovery';
+    acctMode = recovery ? 'reset' : 'in';
+    openAcct();
+    if(recovery) renderAcct();
+    else await finishSignIn();
+  }catch(err){
+    console.error('link sign-in failed', err);
+    renderAcct('That link did not work. Ask for a new one.', true);
+  }
+  return true;
+}
+
 writeSession(readSession());
-if(session) liveSession().then(live => { if(live) syncMember().then(loadRatings).catch(()=>{}); });
+authFromAddress().then(handled => {
+  if(!handled && session) liveSession().then(live => { if(live) syncMember().then(loadRatings).catch(()=>{}); });
+});
 
 /* ---------- search ----------
    Matches on title, author, country and the year/month a book was read, with
