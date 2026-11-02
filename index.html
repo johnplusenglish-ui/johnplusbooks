@@ -256,6 +256,23 @@ a{color:inherit}
   background:none; border:none; padding:0 0 .9rem; cursor:pointer; text-decoration:underline;
 }
 .shelf-row{display:flex; gap:.9rem; flex-wrap:wrap; margin:0 0 2rem; padding:0; list-style:none}
+/* the recommendations are one sideways row, so twenty of them stay one row */
+.rec-row{
+  display:flex; gap:.9rem; flex-wrap:nowrap; margin:0 0 2rem; padding:0 .2rem .6rem; list-style:none;
+  overflow-x:auto; scroll-snap-type:x proximity; -webkit-overflow-scrolling:touch;
+}
+.rec-row li{width:84px; flex:none; scroll-snap-align:start}
+.rec-row button{
+  display:block; width:100%; text-align:left; font:inherit; color:inherit;
+  background:none; border:none; padding:0; cursor:pointer;
+}
+.rec-row img, .rec-row .slot-blank{
+  display:block; width:84px; height:126px; object-fit:cover; border-radius:4px;
+  background:var(--bg); border:1px solid var(--line);
+}
+.rec-row button:hover img{border-color:var(--yr-color)}
+.rec-row .sr-title{display:block; font-size:.7rem; line-height:1.3; color:var(--ink-soft); margin-top:.35rem}
+.rec-row button:hover .sr-title{color:var(--ink)}
 .shelf-row li{width:72px}
 .shelf-row .slot-blank{display:block; width:72px; height:108px; border-radius:4px}
 .shelf-row img{width:72px; height:108px; object-fit:cover; border-radius:4px; display:block; background:var(--bg); border:1px solid var(--line); cursor:pointer}
@@ -2688,6 +2705,13 @@ function hasBookSlots(p){
   return Object.keys(BOOK_SLOTS).some(k => p[k] && p[k].title) || recsOf(p).length > 0;
 }
 
+/* A recommendation the club has read is a page on this site; anything else is
+   a book we know only a title and an author for, so it goes out to Goodreads. */
+function bookByTitle(title){
+  const want = (title || '').trim().toLowerCase();
+  return DATA.find(b => !b.break && b.title.toLowerCase() === want) || null;
+}
+
 function readerSlotsHTML(p){
   const now = p.now_reading && p.now_reading.title ? p.now_reading : null;
   const recs = recsOf(p);
@@ -2701,16 +2725,24 @@ function readerSlotsHTML(p){
       </div>
     </div></div>` : '';
   const recBlock = recs.length ? `<p class="shelf-sub">${escHTML(RECS_LABEL)}</p>
-    <ul class="shelf-row">${recs.map(b=>`
-      <li>${b.cover ? `<img src="${escHTML(b.cover)}" alt="${escHTML(b.title)}" loading="lazy" decoding="async">`
-                    : '<span class="slot-blank" style="width:72px;height:108px"></span>'}
-        <span class="sr-title">${escHTML(b.title)}</span></li>`).join('')}</ul>` : '';
+    <ul class="rec-row">${recs.map((b,i)=>{
+      const pick = bookByTitle(b.title);
+      return `<li><button type="button" ${pick ? `data-slug="${escHTML(slug(pick))}"` : `data-rec="${i}"`}
+          title="${escHTML(pick ? 'Open ' + b.title : 'Look up ' + b.title)}">
+        ${b.cover ? `<img src="${escHTML(b.cover)}" alt="" loading="lazy" decoding="async">`
+                  : '<span class="slot-blank"></span>'}
+        <span class="sr-title">${escHTML(b.title)}</span>
+      </button></li>`;
+    }).join('')}</ul>` : '';
   return nowBlock + recBlock;
 }
+
+let currentReader = null;
 
 function renderReaderOne(voterId){
   const p = profilesCache[voterId];
   if(!p) return renderReadersPage();
+  currentReader = voterId;
   const scores = (byVoter[voterId] || [])
     .map(r => ({ book: SLUG_TO_BOOK[r.slug], rating: r.rating, comment: r.comment }))
     .filter(r => r.book)
@@ -2762,6 +2794,15 @@ readersSection.addEventListener('click', (e)=>{
   if(e.target.id === 'readerBack'){ renderReadersPage(); syncHash('readers'); return; }
   const cover = e.target.closest('.shelf-row img');
   if(cover){ chooseSearch(cover.dataset.slug); return; }
+  const rec = e.target.closest('.rec-row button');
+  if(rec){
+    if(rec.dataset.slug) return chooseSearch(rec.dataset.slug);
+    const p = profilesCache[currentReader] || {};
+    const b = recsOf(p)[Number(rec.dataset.rec)];
+    if(b) window.open('https://www.goodreads.com/search?q=' +
+      encodeURIComponent([b.title, b.author].filter(Boolean).join(' ')), '_blank', 'noopener');
+    return;
+  }
   const row = e.target.closest('.fav-row[data-slug]');
   if(row) chooseSearch(row.dataset.slug);
 });
