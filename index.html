@@ -1705,7 +1705,7 @@ async function setShelf(bookSlug, status){
   const live = await liveSession();
   if(!live) return false;
   const mine = myShelf();
-  const clearing = mine[bookSlug] === status;
+  const clearing = (mine[bookSlug] || {}).status === status;
   const res = clearing
     ? await memberFetch(`shelf_items?user_id=eq.${live.user_id}&book_slug=eq.${encodeURIComponent(bookSlug)}`, { method:'DELETE' })
     : await memberFetch('shelf_items', {
@@ -1716,7 +1716,7 @@ async function setShelf(bookSlug, status){
   if(!res.ok) return false;
   const voter = getVoterId();
   const shelf = shelfCache[voter] || (shelfCache[voter] = {});
-  if(clearing) delete shelf[bookSlug]; else shelf[bookSlug] = status;
+  if(clearing) delete shelf[bookSlug]; else shelf[bookSlug] = { status, at:new Date().toISOString() };
   return true;
 }
 async function loadProfiles(){
@@ -1725,7 +1725,7 @@ async function loadProfiles(){
     const headers = { apikey:AUTH_SUPABASE_KEY, Authorization:`Bearer ${AUTH_SUPABASE_KEY}` };
     const [pRes, sRes] = await Promise.all([
       fetch(`${AUTH_SUPABASE_URL}/rest/v1/club_profiles?select=voter_id,display_name,avatar_url,about,goodreads_url,now_reading,last_read,recommends`, { headers }),
-      fetch(`${AUTH_SUPABASE_URL}/rest/v1/club_shelves?select=voter_id,book_slug,status`, { headers })
+      fetch(`${AUTH_SUPABASE_URL}/rest/v1/club_shelves?select=voter_id,book_slug,status,updated_at`, { headers })
     ]);
     if(!pRes.ok) return;                      // view not there yet — notes just show plain names
     const rows = await pRes.json();
@@ -1735,7 +1735,7 @@ async function loadProfiles(){
     if(sRes.ok){
       const shelves = {};
       (await sRes.json()).forEach(r=>{
-        (shelves[r.voter_id] || (shelves[r.voter_id] = {}))[r.book_slug] = r.status;
+        (shelves[r.voter_id] || (shelves[r.voter_id] = {}))[r.book_slug] = { status:r.status, at:r.updated_at || '' };
       });
       shelfCache = shelves;
     }
@@ -2584,12 +2584,8 @@ function readerName(p){ return (p.display_name || '').trim() || 'A reader'; }
 function readerCounts(voterId){
   const shelf = shelfOf(voterId);
   const scored = (byVoter[voterId] || []).length;
-  return {
-    scored,
-    read: Object.values(shelf).filter(v=>v === 'read').length,
-    want: Object.values(shelf).filter(v=>v === 'want').length,
-    reading: Object.values(shelf).filter(v=>v === 'reading').length
-  };
+  const by = st => Object.values(shelf).filter(v => v.status === st).length;
+  return { scored, read: by('read'), want: by('want'), reading: by('reading') };
 }
 
 /* A glance at what somebody is actually reading, so the list is covers rather
@@ -2601,7 +2597,7 @@ function readerStripHTML(p){
   const add = url => { if(url && !covers.includes(url)) covers.push(url); };
   // the three they chose themselves lead, then what they are reading, then their best
   Object.keys(BOOK_SLOTS).forEach(k => { if(p[k]) add(p[k].cover); });
-  Object.keys(shelf).filter(k => shelf[k] === 'reading').forEach(k => add(coverFor(SLUG_TO_BOOK[k] || {})));
+  Object.keys(shelf).filter(k => shelf[k].status === 'reading').forEach(k => add(coverFor(SLUG_TO_BOOK[k] || {})));
   (byVoter[voterId] || []).slice().sort((a,b)=> b.rating - a.rating)
     .forEach(r => { if(SLUG_TO_BOOK[r.slug]) add(coverFor(SLUG_TO_BOOK[r.slug])); });
   Object.keys(shelf).forEach(k => { if(SLUG_TO_BOOK[k]) add(coverFor(SLUG_TO_BOOK[k])); });
@@ -2638,11 +2634,17 @@ function renderReaders(){
   }).join('');
 }
 
-function shelfRowHTML(voterId, status){
+function shelfRowHTML(voterId, status, opts){
+  opts = opts || {};
   const shelf = shelfOf(voterId);
-  const books = Object.keys(shelf).filter(k => shelf[k] === status).map(k => SLUG_TO_BOOK[k]).filter(Boolean);
+  let keys = Object.keys(shelf).filter(k => shelf[k].status === status);
+  if(opts.latestOnly){
+    keys.sort((a,b)=> (shelf[b].at || '').localeCompare(shelf[a].at || ''));
+    keys = keys.slice(0, 1);
+  }
+  const books = keys.map(k => SLUG_TO_BOOK[k]).filter(Boolean);
   if(!books.length) return '';
-  return `<p class="shelf-sub">${SHELF_LABELS[status]}</p>
+  return `<p class="shelf-sub">${escHTML(opts.label || SHELF_LABELS[status])}</p>
     <ul class="shelf-row">${books.map(b=>`
       <li><img src="${escHTML(coverFor(b) || '')}" alt="${escHTML(b.title)}" data-slug="${escHTML(slug(b))}">
         <span class="sr-title">${escHTML(b.title)}</span></li>`).join('')}</ul>`;
@@ -2675,7 +2677,8 @@ function renderReaderOne(voterId){
     .map(r => ({ book: SLUG_TO_BOOK[r.slug], rating: r.rating, comment: r.comment }))
     .filter(r => r.book)
     .sort((a,b)=> b.rating - a.rating);
-  const shelfRows = ['reading','want','read'].map(st => shelfRowHTML(voterId, st)).join('');
+  const shelfRows = shelfRowHTML(voterId, 'reading')
+    + shelfRowHTML(voterId, 'read', { latestOnly:true, label:'Last read' });
   /* the three chosen books use the same words as the shelves, so the shelves
      say plainly that they are about the club's own picks */
   const shelves = shelfRows
@@ -4325,7 +4328,7 @@ function renderShelfUI(bookSlug){
     wrap.innerHTML = '<span class="shelf-hint">Sign in to put this on a shelf.</span>';
     return;
   }
-  const mine = myShelf()[bookSlug] || '';
+  const mine = (myShelf()[bookSlug] || {}).status || '';
   wrap.innerHTML = Object.keys(SHELF_LABELS).map(k =>
     `<button type="button" data-shelf="${k}" data-on="${mine === k}">${SHELF_LABELS[k]}</button>`
   ).join('');
@@ -4709,8 +4712,7 @@ acctBody.addEventListener('click', async (e)=>{
   const slot = btn.closest('.slot');
   if(slot && btn.dataset.act === 'find'){
     acctFinding = acctFinding === slot.dataset.slot ? null : slot.dataset.slot;
-    acctFindQ = ''; acctFindHits = []; acctFindMsg = '';
-    renderAcct();
+    renderAcct();   // the words and the results carry across, so one search fills any slot
     const q = acctBody.querySelector('.slot-q');
     if(q) q.focus();
     return;
@@ -4833,7 +4835,11 @@ function renderSearch(){
       </span>
     </button>`;
   }).join('');
-  searchEmpty.textContent = !q ? 'Start typing to find a book.' : 'No book matches that.';
+  searchEmpty.innerHTML = !q
+    ? 'Start typing to find a book.'
+    : `The club has not read that one.<br><br>${session
+        ? `<button type="button" class="acct-quiet" id="searchToProfile" data-q="${escHTML(q)}">Put it on your profile instead</button>`
+        : 'This searches the books Book42 has picked.'}`;
   searchEmpty.style.display = hits.length ? 'none' : 'block';
 }
 
@@ -4870,6 +4876,27 @@ searchInput.addEventListener('input', renderSearch);
 searchList.addEventListener('click', (e)=>{
   const item = e.target.closest('.search-item');
   if(item) chooseSearch(item.dataset.slug);
+});
+
+/* A book the club never read is still a book you are reading: hand the words
+   straight to the profile's own lookup rather than stopping at "no match". */
+searchEmpty.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('#searchToProfile');
+  if(!btn) return;
+  closeSearch();
+  acctFinding = 'now_reading';
+  acctFindQ = btn.dataset.q;
+  acctFindHits = [];
+  acctFindMsg = 'Looking…';
+  openAcct();
+  try{
+    acctFindHits = await findBooks(acctFindQ);
+    acctFindMsg = acctFindHits.length ? '' : 'Nothing found. Try the author as well.';
+  }catch(err){
+    console.error('book search failed', err);
+    acctFindMsg = 'Could not reach the book list. Try again.';
+  }
+  renderAcct();
 });
 searchPanel.addEventListener('keydown', (e)=>{
   if(e.key === 'ArrowDown'){ e.preventDefault(); moveSearchCursor(1); }
