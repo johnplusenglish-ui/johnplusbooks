@@ -2675,7 +2675,12 @@ function renderReaderOne(voterId){
     .map(r => ({ book: SLUG_TO_BOOK[r.slug], rating: r.rating, comment: r.comment }))
     .filter(r => r.book)
     .sort((a,b)=> b.rating - a.rating);
-  const shelves = ['reading','want','read'].map(st => shelfRowHTML(voterId, st)).join('');
+  const shelfRows = ['reading','want','read'].map(st => shelfRowHTML(voterId, st)).join('');
+  /* the three chosen books use the same words as the shelves, so the shelves
+     say plainly that they are about the club's own picks */
+  const shelves = shelfRows
+    ? '<p class="shelf-sub" style="margin-top:1.2rem">Of the Book42 picks</p>' + shelfRows
+    : '';
   const gr = (p.goodreads_url || '').trim();
   readersListBlock.style.display = 'none';
   readerOneBlock.style.display = 'block';
