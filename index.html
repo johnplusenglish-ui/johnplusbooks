@@ -1511,6 +1511,15 @@ const SUPABASE_URL = 'https://uovqsqnxcgvefxpxntcj.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_VTOzRUebaH_xQAs4wngfug_jCVCeCFB';
 const RATINGS_ENABLED = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
 
+/* Accounts live in their own Supabase project, deliberately apart from the one
+   above: the books, the scores and the bookings are shared with nothing, and
+   the logins here are nobody else's logins. Sign-in, club_members, the
+   club_profiles view and the avatars bucket are all on this second project;
+   everything else stays on the first. */
+const AUTH_SUPABASE_URL = 'https://yxoatepzppplxgygdwak.supabase.co';
+const AUTH_SUPABASE_KEY = 'sb_publishable_GbWZNgvNQzGylaBLB2Ri1Q_ehmE3NX-';
+const ACCOUNTS_ENABLED  = !!(AUTH_SUPABASE_URL && AUTH_SUPABASE_KEY);
+
 const VOTER_KEY = 'jpbooks-voter-id';
 function getVoterId(){
   let id = localStorage.getItem(VOTER_KEY);
@@ -1566,10 +1575,10 @@ let notesAvailable = true;
    their notes are signed with. A plain public view: no emails in it. */
 let profilesCache = {};
 async function loadProfiles(){
-  if(!RATINGS_ENABLED) return;
+  if(!ACCOUNTS_ENABLED) return;
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/club_profiles?select=voter_id,display_name,avatar_url`, {
-      headers:{ apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}` }
+    const res = await fetch(`${AUTH_SUPABASE_URL}/rest/v1/club_profiles?select=voter_id,display_name,avatar_url`, {
+      headers:{ apikey:AUTH_SUPABASE_KEY, Authorization:`Bearer ${AUTH_SUPABASE_KEY}` }
     });
     if(!res.ok) return;                       // view not there yet — notes just show plain names
     const rows = await res.json();
@@ -3806,9 +3815,9 @@ function writeSession(s){
 }
 
 async function authPost(path, body){
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/${path}`, {
+  const res = await fetch(`${AUTH_SUPABASE_URL}/auth/v1/${path}`, {
     method:'POST',
-    headers:{ apikey:SUPABASE_ANON_KEY, 'Content-Type':'application/json' },
+    headers:{ apikey:AUTH_SUPABASE_KEY, 'Content-Type':'application/json' },
     body: JSON.stringify(body)
   });
   const data = await res.json().catch(()=>({}));
@@ -3819,8 +3828,8 @@ async function authPost(path, body){
 const AUTH_RETURN = location.origin + location.pathname;
 
 async function sessionFromTokens(access_token, refresh_token, expires_in){
-  const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers:{ apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${access_token}` }
+  const res = await fetch(`${AUTH_SUPABASE_URL}/auth/v1/user`, {
+    headers:{ apikey:AUTH_SUPABASE_KEY, Authorization:`Bearer ${access_token}` }
   });
   const user = res.ok ? await res.json() : {};
   if(!user.id) throw new Error('bad token');
@@ -3860,10 +3869,10 @@ async function memberFetch(path, opts){
   const live = await liveSession();
   if(!live) throw new Error('signed out');
   opts = opts || {};
-  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+  return fetch(`${AUTH_SUPABASE_URL}/rest/v1/${path}`, {
     method: opts.method || 'GET',
     headers: Object.assign({
-      apikey: SUPABASE_ANON_KEY,
+      apikey: AUTH_SUPABASE_KEY,
       Authorization: `Bearer ${live.access_token}`,
       'Content-Type': 'application/json'
     }, opts.headers || {}),
@@ -3938,10 +3947,10 @@ async function uploadAvatar(file){
   if(!live) throw new Error('signed out');
   const blob = await squareThumb(file, 256);
   const path = `${live.user_id}.jpg`;
-  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/avatars/${path}`, {
+  const res = await fetch(`${AUTH_SUPABASE_URL}/storage/v1/object/avatars/${path}`, {
     method:'POST',
     headers:{
-      apikey: SUPABASE_ANON_KEY,
+      apikey: AUTH_SUPABASE_KEY,
       Authorization: `Bearer ${live.access_token}`,
       'Content-Type':'image/jpeg',
       'x-upsert':'true'
@@ -3950,7 +3959,7 @@ async function uploadAvatar(file){
   });
   if(!res.ok) throw new Error('upload ' + res.status);
   // the path never changes, so the query string is what busts the old cached face
-  return `${SUPABASE_URL}/storage/v1/object/public/avatars/${path}?v=${Date.now()}`;
+  return `${AUTH_SUPABASE_URL}/storage/v1/object/public/avatars/${path}?v=${Date.now()}`;
 }
 
 /* ---- the account panel ---- */
@@ -4115,9 +4124,9 @@ async function acctSubmit(){
     renderAcct('Saving…');
     try{
       const live = await liveSession();
-      const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      const res = await fetch(`${AUTH_SUPABASE_URL}/auth/v1/user`, {
         method:'PUT',
-        headers:{ apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${live.access_token}`, 'Content-Type':'application/json' },
+        headers:{ apikey:AUTH_SUPABASE_KEY, Authorization:`Bearer ${live.access_token}`, 'Content-Type':'application/json' },
         body: JSON.stringify({ password: pass })
       });
       if(!res.ok) throw new Error('password ' + res.status);
