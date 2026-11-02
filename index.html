@@ -1695,18 +1695,26 @@ function recsOf(p){
   return (r && r.title) ? [r] : [];
 }
 
+const bookSearchCache = new Map();     // a repeat of the same words answers instantly
+
 async function findBooks(q){
+  const key = q.trim().toLowerCase();
+  if(bookSearchCache.has(key)) return bookSearchCache.get(key);
   const url = 'https://openlibrary.org/search.json?limit=5&fields=title,author_name,cover_i,first_publish_year&q='
             + encodeURIComponent(q);
   const res = await fetch(url);
   if(!res.ok) throw new Error('search ' + res.status);
   const data = await res.json();
-  return (data.docs || []).map(d => ({
+  const hits = (data.docs || []).map(d => ({
     title: d.title || '',
     author: (d.author_name || [])[0] || '',
     year: d.first_publish_year || null,
-    cover: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg` : null
+    // the list shows the small one; the profile keeps the medium one it was chosen by
+    cover: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg` : null,
+    thumb: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-S.jpg` : null
   })).filter(b => b.title);
+  bookSearchCache.set(key, hits);
+  return hits;
 }
 
 function shelfOf(voterId){ return shelfCache[voterId] || {}; }
@@ -4544,7 +4552,7 @@ function finderHTML(){
     <input type="text" class="slot-q" placeholder="Title, or title and author" value="${escHTML(acctFindQ)}">
     <div class="slot-hits">${acctFindHits.length
       ? acctFindHits.map((h,i)=>`<button type="button" data-hit="${i}">
-          ${h.cover ? `<img src="${escHTML(h.cover)}" alt="">` : '<span class="slot-blank"></span>'}
+          ${h.cover ? `<img src="${escHTML(h.thumb || h.cover)}" alt="" loading="lazy" decoding="async">` : '<span class="slot-blank"></span>'}
           <span>${escHTML(h.title)}<small>${escHTML([h.author, h.year].filter(Boolean).join(' · '))}</small></span>
         </button>`).join('')
       : `<div class="search-empty">${escHTML(acctFindMsg || 'Type a title and press Enter.')}</div>`}</div>
@@ -4701,7 +4709,7 @@ function paintHits(){
   if(!box) return;
   box.innerHTML = acctFindHits.length
     ? acctFindHits.map((h,i)=>`<button type="button" data-hit="${i}">
-        ${h.cover ? `<img src="${escHTML(h.cover)}" alt="">` : '<span class="slot-blank"></span>'}
+        ${h.cover ? `<img src="${escHTML(h.thumb || h.cover)}" alt="" loading="lazy" decoding="async">` : '<span class="slot-blank"></span>'}
         <span>${escHTML(h.title)}<small>${escHTML([h.author, h.year].filter(Boolean).join(' · '))}</small></span>
       </button>`).join('')
     : `<div class="search-empty">${escHTML(acctFindMsg || 'Type a title and press Enter.')}</div>`;
@@ -4803,10 +4811,10 @@ acctBody.addEventListener('click', async (e)=>{
     try{
       if(toRecs){
         const recs = recsOf(profile).filter(b => !(b.title === chosen.title && b.author === chosen.author));
-        await saveProfile({ recommends: recs.concat([chosen]) });
+        await saveProfile({ recommends: recs.concat([{ title:chosen.title, author:chosen.author, year:chosen.year, cover:chosen.cover }]) });
         acctFindHits = []; acctFindQ = '';      // the finder stays open for the next one
       } else {
-        await saveProfile({ [slot.dataset.slot]: chosen });
+        await saveProfile({ [slot.dataset.slot]: { title:chosen.title, author:chosen.author, year:chosen.year, cover:chosen.cover } });
         acctFinding = null; acctFindHits = []; acctFindQ = '';
       }
       await loadProfiles();
