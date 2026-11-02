@@ -176,6 +176,52 @@ a{color:inherit}
 }
 .tg-link svg{width:15px; height:15px; fill:currentColor; flex:none}
 
+/* ---------- shelves and reader profiles ---------- */
+.m-shelf{display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.9rem}
+.m-shelf button{
+  font:inherit; font-size:.75rem; font-weight:600;
+  border:1px solid var(--line); background:#fff; color:var(--ink-soft);
+  border-radius:999px; padding:.3rem .8rem; cursor:pointer;
+}
+.m-shelf button:hover{border-color:var(--ink-soft); color:var(--ink)}
+.m-shelf button[data-on="true"]{background:var(--yr-color); border-color:var(--yr-color); color:#fff}
+.m-shelf .shelf-hint{font-size:.74rem; color:var(--ink-soft); align-self:center}
+
+.readers-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:.9rem; margin:0; padding:0; list-style:none}
+.reader-card{
+  display:flex; gap:.7rem; align-items:center; width:100%; text-align:left;
+  font:inherit; color:inherit; cursor:pointer;
+  background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:.75rem .85rem;
+}
+.reader-card:hover{border-color:var(--yr-color)}
+.reader-card .rc-name{font-size:.88rem; font-weight:700}
+.reader-card .rc-meta{font-size:.73rem; color:var(--ink-soft); margin-top:.1rem}
+.rc-avatar{width:42px; height:42px; border-radius:999px; object-fit:cover; flex:none; background:#fff; border:1px solid var(--line)}
+.rc-initial{
+  width:42px; height:42px; border-radius:999px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  background:#fff; border:1px solid var(--line);
+  font-size:1rem; font-weight:800; color:var(--ink-soft);
+}
+.reader-head{display:flex; gap:1rem; align-items:center; margin-bottom:.4rem}
+.reader-head .rh-avatar{width:72px; height:72px; border-radius:999px; object-fit:cover; flex:none; background:var(--bg); border:1px solid var(--line)}
+.reader-head .rh-initial{
+  width:72px; height:72px; border-radius:999px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg); border:1px solid var(--line);
+  font-size:1.6rem; font-weight:800; color:var(--ink-soft);
+}
+.reader-back{
+  font:inherit; font-size:.78rem; color:var(--ink-soft);
+  background:none; border:none; padding:0 0 .9rem; cursor:pointer; text-decoration:underline;
+}
+.shelf-row{display:flex; gap:.7rem; flex-wrap:wrap; margin:0 0 1.6rem; padding:0; list-style:none}
+.shelf-row li{width:72px}
+.shelf-row img{width:72px; height:108px; object-fit:cover; border-radius:4px; display:block; background:var(--bg); border:1px solid var(--line); cursor:pointer}
+.shelf-row .sr-title{font-size:.68rem; line-height:1.3; color:var(--ink-soft); margin-top:.3rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.shelf-sub{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 .6rem}
+.reader-goodreads{font-size:.8rem}
+
 /* ---------- member account ----------
    Signing in is optional: it exists so one person's scores follow them from
    phone to laptop. The account does not own the ratings — it owns the
@@ -1384,6 +1430,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
           </div>
         </div>
         <div class="m-genres" id="mGenres"></div>
+        <div class="m-shelf" id="mShelf"></div>
         <p class="m-teaser" id="mTeaser"></p>
         <div class="m-audio" id="mAudio"></div>
         <div class="m-talk" id="mTalk"></div>
@@ -1587,17 +1634,54 @@ let notesAvailable = true;
 /* Names and photos of everyone who has made a profile, keyed by the voter_id
    their notes are signed with. A plain public view: no emails in it. */
 let profilesCache = {};
+let byVoter = {};          // voter_id -> [{slug, rating, comment}]
+let shelfCache = {};        // voter_id -> { book_slug: 'reading' | 'read' | 'want' }
+
+const SHELF_LABELS = { want:'Want to read', reading:'Reading now', read:'Read' };
+
+function shelfOf(voterId){ return shelfCache[voterId] || {}; }
+function myShelf(){ return shelfOf(getVoterId()); }
+
+/* One row per book, written straight to the accounts project. Clicking the
+   status a book already has takes it off the shelf again. */
+async function setShelf(bookSlug, status){
+  const live = await liveSession();
+  if(!live) return false;
+  const mine = myShelf();
+  const clearing = mine[bookSlug] === status;
+  const res = clearing
+    ? await memberFetch(`shelf_items?user_id=eq.${live.user_id}&book_slug=eq.${encodeURIComponent(bookSlug)}`, { method:'DELETE' })
+    : await memberFetch('shelf_items', {
+        method:'POST',
+        headers:{ Prefer:'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify({ user_id: live.user_id, book_slug: bookSlug, status, updated_at: new Date().toISOString() })
+      });
+  if(!res.ok) return false;
+  const voter = getVoterId();
+  const shelf = shelfCache[voter] || (shelfCache[voter] = {});
+  if(clearing) delete shelf[bookSlug]; else shelf[bookSlug] = status;
+  return true;
+}
 async function loadProfiles(){
   if(!ACCOUNTS_ENABLED) return;
   try{
-    const res = await fetch(`${AUTH_SUPABASE_URL}/rest/v1/club_profiles?select=voter_id,display_name,avatar_url`, {
-      headers:{ apikey:AUTH_SUPABASE_KEY, Authorization:`Bearer ${AUTH_SUPABASE_KEY}` }
-    });
-    if(!res.ok) return;                       // view not there yet — notes just show plain names
-    const rows = await res.json();
+    const headers = { apikey:AUTH_SUPABASE_KEY, Authorization:`Bearer ${AUTH_SUPABASE_KEY}` };
+    const [pRes, sRes] = await Promise.all([
+      fetch(`${AUTH_SUPABASE_URL}/rest/v1/club_profiles?select=voter_id,display_name,avatar_url,about,goodreads_url`, { headers }),
+      fetch(`${AUTH_SUPABASE_URL}/rest/v1/club_shelves?select=voter_id,book_slug,status`, { headers })
+    ]);
+    if(!pRes.ok) return;                      // view not there yet — notes just show plain names
+    const rows = await pRes.json();
     const next = {};
     rows.forEach(r => { next[r.voter_id] = r; });
     profilesCache = next;
+    if(sRes.ok){
+      const shelves = {};
+      (await sRes.json()).forEach(r=>{
+        (shelves[r.voter_id] || (shelves[r.voter_id] = {}))[r.book_slug] = r.status;
+      });
+      shelfCache = shelves;
+    }
   }catch(e){ /* offline: names without photos is a fine fallback */ }
 }
 
@@ -1622,7 +1706,7 @@ async function loadRatings(){
     }
     const rows = await res.json();
     const me = getVoterId();
-    const next = {}, nextNotes = {};
+    const next = {}, nextNotes = {}, perVoter = {};
     const voters = new Set();
     const activity = [];   // every other device's rating/note, for the notif bell — see notesAvailable below
     rows.forEach(r=>{
@@ -1630,6 +1714,9 @@ async function loadRatings(){
       voters.add(r.voter_id);
       const s = next[r.book_slug] || (next[r.book_slug] = {sum:0, count:0, mine:0});
       s.sum += Number(r.rating); s.count += 1;
+      (perVoter[r.voter_id] || (perVoter[r.voter_id] = [])).push({
+        slug: r.book_slug, rating: Number(r.rating), comment: (r.comment || '').trim()
+      });
       const isMine = r.voter_id === me;
       if(isMine) s.mine = Number(r.rating);
       const text = (r.comment || '').trim();
@@ -1654,6 +1741,7 @@ async function loadRatings(){
     activity.sort((a,b)=> b.at.localeCompare(a.at));
     ratingsCache = next;
     notesCache = nextNotes;
+    byVoter = perVoter;
     ratingsVoters = voters.size;
     activityCache = activity;
     renderNotifications();
@@ -1664,6 +1752,7 @@ async function loadRatings(){
     renderNotesUI(currentModalSlug);
   }
   renderFaves();   // the club leaderboard is nothing but this data, sorted
+  if(readersSection.classList.contains('active')) renderReadersPage();
 }
 
 /* ---------- notifications bell ----------
@@ -2146,6 +2235,16 @@ favBtn.style.setProperty('--yr-color', FAVES_COLOR);
 favBtn.addEventListener('click', ()=>{ showYear('faves'); syncHash('faves'); });
 yearNav.appendChild(favBtn);
 
+// Readers sits beside Favourites: both are ways into the club rather than a year
+const READERS_COLOR = '#2f6f5e';
+const readersBtn = document.createElement('button');
+readersBtn.type = 'button';
+readersBtn.textContent = 'Readers';
+readersBtn.dataset.year = 'readers';
+readersBtn.style.setProperty('--yr-color', READERS_COLOR);
+readersBtn.addEventListener('click', ()=>{ showReaders(); syncHash('readers'); });
+yearNav.appendChild(readersBtn);
+
 years.forEach(y=>{
   const btn = document.createElement('button');
   btn.type = 'button';
@@ -2392,6 +2491,134 @@ favesSection.innerHTML = `
     </div>
   </div>`;
 yearsRoot.appendChild(favesSection);
+
+/* ---------- Readers ----------
+   Everyone who has made a profile, and one page each: their photo, their line,
+   their shelves and everything they have scored. All of it comes from the two
+   public views, so a signed-out visitor can browse it the same as anyone. */
+const readersSection = document.createElement('section');
+readersSection.className = 'year-section faves-section';
+readersSection.id = 'yreaders';
+readersSection.style.setProperty('--yr-color', READERS_COLOR);
+readersSection.innerHTML = `
+  <div class="faves-scroll">
+    <div class="faves-inner">
+      <div class="faves-block" id="readersListBlock">
+        <div class="faves-kicker">The club</div>
+        <h2 class="faves-head">Readers</h2>
+        <p class="faves-lede" id="readersLede">Everyone who has made a profile. Open one to see their shelves and their scores.</p>
+        <ul class="readers-grid" id="readersGrid"></ul>
+      </div>
+      <div class="faves-block" id="readerOneBlock" style="display:none"></div>
+    </div>
+  </div>`;
+yearsRoot.appendChild(readersSection);
+
+const readersGrid = readersSection.querySelector('#readersGrid');
+const readersLede = readersSection.querySelector('#readersLede');
+const readersListBlock = readersSection.querySelector('#readersListBlock');
+const readerOneBlock = readersSection.querySelector('#readerOneBlock');
+
+const SLUG_TO_BOOK = {};
+DATA.filter(b=>!b.break).forEach(b=>{ SLUG_TO_BOOK[slug(b)] = b; });
+
+function readerName(p){ return (p.display_name || '').trim() || 'A reader'; }
+
+function readerCounts(voterId){
+  const shelf = shelfOf(voterId);
+  const scored = (byVoter[voterId] || []).length;
+  return {
+    scored,
+    read: Object.values(shelf).filter(v=>v === 'read').length,
+    want: Object.values(shelf).filter(v=>v === 'want').length,
+    reading: Object.values(shelf).filter(v=>v === 'reading').length
+  };
+}
+
+function renderReaders(){
+  const rows = Object.values(profilesCache)
+    .filter(p => (p.display_name || '').trim() || p.avatar_url)
+    .sort((a,b)=> readerCounts(b.voter_id).scored - readerCounts(a.voter_id).scored
+                || readerName(a).localeCompare(readerName(b)));
+  readersLede.textContent = rows.length
+    ? 'Everyone who has made a profile. Open one to see their shelves and their scores.'
+    : 'Nobody has made a profile yet. Be the first, from the person icon up at the top.';
+  readersGrid.innerHTML = rows.map(p=>{
+    const c = readerCounts(p.voter_id);
+    const bits = [c.scored ? c.scored + ' scored' : '', c.read ? c.read + ' read' : '', c.want ? c.want + ' to read' : '']
+      .filter(Boolean).join(' · ') || 'Just joined';
+    return `<li><button type="button" class="reader-card" data-voter="${escHTML(p.voter_id)}">
+      ${avatarHTML(p.avatar_url, readerName(p), 'rc')}
+      <span>
+        <span class="rc-name">${escHTML(readerName(p))}</span>
+        <span class="rc-meta">${escHTML(bits)}</span>
+      </span>
+    </button></li>`;
+  }).join('');
+}
+
+function shelfRowHTML(voterId, status){
+  const shelf = shelfOf(voterId);
+  const books = Object.keys(shelf).filter(k => shelf[k] === status).map(k => SLUG_TO_BOOK[k]).filter(Boolean);
+  if(!books.length) return '';
+  return `<p class="shelf-sub">${SHELF_LABELS[status]}</p>
+    <ul class="shelf-row">${books.map(b=>`
+      <li><img src="${escHTML(coverFor(b) || '')}" alt="${escHTML(b.title)}" data-slug="${escHTML(slug(b))}">
+        <span class="sr-title">${escHTML(b.title)}</span></li>`).join('')}</ul>`;
+}
+
+function renderReaderOne(voterId){
+  const p = profilesCache[voterId];
+  if(!p) return renderReadersPage();
+  const scores = (byVoter[voterId] || [])
+    .map(r => ({ book: SLUG_TO_BOOK[r.slug], rating: r.rating, comment: r.comment }))
+    .filter(r => r.book)
+    .sort((a,b)=> b.rating - a.rating);
+  const shelves = ['reading','want','read'].map(st => shelfRowHTML(voterId, st)).join('');
+  const gr = (p.goodreads_url || '').trim();
+  readersListBlock.style.display = 'none';
+  readerOneBlock.style.display = 'block';
+  readerOneBlock.innerHTML = `
+    <button type="button" class="reader-back" id="readerBack">Back to all readers</button>
+    <div class="reader-head">
+      ${avatarHTML(p.avatar_url, readerName(p), 'rh')}
+      <div>
+        <h2 class="faves-head" style="margin:0">${escHTML(readerName(p))}</h2>
+        ${p.about ? `<p class="faves-lede" style="margin:.3rem 0 0">${escHTML(p.about)}</p>` : ''}
+      </div>
+    </div>
+    ${gr && /^https?:\/\//.test(gr)
+      ? `<p class="reader-goodreads"><a href="${escHTML(gr)}" target="_blank" rel="noopener">Their Goodreads</a></p>` : ''}
+    ${shelves || '<p class="faves-lede">Nothing on the shelves yet.</p>'}
+    ${scores.length ? `<p class="shelf-sub">Scores</p>
+      <ol class="fav-list">${scores.map(r=>`
+        <li class="fav-row" data-slug="${escHTML(slug(r.book))}">
+          <span class="fav-rank">${r.rating.toFixed(1)}</span>
+          <span class="fav-body"><span class="fav-title">${escHTML(r.book.title)}</span>
+          ${r.comment ? `<span class="fav-meta">${escHTML(r.comment)}</span>` : ''}</span>
+        </li>`).join('')}</ol>` : ''}`;
+}
+
+function renderReadersPage(){
+  readersListBlock.style.display = 'block';
+  readerOneBlock.style.display = 'none';
+  renderReaders();
+}
+
+function showReaders(voterId){
+  if(voterId) renderReaderOne(voterId); else renderReadersPage();
+  showYear('readers');
+}
+
+readersSection.addEventListener('click', (e)=>{
+  const card = e.target.closest('.reader-card');
+  if(card){ renderReaderOne(card.dataset.voter); syncHash('reader-' + card.dataset.voter); return; }
+  if(e.target.id === 'readerBack'){ renderReadersPage(); syncHash('readers'); return; }
+  const cover = e.target.closest('.shelf-row img');
+  if(cover){ chooseSearch(cover.dataset.slug); return; }
+  const row = e.target.closest('.fav-row[data-slug]');
+  if(row) chooseSearch(row.dataset.slug);
+});
 
 const shelfBlock = favesSection.querySelector('#shelfBlock');
 const shelfListEl = favesSection.querySelector('#shelfList');
@@ -3377,6 +3604,8 @@ function openBookModal(b, y, opts){
 
   mTalk.innerHTML = (info.talk && info.talk.length) ? talkHTML(info.talk) : '';
 
+  renderShelfUI(bookSlugOf(b));
+
   document.getElementById('mGenres').innerHTML =
     (b.nonfiction ? '<span class="genre-tag is-nf">Non-fiction</span>' : '') +
     (info.genres || []).map(g=>`<span class="genre-tag">${g}</span>`).join('');
@@ -3785,6 +4014,9 @@ function openFromHash(){
     openBookModal(b, b.year);
     return;
   }
+  if(wanted === 'readers'){ showReaders(); return; }
+  const readerMatch = wanted.match(/^reader-(.+)$/);
+  if(readerMatch){ showReaders(readerMatch[1]); return; }
   if(wanted === 'now' || wanted === 'faves' || wanted === 'prizes' || wanted === 'podcast'){
     showYear(wanted);
     return;
@@ -3975,6 +4207,36 @@ async function uploadAvatar(file){
   return `${AUTH_SUPABASE_URL}/storage/v1/object/public/avatars/${path}?v=${Date.now()}`;
 }
 
+function bookSlugOf(b){ return slug(b); }
+
+function renderShelfUI(bookSlug){
+  const wrap = document.getElementById('mShelf');
+  if(!ACCOUNTS_ENABLED){ wrap.innerHTML = ''; return; }
+  if(!session){
+    wrap.innerHTML = '<span class="shelf-hint">Sign in to put this on a shelf.</span>';
+    return;
+  }
+  const mine = myShelf()[bookSlug] || '';
+  wrap.innerHTML = Object.keys(SHELF_LABELS).map(k =>
+    `<button type="button" data-shelf="${k}" data-on="${mine === k}">${SHELF_LABELS[k]}</button>`
+  ).join('');
+}
+
+document.getElementById('mShelf').addEventListener('click', async (e)=>{
+  const btn = e.target.closest('button[data-shelf]');
+  if(!btn || !currentModalSlug) return;
+  const wanted = btn.dataset.shelf;
+  btn.disabled = true;
+  const ok = await setShelf(currentModalSlug, wanted);
+  renderShelfUI(currentModalSlug);
+  if(!ok){
+    document.getElementById('mShelf').insertAdjacentHTML('beforeend',
+      '<span class="shelf-hint">Not saved. Try again.</span>');
+  } else if(acctPanel.dataset.open === 'true'){
+    renderAcct();
+  }
+});
+
 /* ---- the account panel ---- */
 const acctBtn   = document.getElementById('acctBtn');
 const acctPanel = document.getElementById('acctPanel');
@@ -4029,6 +4291,8 @@ function renderAcct(msg, bad){
       </div>
       <label for="acctName">Your name, as it appears on your notes</label>
       <input type="text" id="acctName" maxlength="40" autocomplete="name" value="${escHTML(name)}">
+      <label for="acctGr">Your Goodreads page, if you have one</label>
+      <input type="url" id="acctGr" placeholder="https://www.goodreads.com/user/show/..." value="${escHTML(p.goodreads_url || '')}">
       <label for="acctAbout">A line about you</label>
       <input type="text" id="acctAbout" maxlength="90" placeholder="What you like to read" value="${escHTML(p.about || '')}">
       <button type="button" class="acct-go" id="acctSaveProfile">Save profile</button>
@@ -4039,6 +4303,7 @@ function renderAcct(msg, bad){
           <span class="am-score">${r.score}</span>
         </button>`).join('')}</div>`
         : '<p class="acct-lede">Score a book and it will show up here.</p>'}
+      <button type="button" class="acct-quiet" id="acctSeeMine">See my profile page</button>
       <button type="button" class="acct-quiet" id="acctOut">Sign out</button>`;
     return;
   }
@@ -4270,10 +4535,18 @@ acctBody.addEventListener('click', async (e)=>{
     localStorage.setItem(NAME_KEY, name);
     btn.disabled = true;
     try{
-      await saveProfile({ display_name: name || null, about: about || null });
+      const gr = acctBody.querySelector('#acctGr').value.trim();
+      await saveProfile({ display_name: name || null, about: about || null, goodreads_url: gr || null });
       await loadProfiles();
       renderAcct('Saved.');
     }catch(err){ console.error('profile save failed', err); renderAcct('Not saved. Please try again.', true); }
+    return;
+  }
+
+  if(btn.id === 'acctSeeMine'){
+    closeAcct();
+    showReaders(getVoterId());
+    syncHash('reader-' + getVoterId());
     return;
   }
 
