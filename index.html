@@ -382,6 +382,13 @@ a{color:inherit}
 @media (max-width:680px){
   .acct-wrap{position:static}
   .acct-panel{left:.75rem; right:.75rem; width:auto}
+  /* a thumb is wider than a mouse pointer: the header circles grow to suit */
+  .acct-btn, .search-btn, .notif-bell{width:38px; height:38px}
+  /* a long name beside a round photo wrapped into a narrow column, so on a
+     phone the photo takes its own line and the words get the full width */
+  .reader-head{flex-direction:column; align-items:flex-start; gap:.75rem}
+  .reader-head .rh-avatar, .reader-head .rh-initial{width:64px; height:64px}
+  .reader-slots img{width:88px; height:132px}
 }
 
 /* ---------- search ----------
