@@ -380,6 +380,17 @@ a{color:inherit}
 .acct-mine .am-title{flex:1; min-width:0; font-size:.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .acct-mine .am-score{font-size:.8rem; font-weight:700; color:var(--accent)}
 @media (max-width:680px){
+  .faves-scroll{padding-top:0}
+  .faves-head{font-size:1.35rem}
+  .faves-lede{font-size:.82rem; margin-bottom:1rem}
+  .faves-block + .faves-block{margin-top:1.8rem; padding-top:1.5rem}
+  .readers-grid{gap:.6rem}
+  .reader-card{padding:.65rem .7rem}
+  /* the year pill was cut to a single letter. Rather than fixing its width and
+     shoving the Telegram button off the edge, the whole row tightens up and
+     the pill takes what that frees. */
+  .topbar{gap:.5rem; padding-left:.9rem; padding-right:.9rem}
+  .year-nav-select{flex:1 1 auto; min-width:0; font-size:.8rem; padding:.42rem 1.6rem .42rem .7rem; background-position:right .45rem center}
   .acct-wrap{position:static}
   .acct-panel{left:.75rem; right:.75rem; width:auto}
   /* a thumb is wider than a mouse pointer: the header circles grow to suit */
@@ -2418,6 +2429,9 @@ function showYear(y){
   // then, so the explicit-pixel-height card sizing above was a no-op. Now
   // that this section is actually visible, re-measure for real.
   carousels[y]?.layout();
+  /* the phone's dropdown calls this directly rather than going through
+     showReaders(), so the list has to be built here too or the page is blank */
+  if(key === 'readers' && readerOneBlock.style.display !== 'block') renderReadersPage();
 }
 
 // ---- icon svgs ----
@@ -5057,6 +5071,18 @@ document.addEventListener('keydown', (e)=>{
     openSearch();
   }
 });
+
+/* Open Library sometimes names a cover that is not actually there, which left
+   an empty bordered box in a row. A picture that fails simply steps aside. */
+document.addEventListener('error', (e)=>{
+  const img = e.target;
+  if(!(img instanceof HTMLImageElement)) return;
+  if(!img.closest('.rc-strip, .rec-row, .reader-slots, .slot, .rec-list, .search-list')) return;
+  const blank = document.createElement('span');
+  blank.className = 'slot-blank';
+  if(img.classList.contains('search-thumb')) blank.className = 'search-thumb';
+  img.replaceWith(blank);
+}, true);
 
 window.addEventListener('hashchange', openFromHash);
 </script>
