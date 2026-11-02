@@ -224,6 +224,32 @@ a{color:inherit}
 .acct-msg{margin:0; font-size:.78rem; line-height:1.45; color:var(--ink-soft)}
 .acct-msg[data-bad="true"]{color:var(--accent)}
 .acct-who{font-size:.85rem; font-weight:700; word-break:break-all}
+.acct-form{display:flex; flex-direction:column; gap:.6rem}
+.acct-switch{display:flex; gap:.9rem; border-bottom:1px solid var(--line); margin:-.2rem 0 .2rem}
+.acct-switch button{
+  font:inherit; font-size:.8rem; font-weight:700; color:var(--ink-soft);
+  background:none; border:none; border-bottom:2px solid transparent;
+  padding:.1rem 0 .45rem; cursor:pointer;
+}
+.acct-switch button[data-on="true"]{color:var(--ink); border-bottom-color:var(--accent)}
+.acct-photo-row{display:flex; align-items:center; gap:.75rem}
+.acct-avatar{
+  width:54px; height:54px; border-radius:999px; object-fit:cover; flex:none;
+  background:var(--bg); border:1px solid var(--line);
+}
+.acct-initial{
+  width:54px; height:54px; border-radius:999px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg); border:1px solid var(--line);
+  font-size:1.2rem; font-weight:800; color:var(--ink-soft);
+}
+.cn-avatar{width:22px; height:22px; border-radius:999px; object-fit:cover; background:var(--bg); border:1px solid var(--line)}
+.cn-initial{
+  width:22px; height:22px; border-radius:999px; flex:none;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg); border:1px solid var(--line);
+  font-size:.62rem; font-weight:800; color:var(--ink-soft);
+}
 .acct-stats{display:flex; gap:1.2rem; padding:.2rem 0 .1rem}
 .acct-stat b{display:block; font-size:1.15rem; font-weight:800; line-height:1.1}
 .acct-stat span{font-size:.7rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em}
@@ -1170,7 +1196,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
    the note, which read as cramped. Now three separately-weighted tokens spaced
    by flex gap, with real room above them. */
 .club-note .cn-by{
-  display:flex; align-items:baseline; gap:.55rem; flex-wrap:wrap;
+  display:flex; align-items:center; gap:.55rem; flex-wrap:wrap;
   font-size:.74rem; font-weight:700; color:var(--ink-soft);
 }
 .club-note .cn-by .cn-score{color:var(--yr-color)}
@@ -1536,8 +1562,33 @@ const NOTE_COLS   = RATING_COLS + ',comment,display_name,updated_at';
    ratings down with it. */
 let notesAvailable = true;
 
+/* Names and photos of everyone who has made a profile, keyed by the voter_id
+   their notes are signed with. A plain public view: no emails in it. */
+let profilesCache = {};
+async function loadProfiles(){
+  if(!RATINGS_ENABLED) return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/club_profiles?select=voter_id,display_name,avatar_url`, {
+      headers:{ apikey:SUPABASE_ANON_KEY, Authorization:`Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if(!res.ok) return;                       // view not there yet — notes just show plain names
+    const rows = await res.json();
+    const next = {};
+    rows.forEach(r => { next[r.voter_id] = r; });
+    profilesCache = next;
+  }catch(e){ /* offline: names without photos is a fine fallback */ }
+}
+
+function avatarHTML(url, name, cls){
+  const initial = escHTML((name || '?').trim().charAt(0).toUpperCase() || '?');
+  return url
+    ? `<img class="${cls}-avatar" src="${escHTML(url)}" alt="">`
+    : `<span class="${cls}-initial" aria-hidden="true">${initial}</span>`;
+}
+
 async function loadRatings(){
   if(!RATINGS_ENABLED) return;
+  await loadProfiles();
   const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
   try{
     let res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings?select=${NOTE_COLS}`, { headers });
@@ -1561,8 +1612,10 @@ async function loadRatings(){
       if(isMine) s.mine = Number(r.rating);
       const text = (r.comment || '').trim();
       if(text){
+        const prof = profilesCache[r.voter_id] || {};
         (nextNotes[r.book_slug] || (nextNotes[r.book_slug] = [])).push({
-          name: (r.display_name || '').trim() || 'Anonymous',
+          name: (prof.display_name || r.display_name || '').trim() || 'Anonymous',
+          avatar: prof.avatar_url || null,
           text, rating: Number(r.rating), at: r.updated_at || '', mine: isMine
         });
       }
@@ -1794,6 +1847,7 @@ function renderNotesUI(bslug){
     <div class="club-note" data-mine="${n.mine ? 'true' : 'false'}">
       <div class="cn-text">${escHTML(n.text)}</div>
       <div class="cn-by">
+        ${avatarHTML(n.avatar, n.name, 'cn')}
         <span class="cn-name">${escHTML(n.name)}</span>
         <span class="cn-score">${n.rating.toFixed(1)}</span>
         ${n.mine ? '<span class="cn-mine">yours</span>' : ''}
@@ -3804,35 +3858,84 @@ async function memberFetch(path, opts){
 
 /* First sign-in claims this device's voter_id for the account; every later one
    adopts whatever the account already holds. */
+let profile = null;     // {voter_id, display_name, avatar_url, about}
+
 async function syncMember(){
   const live = await liveSession();
   if(!live) return;
-  const res = await memberFetch(`club_members?user_id=eq.${live.user_id}&select=voter_id,display_name`);
+  const res = await memberFetch(`club_members?user_id=eq.${live.user_id}&select=voter_id,display_name,avatar_url,about`);
   if(!res.ok) throw new Error('members ' + res.status);
   const rows = await res.json();
   if(rows.length){
-    localStorage.setItem(VOTER_KEY, rows[0].voter_id);
-    if(rows[0].display_name) localStorage.setItem(NAME_KEY, rows[0].display_name);
+    profile = rows[0];
+    localStorage.setItem(VOTER_KEY, profile.voter_id);
+    if(profile.display_name) localStorage.setItem(NAME_KEY, profile.display_name);
   } else {
+    profile = {
+      voter_id: getVoterId(),
+      display_name: localStorage.getItem(NAME_KEY) || '',
+      avatar_url: null, about: null
+    };
     const ins = await memberFetch('club_members', {
       method:'POST',
       headers:{ Prefer:'return=minimal' },
       body: JSON.stringify({
-        user_id: live.user_id, voter_id: getVoterId(),
-        display_name: localStorage.getItem(NAME_KEY) || null, email: live.email || null
+        user_id: live.user_id, voter_id: profile.voter_id,
+        display_name: profile.display_name || null, email: live.email || null
       })
     });
     if(!ins.ok) throw new Error('members ' + ins.status);
   }
 }
 
-async function saveMemberName(name){
+async function saveProfile(fields){
   const live = await liveSession();
   if(!live) return;
-  await memberFetch(`club_members?user_id=eq.${live.user_id}`, {
+  const res = await memberFetch(`club_members?user_id=eq.${live.user_id}`, {
     method:'PATCH', headers:{ Prefer:'return=minimal' },
-    body: JSON.stringify({ display_name: name || null })
+    body: JSON.stringify(fields)
   });
+  if(!res.ok) throw new Error('profile ' + res.status);
+  Object.assign(profile, fields);
+}
+
+/* A photo is squared off and shrunk in the browser before it goes anywhere, so
+   a 4MB phone snap lands as a ~40KB thumbnail and the page stays quick. */
+function squareThumb(file, size){
+  return new Promise((resolve, reject)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const side = Math.min(img.width, img.height);
+      const cv = document.createElement('canvas');
+      cv.width = cv.height = size;
+      const cx = cv.getContext('2d');
+      cx.drawImage(img, (img.width - side)/2, (img.height - side)/2, side, side, 0, 0, size, size);
+      URL.revokeObjectURL(img.src);
+      cv.toBlob(b => b ? resolve(b) : reject(new Error('no blob')), 'image/jpeg', 0.85);
+    };
+    img.onerror = ()=> reject(new Error('not an image'));
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function uploadAvatar(file){
+  const live = await liveSession();
+  if(!live) throw new Error('signed out');
+  const blob = await squareThumb(file, 256);
+  const path = `${live.user_id}.jpg`;
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/avatars/${path}`, {
+    method:'POST',
+    headers:{
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${live.access_token}`,
+      'Content-Type':'image/jpeg',
+      'x-upsert':'true'
+    },
+    body: blob
+  });
+  if(!res.ok) throw new Error('upload ' + res.status);
+  // the path never changes, so the query string is what busts the old cached face
+  return `${SUPABASE_URL}/storage/v1/object/public/avatars/${path}?v=${Date.now()}`;
 }
 
 /* ---- the account panel ---- */
@@ -3840,7 +3943,7 @@ const acctBtn   = document.getElementById('acctBtn');
 const acctPanel = document.getElementById('acctPanel');
 const acctBody  = document.getElementById('acctBody');
 const acctHead  = document.getElementById('acctHead');
-let acctStage = 'email';        // email -> code -> in
+let acctMode  = 'signin';     // signin | signup | code | sent
 let acctEmail = '';
 
 function myBooks(){
@@ -3851,19 +3954,31 @@ function myBooks(){
 
 function renderAcct(msg, bad){
   const note = msg ? `<p class="acct-msg" data-bad="${!!bad}">${escHTML(msg)}</p>` : '';
+
   if(session){
+    const p = profile || {};
     const mine = myBooks();
     const avg = mine.length ? (mine.reduce((t,r)=>t+r.score,0) / mine.length) : 0;
-    acctHead.textContent = 'Your reading';
+    const name = p.display_name || localStorage.getItem(NAME_KEY) || '';
+    acctHead.textContent = 'Your profile';
     acctBody.innerHTML = `
+      <div class="acct-photo-row">
+        ${avatarHTML(p.avatar_url, name || session.email, 'acct')}
+        <div>
+          <button type="button" class="acct-go" id="acctPhotoBtn">${p.avatar_url ? 'Change photo' : 'Add a photo'}</button>
+          <input type="file" id="acctPhoto" accept="image/*" style="display:none">
+        </div>
+      </div>
       <div class="acct-who">${escHTML(session.email || '')}</div>
       <div class="acct-stats">
         <span class="acct-stat"><b>${mine.length}</b><span>rated</span></span>
         <span class="acct-stat"><b>${mine.length ? avg.toFixed(1) : '—'}</b><span>average</span></span>
       </div>
-      <label for="acctName">The name shown on your notes</label>
-      <input type="text" id="acctName" maxlength="40" autocomplete="name" value="${escHTML(localStorage.getItem(NAME_KEY) || '')}">
-      <button type="button" class="acct-go" id="acctSaveName">Save name</button>
+      <label for="acctName">Your name, as it appears on your notes</label>
+      <input type="text" id="acctName" maxlength="40" autocomplete="name" value="${escHTML(name)}">
+      <label for="acctAbout">A line about you</label>
+      <input type="text" id="acctAbout" maxlength="90" placeholder="What you like to read" value="${escHTML(p.about || '')}">
+      <button type="button" class="acct-go" id="acctSaveProfile">Save profile</button>
       ${note}
       ${mine.length ? `<div class="acct-mine">${mine.map(r=>
         `<button type="button" data-slug="${escHTML(slug(r.book))}">
@@ -3874,23 +3989,43 @@ function renderAcct(msg, bad){
       <button type="button" class="acct-quiet" id="acctOut">Sign out</button>`;
     return;
   }
-  acctHead.textContent = 'Sign in';
-  if(acctStage === 'code'){
+
+  if(acctMode === 'code'){
+    acctHead.textContent = 'Sign in';
     acctBody.innerHTML = `
-      <p class="acct-lede">We sent a six-digit code to ${escHTML(acctEmail)}. It is good for an hour.</p>
-      <label for="acctCode">Your code</label>
-      <input type="text" id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456">
-      <button type="button" class="acct-go" id="acctVerify">Sign in</button>
+      <p class="acct-lede">We sent a six-digit code to ${escHTML(acctEmail)}. It lasts an hour.</p>
+      <form class="acct-form" id="acctForm" autocomplete="on">
+        <label for="acctCode">Your code</label>
+        <input type="text" id="acctCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="123456">
+        <button type="submit" class="acct-go" id="acctVerify">Sign in</button>
+      </form>
       ${note}
-      <button type="button" class="acct-quiet" id="acctBack">Use a different email</button>`;
-  } else {
-    acctBody.innerHTML = `
-      <p class="acct-lede">Sign in to keep your scores and notes together on every device you read on. No password, just a code by email.</p>
-      <label for="acctEmail">Your email</label>
-      <input type="email" id="acctEmail" autocomplete="email" placeholder="you@example.com" value="${escHTML(acctEmail)}">
-      <button type="button" class="acct-go" id="acctSend">Email me a code</button>
-      ${note}`;
+      <button type="button" class="acct-quiet" id="acctBack">Back</button>`;
+    return;
   }
+
+  const up = acctMode === 'signup';
+  acctHead.textContent = up ? 'Make a profile' : 'Sign in';
+  acctBody.innerHTML = `
+    <div class="acct-switch">
+      <button type="button" data-mode="signin" data-on="${!up}">Sign in</button>
+      <button type="button" data-mode="signup" data-on="${up}">Make a profile</button>
+    </div>
+    <p class="acct-lede">${up
+      ? 'A profile keeps your scores, your notes and your photo together, on every device you read on.'
+      : 'Welcome back. Your scores and notes are waiting.'}</p>
+    <form class="acct-form" id="acctForm" autocomplete="on">
+      ${up ? `<label for="acctNewName">Your name</label>
+      <input type="text" id="acctNewName" maxlength="40" autocomplete="name" placeholder="Aoife">` : ''}
+      <label for="acctEmail">Your email</label>
+      <input type="email" id="acctEmail" autocomplete="username" placeholder="you@example.com" value="${escHTML(acctEmail)}">
+      <label for="acctPass">Password</label>
+      <input type="password" id="acctPass" autocomplete="${up ? 'new-password' : 'current-password'}"
+             minlength="8" placeholder="${up ? 'At least 8 characters' : ''}">
+      <button type="submit" class="acct-go" id="acctGo">${up ? 'Make my profile' : 'Sign in'}</button>
+    </form>
+    ${note}
+    <button type="button" class="acct-quiet" id="acctCodeInstead">${up ? 'Sign in with a code instead' : 'Forgotten your password? Email me a code'}</button>`;
 }
 
 function openAcct(){
@@ -3909,73 +4044,136 @@ acctBtn.addEventListener('click', (e)=>{
   e.stopPropagation();
   if(acctPanel.dataset.open === 'true') closeAcct(); else openAcct();
 });
+/* capture, not bubble: the panel rewrites itself on most clicks, and by the
+   time a bubbled click reached here the clicked node was already detached and
+   read as "outside", which shut the panel on every button in it */
 document.addEventListener('click', (e)=>{
   if(acctPanel.dataset.open === 'true' && !e.target.closest('.acct-wrap')) closeAcct();
-});
+}, true);
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && acctPanel.dataset.open === 'true'){ closeAcct(); acctBtn.focus(); }
+});
+
+/* Signed in and linked up: whichever door they came through ends here. */
+async function finishSignIn(){
+  acctEmail = '';
+  try{
+    await syncMember();
+    await loadRatings();      // re-reads "mine" against the adopted voter_id
+    renderAcct();
+  }catch(err){
+    console.error('member sync failed', err);
+    renderAcct('Signed in, but your scores could not be linked up yet.', true);
+  }
+}
+
+async function acctSubmit(){
+  const emailEl = acctBody.querySelector('#acctEmail');
+  const codeEl  = acctBody.querySelector('#acctCode');
+
+  if(codeEl){
+    const token = codeEl.value.trim();
+    if(!token) return renderAcct('Enter the code from the email.', true);
+    renderAcct('Checking…');
+    try{
+      const data = await authPost('verify', { email: acctEmail, token, type:'email' });
+      writeSession(sessionFrom(data));
+    }catch(err){
+      console.error('verify failed', err);
+      renderAcct('That code was not accepted. Check it and try again.', true);
+      return;
+    }
+    return finishSignIn();
+  }
+
+  const email = (emailEl.value || '').trim();
+  const pass  = acctBody.querySelector('#acctPass').value;
+  const name  = (acctBody.querySelector('#acctNewName') || {}).value || '';
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return renderAcct('That email does not look right.', true);
+  if(pass.length < 8) return renderAcct('A password needs at least 8 characters.', true);
+
+  const up = acctMode === 'signup';
+  acctEmail = email;
+  renderAcct(up ? 'Making your profile…' : 'Signing in…');
+  try{
+    const data = up
+      ? await authPost('signup', { email, password: pass })
+      : await authPost('token?grant_type=password', { email, password: pass });
+    if(!data.access_token){
+      // the project still asks people to confirm their email before first use
+      acctMode = 'signin';
+      renderAcct('Check your email to confirm the address, then sign in.');
+      return;
+    }
+    writeSession(sessionFrom(data));
+    if(up && name.trim()) localStorage.setItem(NAME_KEY, name.trim().slice(0, 40));
+    return finishSignIn();
+  }catch(err){
+    console.error(up ? 'signup failed' : 'signin failed', err);
+    acctMode = up ? 'signup' : 'signin';
+    renderAcct(up
+      ? 'Could not make that profile. The email may already have one, so try signing in.'
+      : 'That email and password did not match. Try again, or ask for a code.', true);
+  }
+}
+
+acctBody.addEventListener('submit', (e)=>{ e.preventDefault(); acctSubmit(); });
+
+acctBody.addEventListener('change', async (e)=>{
+  if(e.target.id !== 'acctPhoto') return;
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  renderAcct('Uploading your photo…');
+  try{
+    const url = await uploadAvatar(file);
+    await saveProfile({ avatar_url: url });
+    await loadProfiles();
+    renderAcct('Photo saved.');
+  }catch(err){
+    console.error('avatar failed', err);
+    renderAcct('That photo would not upload. Try a different one.', true);
+  }
 });
 
 acctBody.addEventListener('click', async (e)=>{
   const btn = e.target.closest('button');
   if(!btn) return;
 
-  if(btn.id === 'acctSend'){
-    const email = acctBody.querySelector('#acctEmail').value.trim();
-    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return renderAcct('That email does not look right.', true);
-    btn.disabled = true; renderAcct('Sending…');
+  if(btn.dataset.mode){ acctMode = btn.dataset.mode; renderAcct(); return; }
+  if(btn.id === 'acctBack'){ acctMode = 'signin'; renderAcct(); return; }
+  if(btn.id === 'acctPhotoBtn'){ acctBody.querySelector('#acctPhoto').click(); return; }
+
+  if(btn.id === 'acctCodeInstead'){
+    const email = (acctBody.querySelector('#acctEmail').value || '').trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return renderAcct('Put your email in first, then ask for a code.', true);
+    acctEmail = email;
+    renderAcct('Sending…');
     try{
       await authPost('otp', { email, create_user:true });
-      acctEmail = email; acctStage = 'code'; renderAcct();
+      acctMode = 'code'; renderAcct();
     }catch(err){
       console.error('otp failed', err);
-      acctStage = 'email'; acctEmail = email;
       renderAcct('Could not send the code. Please try again in a minute.', true);
     }
     return;
   }
 
-  if(btn.id === 'acctVerify'){
-    const token = acctBody.querySelector('#acctCode').value.trim();
-    if(!token) return renderAcct('Enter the code from the email.', true);
-    btn.disabled = true; renderAcct('Checking…');
-    try{
-      const data = await authPost('verify', { email: acctEmail, token, type:'email' });
-      writeSession(sessionFrom(data));
-    }catch(err){
-      console.error('verify failed', err);
-      acctStage = 'code';
-      renderAcct('That code was not accepted. Check it and try again.', true);
-      return;
-    }
-    /* signed in either way: a failure past this point is the members table,
-       not the code, and saying so beats sending them round the loop again */
-    acctStage = 'in';
-    try{
-      await syncMember();
-      await loadRatings();      // re-reads "mine" against the adopted voter_id
-      renderAcct();
-    }catch(err){
-      console.error('member sync failed', err);
-      renderAcct('Signed in, but your scores could not be linked up yet.', true);
-    }
-    return;
-  }
-
-  if(btn.id === 'acctBack'){ acctStage = 'email'; renderAcct(); return; }
-
-  if(btn.id === 'acctSaveName'){
-    const name = acctBody.querySelector('#acctName').value.trim().slice(0, 40);
+  if(btn.id === 'acctSaveProfile'){
+    const name  = acctBody.querySelector('#acctName').value.trim().slice(0, 40);
+    const about = acctBody.querySelector('#acctAbout').value.trim().slice(0, 90);
     localStorage.setItem(NAME_KEY, name);
     btn.disabled = true;
-    try{ await saveMemberName(name); renderAcct('Saved.'); }
-    catch(err){ console.error('name save failed', err); renderAcct('Not saved. Please try again.', true); }
+    try{
+      await saveProfile({ display_name: name || null, about: about || null });
+      await loadProfiles();
+      renderAcct('Saved.');
+    }catch(err){ console.error('profile save failed', err); renderAcct('Not saved. Please try again.', true); }
     return;
   }
 
   if(btn.id === 'acctOut'){
     writeSession(null);
-    acctStage = 'email'; acctEmail = '';
+    profile = null; acctMode = 'signin'; acctEmail = '';
     renderAcct();
     return;
   }
