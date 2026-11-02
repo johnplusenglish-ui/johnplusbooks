@@ -194,7 +194,12 @@ a{color:inherit}
   background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:.75rem .85rem;
 }
 .reader-card:hover{border-color:var(--yr-color)}
+.reader-card{flex-direction:column; align-items:stretch; gap:.55rem}
+.reader-top{display:flex; gap:.7rem; align-items:center}
 .reader-card .rc-name{font-size:.88rem; font-weight:700}
+.rc-strip{display:flex; gap:.25rem}
+.rc-strip img{width:26px; height:39px; object-fit:cover; border-radius:2px; background:var(--bg); border:1px solid var(--line)}
+.rc-strip .rc-more{font-size:.68rem; color:var(--ink-soft); align-self:flex-end; padding-bottom:.15rem}
 .reader-card .rc-meta{font-size:.73rem; color:var(--ink-soft); margin-top:.1rem}
 .rc-avatar{width:42px; height:42px; border-radius:999px; object-fit:cover; flex:none; background:#fff; border:1px solid var(--line)}
 .rc-initial{
@@ -2535,6 +2540,23 @@ function readerCounts(voterId){
   };
 }
 
+/* A glance at what somebody is actually reading, so the list is covers rather
+   than a column of names: reading now first, then whatever they rated highest. */
+function readerStripHTML(voterId){
+  const shelf = shelfOf(voterId);
+  const picked = [];
+  const add = b => { if(b && !picked.includes(b)) picked.push(b); };
+  Object.keys(shelf).filter(k => shelf[k] === 'reading').forEach(k => add(SLUG_TO_BOOK[k]));
+  (byVoter[voterId] || []).slice().sort((a,b)=> b.rating - a.rating).forEach(r => add(SLUG_TO_BOOK[r.slug]));
+  Object.keys(shelf).forEach(k => add(SLUG_TO_BOOK[k]));
+  if(!picked.length) return '';
+  const shown = picked.slice(0, 5);
+  const rest = picked.length - shown.length;
+  return `<span class="rc-strip">${shown.map(b=>
+      `<img src="${escHTML(coverFor(b) || '')}" alt="">`).join('')}
+    ${rest > 0 ? `<span class="rc-more">+${rest}</span>` : ''}</span>`;
+}
+
 function renderReaders(){
   const rows = Object.values(profilesCache)
     .filter(p => (p.display_name || '').trim() || p.avatar_url)
@@ -2548,11 +2570,14 @@ function renderReaders(){
     const bits = [c.scored ? c.scored + ' scored' : '', c.read ? c.read + ' read' : '', c.want ? c.want + ' to read' : '']
       .filter(Boolean).join(' · ') || 'Just joined';
     return `<li><button type="button" class="reader-card" data-voter="${escHTML(p.voter_id)}">
-      ${avatarHTML(p.avatar_url, readerName(p), 'rc')}
-      <span>
-        <span class="rc-name">${escHTML(readerName(p))}</span>
-        <span class="rc-meta">${escHTML(bits)}</span>
+      <span class="reader-top">
+        ${avatarHTML(p.avatar_url, readerName(p), 'rc')}
+        <span>
+          <span class="rc-name">${escHTML(readerName(p))}</span>
+          <span class="rc-meta">${escHTML(bits)}</span>
+        </span>
       </span>
+      ${readerStripHTML(p.voter_id)}
     </button></li>`;
   }).join('');
 }
@@ -2594,7 +2619,9 @@ function renderReaderOne(voterId){
       <ol class="fav-list">${scores.map(r=>`
         <li class="fav-row" data-slug="${escHTML(slug(r.book))}">
           <span class="fav-rank">${r.rating.toFixed(1)}</span>
+          <img class="fav-cover" src="${escHTML(coverFor(r.book) || '')}" alt="">
           <span class="fav-body"><span class="fav-title">${escHTML(r.book.title)}</span>
+          <span class="fav-author">${escHTML(r.book.author)}</span>
           ${r.comment ? `<span class="fav-meta">${escHTML(r.comment)}</span>` : ''}</span>
         </li>`).join('')}</ol>` : ''}`;
 }
