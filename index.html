@@ -180,7 +180,7 @@ a{color:inherit}
 .slot-list{display:flex; flex-direction:column; gap:.55rem; border-top:1px solid var(--line); padding-top:.7rem}
 .slot{display:flex; gap:.6rem; align-items:flex-start}
 .slot-cover{width:34px; height:51px; object-fit:cover; border-radius:3px; flex:none; background:var(--bg); border:1px solid var(--line)}
-.slot-blank{width:34px; height:51px; border-radius:3px; flex:none; background:var(--bg); border:1px dashed var(--line)}
+.slot-blank{display:inline-block; width:34px; height:51px; border-radius:3px; flex:none; background:var(--bg); border:1px dashed var(--line)}
 .slot-body{flex:1; min-width:0}
 .slot-label{font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft)}
 .slot-title{font-size:.84rem; font-weight:600; line-height:1.3; margin-top:.1rem}
@@ -200,7 +200,12 @@ a{color:inherit}
 .slot-hits span{font-size:.76rem; line-height:1.25}
 .slot-hits small{display:block; color:var(--ink-soft); font-size:.7rem}
 
-.reader-slots{display:flex; gap:1.1rem; flex-wrap:wrap; margin:0 0 1.6rem}
+.reader-slots{display:flex; gap:1.6rem; flex-wrap:wrap; margin:0 0 2.2rem}
+.rec-list{list-style:none; margin:.45rem 0 .2rem; padding:0; display:flex; flex-direction:column; gap:.5rem}
+.rec-list li{display:flex; gap:.5rem; align-items:center}
+.rec-list img, .rec-list .slot-blank{width:26px; height:39px; object-fit:cover; border-radius:2px; flex:none}
+.rec-list span{min-width:0}
+.rec-list button{font:inherit; font-size:.72rem; color:var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline; margin-left:auto}
 .reader-slots .rs-one{display:flex; gap:.6rem; align-items:flex-start; min-width:180px}
 .reader-slots img{width:48px; height:72px; object-fit:cover; border-radius:3px; background:var(--bg); border:1px solid var(--line)}
 
@@ -236,7 +241,7 @@ a{color:inherit}
   background:#fff; border:1px solid var(--line);
   font-size:1rem; font-weight:800; color:var(--ink-soft);
 }
-.reader-head{display:flex; gap:1rem; align-items:center; margin-bottom:.4rem}
+.reader-head{display:flex; gap:1.15rem; align-items:center; margin-bottom:1.8rem}
 .reader-head .rh-avatar{width:72px; height:72px; border-radius:999px; object-fit:cover; flex:none; background:var(--bg); border:1px solid var(--line)}
 .reader-head .rh-initial{
   width:72px; height:72px; border-radius:999px; flex:none;
@@ -248,11 +253,12 @@ a{color:inherit}
   font:inherit; font-size:.78rem; color:var(--ink-soft);
   background:none; border:none; padding:0 0 .9rem; cursor:pointer; text-decoration:underline;
 }
-.shelf-row{display:flex; gap:.7rem; flex-wrap:wrap; margin:0 0 1.6rem; padding:0; list-style:none}
+.shelf-row{display:flex; gap:.9rem; flex-wrap:wrap; margin:0 0 2rem; padding:0; list-style:none}
 .shelf-row li{width:72px}
+.shelf-row .slot-blank{display:block; width:72px; height:108px; border-radius:4px}
 .shelf-row img{width:72px; height:108px; object-fit:cover; border-radius:4px; display:block; background:var(--bg); border:1px solid var(--line); cursor:pointer}
 .shelf-row .sr-title{font-size:.68rem; line-height:1.3; color:var(--ink-soft); margin-top:.3rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
-.shelf-sub{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 .6rem}
+.shelf-sub{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); margin:2rem 0 .8rem}
 .reader-goodreads{font-size:.8rem}
 
 /* ---------- member account ----------
@@ -1676,10 +1682,16 @@ const SHELF_LABELS = { want:'Want to read', reading:'Reading now', read:'Read' }
    club's picks. Titles and covers come from Open Library at the moment someone
    searches, and the chosen one is stored as it was found, so the profile never
    depends on that service being up later. */
-const BOOK_SLOTS = {
-  now_reading: 'Reading now',
-  recommends:  "Book I'd recommend"
-};
+const BOOK_SLOTS = { now_reading: 'Reading now' };
+const RECS_LABEL = "Books I'd recommend";
+
+/* Recommendations started life as a single book, so an old profile may still
+   hold one object rather than a list. */
+function recsOf(p){
+  const r = p && p.recommends;
+  if(Array.isArray(r)) return r.filter(x => x && x.title);
+  return (r && r.title) ? [r] : [];
+}
 
 async function findBooks(q){
   const url = 'https://openlibrary.org/search.json?limit=5&fields=title,author_name,cover_i,first_publish_year&q='
@@ -2156,6 +2168,18 @@ function setOverride(key, url){
   if(url) o[key] = url; else delete o[key];
   localStorage.setItem(OVERRIDES_KEY, JSON.stringify(o));
 }
+/* Three sizes of the same picture. The full file is 700px and ~200KB, which is
+   right for nothing smaller than a card: a 30px row thumbnail pulling 200KB is
+   what made the lists feel slow. An overridden or remote cover has no sizes of
+   its own, so it is handed back untouched. */
+function sizedCover(b, folder){
+  const url = coverFor(b);
+  if(!url || !/^covers\/[^/]+\.jpg$/i.test(url)) return url;
+  return url.replace(/^covers\//, `covers/${folder}/`);
+}
+function thumbFor(b){ return sizedCover(b, 'thumbs'); }   // 200px, for rows and strips
+function midFor(b){ return sizedCover(b, 'mid'); }        // 520px, for cards and the book page
+
 function coverFor(b){
   const o = getOverrides();
   const k = slug(b);
@@ -2411,8 +2435,8 @@ function countdownFor(iso){
 if(nowBook){
   const info = BOOKINFO[nowBook.title] || {};
   const cd = countdownFor(NOW.discussion);
-  const cover = coverFor(nowBook);
-  const nextCover = nowNext ? coverFor(nowNext) : null;
+  const cover = midFor(nowBook);
+  const nextCover = nowNext ? thumbFor(nowNext) : null;
   const zm = NOW.zoom;
   const zmDay = zm && new Date(zm.date + 'T00:00');
   const zoomBar = (zm && !isNaN(zmDay) && new Date() < new Date(zmDay.getTime() + 86400000))
@@ -2510,7 +2534,7 @@ function shelfEntries(){
     return {
       title: item.title,
       author: item.author || (pick ? pick.author : ''),
-      cover: item.cover || (pick ? coverFor(pick) : null),
+      cover: item.cover || (pick ? thumbFor(pick) : null),
       note: item.note || '',
       pick
     };
@@ -2596,14 +2620,15 @@ function readerStripHTML(p){
   const add = url => { if(url && !covers.includes(url)) covers.push(url); };
   // the three they chose themselves lead, then what they are reading, then their best
   Object.keys(BOOK_SLOTS).forEach(k => { if(p[k]) add(p[k].cover); });
-  Object.keys(shelf).filter(k => shelf[k].status === 'reading').forEach(k => add(coverFor(SLUG_TO_BOOK[k] || {})));
+  recsOf(p).forEach(b => add(b.cover));
+  Object.keys(shelf).filter(k => shelf[k].status === 'reading').forEach(k => add(thumbFor(SLUG_TO_BOOK[k] || {})));
   (byVoter[voterId] || []).slice().sort((a,b)=> b.rating - a.rating)
-    .forEach(r => { if(SLUG_TO_BOOK[r.slug]) add(coverFor(SLUG_TO_BOOK[r.slug])); });
-  Object.keys(shelf).forEach(k => { if(SLUG_TO_BOOK[k]) add(coverFor(SLUG_TO_BOOK[k])); });
+    .forEach(r => { if(SLUG_TO_BOOK[r.slug]) add(thumbFor(SLUG_TO_BOOK[r.slug])); });
+  Object.keys(shelf).forEach(k => { if(SLUG_TO_BOOK[k]) add(thumbFor(SLUG_TO_BOOK[k])); });
   if(!covers.length) return '';
   const shown = covers.slice(0, 5);
   const rest = covers.length - shown.length;
-  return `<span class="rc-strip">${shown.map(u=>`<img src="${escHTML(u)}" alt="">`).join('')}
+  return `<span class="rc-strip">${shown.map(u=>`<img src="${escHTML(u)}" alt="" loading="lazy" decoding="async">`).join('')}
     ${rest > 0 ? `<span class="rc-more">+${rest}</span>` : ''}</span>`;
 }
 
@@ -2645,28 +2670,32 @@ function shelfRowHTML(voterId, status, opts){
   if(!books.length) return '';
   return `<p class="shelf-sub">${escHTML(opts.label || SHELF_LABELS[status])}</p>
     <ul class="shelf-row">${books.map(b=>`
-      <li><img src="${escHTML(coverFor(b) || '')}" alt="${escHTML(b.title)}" data-slug="${escHTML(slug(b))}">
+      <li><img src="${escHTML(thumbFor(b) || '')}" alt="${escHTML(b.title)}" loading="lazy" decoding="async" data-slug="${escHTML(slug(b))}">
         <span class="sr-title">${escHTML(b.title)}</span></li>`).join('')}</ul>`;
 }
 
 function hasBookSlots(p){
-  return Object.keys(BOOK_SLOTS).some(k => p[k] && p[k].title);
+  return Object.keys(BOOK_SLOTS).some(k => p[k] && p[k].title) || recsOf(p).length > 0;
 }
 
 function readerSlotsHTML(p){
-  const rows = Object.keys(BOOK_SLOTS).filter(k => p[k] && p[k].title);
-  if(!rows.length) return '';
-  return `<div class="reader-slots">${rows.map(k=>{
-    const b = p[k];
-    return `<div class="rs-one">
-      ${b.cover ? `<img src="${escHTML(b.cover)}" alt="">` : '<span class="slot-blank" style="width:48px;height:72px"></span>'}
+  const now = p.now_reading && p.now_reading.title ? p.now_reading : null;
+  const recs = recsOf(p);
+  if(!now && !recs.length) return '';
+  const nowBlock = now ? `<div class="reader-slots"><div class="rs-one">
+      ${now.cover ? `<img src="${escHTML(now.cover)}" alt="" loading="lazy" decoding="async">` : '<span class="slot-blank" style="width:48px;height:72px"></span>'}
       <div>
-        <div class="slot-label">${escHTML(BOOK_SLOTS[k])}</div>
-        <div class="slot-title">${escHTML(b.title)}</div>
-        <div class="slot-author">${escHTML(b.author || '')}</div>
+        <div class="slot-label">Reading now</div>
+        <div class="slot-title">${escHTML(now.title)}</div>
+        <div class="slot-author">${escHTML(now.author || '')}</div>
       </div>
-    </div>`;
-  }).join('')}</div>`;
+    </div></div>` : '';
+  const recBlock = recs.length ? `<p class="shelf-sub">${escHTML(RECS_LABEL)}</p>
+    <ul class="shelf-row">${recs.map(b=>`
+      <li>${b.cover ? `<img src="${escHTML(b.cover)}" alt="${escHTML(b.title)}" loading="lazy" decoding="async">`
+                    : '<span class="slot-blank" style="width:72px;height:108px"></span>'}
+        <span class="sr-title">${escHTML(b.title)}</span></li>`).join('')}</ul>` : '';
+  return nowBlock + recBlock;
 }
 
 function renderReaderOne(voterId){
@@ -2699,7 +2728,7 @@ function renderReaderOne(voterId){
       <ol class="fav-list">${scores.map(r=>`
         <li class="fav-row" data-slug="${escHTML(slug(r.book))}">
           <span class="fav-rank">${r.rating.toFixed(1)}</span>
-          <img class="fav-cover" src="${escHTML(coverFor(r.book) || '')}" alt="">
+          <img class="fav-cover" src="${escHTML(thumbFor(r.book) || '')}" alt="" loading="lazy" decoding="async">
           <span class="fav-body"><span class="fav-title">${escHTML(r.book.title)}</span>
           <span class="fav-author">${escHTML(r.book.author)}</span>
           ${r.comment ? `<span class="fav-meta">${escHTML(r.comment)}</span>` : ''}</span>
@@ -2779,7 +2808,7 @@ function renderClubNotes(){
      so all of it goes through escHTML — never innerHTML a note raw */
   cnoteListEl.innerHTML = all.map(({n, b})=>{
     const color = YEAR_COLORS[b.year] || FAVES_COLOR;
-    const cover = coverFor(b);
+    const cover = thumbFor(b);
     return `<li><button class="cnote-card" type="button" style="--c:${color}" data-slug="${slug(b)}">
       ${cover ? `<img class="cnote-cover" src="${cover}" alt="" loading="lazy" decoding="async">` : ''}
       <span class="cnote-body">
@@ -2823,7 +2852,7 @@ function renderFaves(){
   favListEl.innerHTML = shown.map((r, i)=>{
     const b = r.book;
     const color = YEAR_COLORS[b.year] || FAVES_COLOR;
-    const cover = coverFor(b);
+    const cover = thumbFor(b);
     return `<li><button class="fav-row" type="button" style="--c:${color}" data-slug="${slug(b)}">
       <span class="fav-rank">${i + 1}</span>
       ${cover ? `<img class="fav-cover" src="${cover}" alt="" loading="lazy" decoding="async">` : '<span class="fav-cover"></span>'}
@@ -3298,7 +3327,7 @@ years.forEach(y=>{
           <div class="p-title">${escHTML(b.note || 'Break')}</div>
           <div class="p-author">${escHTML(b.period)}</div>
         </div></div>`;
-      const cover = coverFor(b);
+      const cover = midFor(b);
       const art = cover
         ? `<img class="cover-img" src="${cover}" alt="${escHTML(b.title)} cover" loading="lazy" decoding="async">`
         : `<div class="placeholder">${ICON_BOOK}<div class="p-title">${escHTML(b.title)}</div><div class="p-author">${escHTML(b.author)}</div></div>`;
@@ -3459,7 +3488,7 @@ years.forEach(y=>{
         </div>
       `;
     } else {
-      const cover = coverFor(b);
+      const cover = midFor(b);
       const coverHtml = cover
         ? `<img class="cover-img" src="${cover}" alt="${b.title} cover" loading="lazy" decoding="async">`
         : `<div class="placeholder">${ICON_BOOK}<div class="p-title">${b.title}</div><div class="p-author">${b.author}</div></div>`;
@@ -3684,7 +3713,7 @@ function openBookModal(b, y, opts){
   opts = opts || {};
   const info = BOOKINFO[b.title] || {};
 
-  document.getElementById('mCover').src = coverFor(b) || '';
+  document.getElementById('mCover').src = midFor(b) || '';
   document.getElementById('mCover').alt = b.title + ' cover';
   document.getElementById('mPeriod').textContent = `${b.period} ${y}`;
   document.getElementById('mTitle').textContent  = b.title;
@@ -3985,7 +4014,7 @@ function rebuildCard(book){
   const st = carousels[book.year];
   const i = st.items.indexOf(book);
   const el = st.cardEls[i];
-  const cover = coverFor(book);
+  const cover = midFor(book);
   const img = el.querySelector('.cover-img');
   const ph = el.querySelector('.placeholder');
   if(cover){
@@ -4502,18 +4531,43 @@ function slotsEditorHTML(p){
           <button type="button" data-act="find">${b ? 'Change' : 'Choose a book'}</button>
           ${b ? '<button type="button" data-act="clear">Remove</button>' : ''}
         </div>
-        ${finding ? `<div class="slot-find">
-          <input type="text" class="slot-q" placeholder="Title, or title and author" value="${escHTML(acctFindQ)}">
-          <div class="slot-hits">${acctFindHits.length
-            ? acctFindHits.map((h,i)=>`<button type="button" data-hit="${i}">
-                ${h.cover ? `<img src="${escHTML(h.cover)}" alt="">` : '<span class="slot-blank"></span>'}
-                <span>${escHTML(h.title)}<small>${escHTML([h.author, h.year].filter(Boolean).join(' · '))}</small></span>
-              </button>`).join('')
-            : `<div class="search-empty">${escHTML(acctFindMsg || 'Type a title and press Enter.')}</div>`}</div>
-        </div>` : ''}
+        ${finding ? finderHTML() : ''}
       </div>
     </div>`;
-  }).join('');
+  }).join('') + recsEditorHTML(p);
+}
+
+function finderHTML(){
+  return `<div class="slot-find">
+    <input type="text" class="slot-q" placeholder="Title, or title and author" value="${escHTML(acctFindQ)}">
+    <div class="slot-hits">${acctFindHits.length
+      ? acctFindHits.map((h,i)=>`<button type="button" data-hit="${i}">
+          ${h.cover ? `<img src="${escHTML(h.cover)}" alt="">` : '<span class="slot-blank"></span>'}
+          <span>${escHTML(h.title)}<small>${escHTML([h.author, h.year].filter(Boolean).join(' · '))}</small></span>
+        </button>`).join('')
+      : `<div class="search-empty">${escHTML(acctFindMsg || 'Type a title and press Enter.')}</div>`}</div>
+  </div>`;
+}
+
+function recsEditorHTML(p){
+  const recs = recsOf(p);
+  return `<div class="slot" data-slot="recommends">
+    <span class="slot-blank" style="visibility:hidden"></span>
+    <div class="slot-body">
+      <div class="slot-label">${escHTML(RECS_LABEL)}</div>
+      ${recs.length ? `<ul class="rec-list">${recs.map((b,i)=>`
+        <li>
+          ${b.cover ? `<img src="${escHTML(b.cover)}" alt="" loading="lazy" decoding="async">` : '<span class="slot-blank"></span>'}
+          <span><span class="slot-title">${escHTML(b.title)}</span>
+          <span class="slot-author">${escHTML(b.author || '')}</span></span>
+          <button type="button" data-act="rmrec" data-i="${i}">Remove</button>
+        </li>`).join('')}</ul>` : ''}
+      <div class="slot-acts">
+        <button type="button" data-act="find">${recs.length ? 'Add another' : 'Add a book'}</button>
+      </div>
+      ${acctFinding === 'recommends' ? finderHTML() : ''}
+    </div>
+  </div>`;
 }
 
 function openAcct(){
@@ -4743,12 +4797,31 @@ acctBody.addEventListener('click', async (e)=>{
   if(slot && btn.dataset.hit !== undefined){
     const chosen = acctFindHits[Number(btn.dataset.hit)];
     btn.disabled = true;
+    const toRecs = slot.dataset.slot === 'recommends';
     try{
-      await saveProfile({ [slot.dataset.slot]: chosen });
-      acctFinding = null; acctFindHits = []; acctFindQ = '';
+      if(toRecs){
+        const recs = recsOf(profile).filter(b => !(b.title === chosen.title && b.author === chosen.author));
+        await saveProfile({ recommends: recs.concat([chosen]) });
+        acctFindHits = []; acctFindQ = '';      // the finder stays open for the next one
+      } else {
+        await saveProfile({ [slot.dataset.slot]: chosen });
+        acctFinding = null; acctFindHits = []; acctFindQ = '';
+      }
       await loadProfiles();
       renderAcct();
     }catch(err){ console.error('slot save failed', err); renderAcct('Not saved. Please try again.', true); }
+    return;
+  }
+
+  if(slot && btn.dataset.act === 'rmrec'){
+    btn.disabled = true;
+    try{
+      const recs = recsOf(profile);
+      recs.splice(Number(btn.dataset.i), 1);
+      await saveProfile({ recommends: recs });
+      await loadProfiles();
+      renderAcct();
+    }catch(err){ console.error('rec remove failed', err); renderAcct('Not saved. Please try again.', true); }
     return;
   }
 
@@ -4840,9 +4913,9 @@ function renderSearch(){
   const hits = searchResults(q);
   searchCursor = hits.length ? 0 : -1;
   searchList.innerHTML = hits.map((b, i) => {
-    const cover = coverFor(b);
+    const cover = thumbFor(b);
     return `<button type="button" class="search-item" data-slug="${escHTML(slug(b))}" data-cursor="${i === 0}">
-      ${cover ? `<img class="search-thumb" src="${escHTML(cover)}" alt="">` : '<span class="search-thumb"></span>'}
+      ${cover ? `<img class="search-thumb" src="${escHTML(cover)}" alt="" loading="lazy" decoding="async">` : '<span class="search-thumb"></span>'}
       <span class="search-body">
         <span class="search-title">${escHTML(b.title)}</span>
         <span class="search-meta">${escHTML(b.author)} &middot; ${escHTML(b.period)} ${b.year}</span>
