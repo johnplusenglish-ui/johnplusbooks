@@ -199,6 +199,18 @@ a{color:inherit}
   display:none; overflow:hidden;
 }
 .acct-panel[data-open="true"]{display:block}
+/* the landing: the very same panel, lifted into the middle of the page so a
+   first visit opens on signing in rather than on a dropdown nobody notices */
+.acct-panel[data-gate="true"]{
+  position:fixed; top:50%; left:50%; right:auto; transform:translate(-50%,-50%);
+  width:min(390px, calc(100vw - 2rem)); z-index:620;
+}
+.acct-gate-back{
+  position:fixed; inset:0; z-index:610;
+  background:rgba(20,20,25,.45);
+  display:none;
+}
+.acct-gate-back[data-show="true"]{display:block}
 .acct-head{
   padding:.7rem .85rem; border-bottom:1px solid var(--line);
   font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
@@ -1282,6 +1294,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
     <button type="button" class="acct-btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" aria-label="Your account">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 20c.9-3.6 3.9-5.5 7.5-5.5s6.6 1.9 7.5 5.5"/></svg>
     </button>
+    <div class="acct-gate-back" id="acctGateBack" data-show="false"></div>
     <div class="acct-panel" id="acctPanel" data-open="false">
       <div class="acct-head" id="acctHead">Your reading</div>
       <div class="acct-body" id="acctBody"></div>
@@ -4073,7 +4086,29 @@ function renderAcct(msg, bad){
       <button type="submit" class="acct-go" id="acctGo">${up ? 'Make my profile' : 'Sign in'}</button>
     </form>
     ${note}
-    ${up ? '' : '<button type="button" class="acct-quiet" id="acctForgot">Forgotten your password?</button>'}`;
+    ${up ? '' : '<button type="button" class="acct-quiet" id="acctForgot">Forgotten your password?</button>'}
+    ${acctGate ? '<button type="button" class="acct-quiet" id="acctSkip">Not now, I am just looking</button>' : ''}`;
+}
+
+/* The landing shows once per visit: signed-in readers never see it, and
+   anyone who waves it away gets left alone until they come back another day. */
+const GATE_SKIP_KEY = 'jpbooks-gate-skipped';
+let acctGate = false;
+
+function closeGate(){
+  acctGate = false;
+  acctPanel.removeAttribute('data-gate');
+  document.getElementById('acctGateBack').dataset.show = 'false';
+}
+
+function openGate(){
+  if(!ACCOUNTS_ENABLED || session) return;
+  try{ if(sessionStorage.getItem(GATE_SKIP_KEY)) return; }catch(e){ /* private window */ }
+  acctGate = true;
+  acctMode = 'signup';
+  acctPanel.dataset.gate = 'true';
+  document.getElementById('acctGateBack').dataset.show = 'true';
+  openAcct();
 }
 
 function openAcct(){
@@ -4086,6 +4121,10 @@ function openAcct(){
 function closeAcct(){
   acctPanel.dataset.open = 'false';
   acctBtn.setAttribute('aria-expanded', 'false');
+  if(acctGate){
+    try{ sessionStorage.setItem(GATE_SKIP_KEY, '1'); }catch(e){ /* private window */ }
+    closeGate();
+  }
 }
 
 acctBtn.addEventListener('click', (e)=>{
@@ -4096,7 +4135,9 @@ acctBtn.addEventListener('click', (e)=>{
    time a bubbled click reached here the clicked node was already detached and
    read as "outside", which shut the panel on every button in it */
 document.addEventListener('click', (e)=>{
-  if(acctPanel.dataset.open === 'true' && !e.target.closest('.acct-wrap')) closeAcct();
+  if(acctPanel.dataset.open !== 'true') return;
+  // the button toggles itself, so leave it alone; the dimmed backdrop counts as outside
+  if(e.target.id === 'acctGateBack' || !e.target.closest('.acct-wrap')) closeAcct();
 }, true);
 document.addEventListener('keydown', (e)=>{
   if(e.key === 'Escape' && acctPanel.dataset.open === 'true'){ closeAcct(); acctBtn.focus(); }
@@ -4105,6 +4146,7 @@ document.addEventListener('keydown', (e)=>{
 /* Signed in and linked up: whichever door they came through ends here. */
 async function finishSignIn(){
   acctEmail = '';
+  closeGate();
   try{
     await syncMember();
     await loadRatings();      // re-reads "mine" against the adopted voter_id
@@ -4213,6 +4255,8 @@ acctBody.addEventListener('click', async (e)=>{
   if(btn.id === 'acctBack'){ acctMode = 'signin'; renderAcct(); return; }
   if(btn.id === 'acctPhotoBtn'){ acctBody.querySelector('#acctPhoto').click(); return; }
 
+  if(btn.id === 'acctSkip'){ closeAcct(); return; }
+
   if(btn.id === 'acctForgot'){
     const field = acctBody.querySelector('#acctEmail');
     acctEmail = (field && field.value || '').trim();
@@ -4275,7 +4319,9 @@ async function authFromAddress(){
 
 writeSession(readSession());
 authFromAddress().then(handled => {
-  if(!handled && session) liveSession().then(live => { if(live) syncMember().then(loadRatings).catch(()=>{}); });
+  if(handled) return;
+  if(session) liveSession().then(live => { if(live) syncMember().then(loadRatings).catch(()=>{}); });
+  else openGate();
 });
 
 /* ---------- search ----------
