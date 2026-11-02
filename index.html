@@ -1678,7 +1678,6 @@ const SHELF_LABELS = { want:'Want to read', reading:'Reading now', read:'Read' }
    depends on that service being up later. */
 const BOOK_SLOTS = {
   now_reading: 'Reading now',
-  last_read:   'Last book I finished',
   recommends:  "Book I'd recommend"
 };
 
@@ -2677,13 +2676,9 @@ function renderReaderOne(voterId){
     .map(r => ({ book: SLUG_TO_BOOK[r.slug], rating: r.rating, comment: r.comment }))
     .filter(r => r.book)
     .sort((a,b)=> b.rating - a.rating);
-  const shelfRows = shelfRowHTML(voterId, 'reading')
-    + shelfRowHTML(voterId, 'read', { latestOnly:true, label:'Last read' });
-  /* the three chosen books use the same words as the shelves, so the shelves
-     say plainly that they are about the club's own picks */
-  const shelves = shelfRows
-    ? '<p class="shelf-sub" style="margin-top:1.2rem">Of the Book42 picks</p>' + shelfRows
-    : '';
+  /* what they are on and what they would press on you: the club's own shelves
+     stay behind the buttons and in the counts, off the page itself */
+  const shelves = '';
   const gr = (p.goodreads_url || '').trim();
   readersListBlock.style.display = 'none';
   readerOneBlock.style.display = 'block';
@@ -4641,25 +4636,44 @@ async function acctSubmit(){
 
 acctBody.addEventListener('submit', (e)=>{ e.preventDefault(); acctSubmit(); });
 
-/* The book search runs on Enter rather than on every keystroke: Open Library is
-   somebody else's service and this is a profile form, not a search engine. */
-acctBody.addEventListener('keydown', async (e)=>{
+/* Runs on Enter rather than on every keystroke: Open Library is somebody
+   else's service and this is a profile form, not a search engine.
+   Only the results box is repainted — re-rendering the whole panel tore out
+   the very input being typed in, which is what left it stuck on "Looking". */
+function paintHits(){
+  const box = acctBody.querySelector('.slot-hits');
+  if(!box) return;
+  box.innerHTML = acctFindHits.length
+    ? acctFindHits.map((h,i)=>`<button type="button" data-hit="${i}">
+        ${h.cover ? `<img src="${escHTML(h.cover)}" alt="">` : '<span class="slot-blank"></span>'}
+        <span>${escHTML(h.title)}<small>${escHTML([h.author, h.year].filter(Boolean).join(' · '))}</small></span>
+      </button>`).join('')
+    : `<div class="search-empty">${escHTML(acctFindMsg || 'Type a title and press Enter.')}</div>`;
+}
+
+async function runBookSearch(q){
+  acctFindQ = q;
+  acctFindHits = [];
+  acctFindMsg = 'Looking…';
+  paintHits();
+  try{
+    const hits = await findBooks(q);
+    if(acctFindQ !== q) return;             // they typed something newer in the meantime
+    acctFindHits = hits;
+    acctFindMsg = hits.length ? '' : 'Nothing found. Try the author as well.';
+  }catch(err){
+    console.error('book search failed', err);
+    acctFindHits = [];
+    acctFindMsg = 'Could not reach the book list. Try again.';
+  }
+  paintHits();
+}
+
+acctBody.addEventListener('keydown', (e)=>{
   if(!e.target.classList.contains('slot-q') || e.key !== 'Enter') return;
   e.preventDefault();
   const q = e.target.value.trim();
-  if(!q) return;
-  acctFindQ = q; acctFindMsg = 'Looking…'; acctFindHits = [];
-  renderAcct();
-  try{
-    acctFindHits = await findBooks(q);
-    acctFindMsg = acctFindHits.length ? '' : 'Nothing found. Try the author as well.';
-  }catch(err){
-    console.error('book search failed', err);
-    acctFindHits = []; acctFindMsg = 'Could not reach the book list. Try again.';
-  }
-  renderAcct();
-  const field = acctBody.querySelector('.slot-q');
-  if(field){ field.value = acctFindQ; field.focus(); }
+  if(q) runBookSearch(q);
 });
 
 acctBody.addEventListener('change', async (e)=>{
@@ -4880,7 +4894,7 @@ searchList.addEventListener('click', (e)=>{
 
 /* A book the club never read is still a book you are reading: hand the words
    straight to the profile's own lookup rather than stopping at "no match". */
-searchEmpty.addEventListener('click', async (e)=>{
+searchEmpty.addEventListener('click', (e)=>{
   const btn = e.target.closest('#searchToProfile');
   if(!btn) return;
   closeSearch();
@@ -4889,14 +4903,7 @@ searchEmpty.addEventListener('click', async (e)=>{
   acctFindHits = [];
   acctFindMsg = 'Looking…';
   openAcct();
-  try{
-    acctFindHits = await findBooks(acctFindQ);
-    acctFindMsg = acctFindHits.length ? '' : 'Nothing found. Try the author as well.';
-  }catch(err){
-    console.error('book search failed', err);
-    acctFindMsg = 'Could not reach the book list. Try again.';
-  }
-  renderAcct();
+  runBookSearch(btn.dataset.q);
 });
 searchPanel.addEventListener('keydown', (e)=>{
   if(e.key === 'ArrowDown'){ e.preventDefault(); moveSearchCursor(1); }
