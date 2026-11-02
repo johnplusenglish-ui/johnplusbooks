@@ -206,8 +206,10 @@ a{color:inherit}
 .rec-list img, .rec-list .slot-blank{width:26px; height:39px; object-fit:cover; border-radius:2px; flex:none}
 .rec-list span{min-width:0}
 .rec-list button{font:inherit; font-size:.72rem; color:var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline; margin-left:auto}
-.reader-slots .rs-one{display:flex; gap:.6rem; align-items:flex-start; min-width:180px}
-.reader-slots img{width:48px; height:72px; object-fit:cover; border-radius:3px; background:var(--bg); border:1px solid var(--line)}
+.reader-slots .rs-one{display:flex; gap:.9rem; align-items:center; min-width:180px}
+.reader-slots img{width:104px; height:156px; object-fit:cover; border-radius:5px; background:var(--bg); border:1px solid var(--line)}
+.reader-slots .slot-title{font-size:1.05rem; font-weight:700}
+.reader-slots .slot-author{font-size:.85rem}
 
 /* ---------- shelves and reader profiles ---------- */
 .m-shelf{display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.9rem}
@@ -2683,7 +2685,7 @@ function readerSlotsHTML(p){
   const recs = recsOf(p);
   if(!now && !recs.length) return '';
   const nowBlock = now ? `<div class="reader-slots"><div class="rs-one">
-      ${now.cover ? `<img src="${escHTML(now.cover)}" alt="" loading="lazy" decoding="async">` : '<span class="slot-blank" style="width:48px;height:72px"></span>'}
+      ${now.cover ? `<img src="${escHTML(now.cover)}" alt="" loading="lazy" decoding="async">` : '<span class="slot-blank" style="width:104px;height:156px"></span>'}
       <div>
         <div class="slot-label">Reading now</div>
         <div class="slot-title">${escHTML(now.title)}</div>
