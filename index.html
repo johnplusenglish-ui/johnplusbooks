@@ -256,7 +256,8 @@ a{color:inherit}
   background:none; border:none; padding:0 0 .9rem; cursor:pointer; text-decoration:underline;
 }
 /* your own picks, edited on the page they appear on */
-.reader-edit{max-width:430px; margin:0 0 1.5rem}
+.reader-edit{max-width:430px; margin:0 0 1.5rem; gap:1.1rem}
+.reader-edit .slot-label{margin-bottom:.15rem}
 .reader-mine{
   font:inherit; font-size:.78rem; color:var(--ink-soft);
   background:none; border:none; padding:0; margin:0 0 2rem; cursor:pointer; text-decoration:underline;
@@ -4859,6 +4860,7 @@ function recsEditorHTML(p){
 }
 
 function openAcct(){
+  slotHost = acctBody;      // the panel's own copy of the editor, not the reader page's
   acctPanel.dataset.open = 'true';
   acctBtn.setAttribute('aria-expanded', 'true');
   renderAcct();
