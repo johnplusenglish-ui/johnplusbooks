@@ -2097,9 +2097,8 @@ function forgetRatingLocal(bookSlug){
   editingNote = false;
 }
 
-/* return=representation on purpose: a blocked delete comes back 204 with an
-   empty body, and saying "Removed" when nothing moved is the one thing this
-   must not do. */
+/* A blocked delete still answers 204, so the row is read back afterwards: the
+   one thing this must not do is say "Removed" when nothing moved. */
 async function deleteRatingRemote(bookSlug, attempt){
   if(!RATINGS_ENABLED) return true;
   attempt = attempt || 1;
@@ -2111,15 +2110,18 @@ async function deleteRatingRemote(bookSlug, attempt){
       headers: {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        Prefer: 'return=representation'
+        Prefer: 'return=minimal'
       }
     });
     if(!res.ok){
       console.error('rating remove failed', res.status, await res.text().catch(()=>''));
       return false;
     }
-    const gone = await res.json().catch(()=> []);
-    if(!Array.isArray(gone) || !gone.length){
+    const back = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings?${where}&select=book_slug`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    const left = back.ok ? await back.json().catch(()=> [1]) : [1];
+    if(Array.isArray(left) && left.length){
       console.error('rating remove removed nothing — is the delete policy in place?');
       return false;
     }
