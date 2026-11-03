@@ -4391,7 +4391,6 @@ document.getElementById('brandHome').addEventListener('click', ()=>{
   showYear(nowBook ? 'now' : years[0]);
 });
 
-openFromHash();
 /* ---------- member accounts ----------
    Sign-in is by a six-digit code emailed through Supabase auth: no passwords
    to keep, and nothing to type twice on a phone. What the account actually
@@ -5325,6 +5324,10 @@ document.addEventListener('error', (e)=>{
 }, true);
 
 window.addEventListener('hashchange', openFromHash);
+/* Last, not where it used to be: a link straight to a book ran this before the
+   account code below had declared `session`, which threw and left the rest of
+   the page (panel, search, readers) unbuilt. */
+openFromHash();
 </script>
 </body>
 </html>
