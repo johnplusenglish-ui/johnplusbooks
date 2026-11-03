@@ -255,6 +255,16 @@ a{color:inherit}
   font:inherit; font-size:.78rem; color:var(--ink-soft);
   background:none; border:none; padding:0 0 .9rem; cursor:pointer; text-decoration:underline;
 }
+/* your own picks, edited on the page they appear on */
+.reader-edit{max-width:430px; margin:0 0 1.5rem}
+.reader-mine{
+  font:inherit; font-size:.78rem; color:var(--ink-soft);
+  background:none; border:none; padding:0; margin:0 0 2rem; cursor:pointer; text-decoration:underline;
+}
+.reader-mine:hover{color:var(--ink)}
+.reader-edit + .reader-mine{margin-top:-.4rem}
+.reader-slot-msg{font-size:.76rem; font-weight:600; color:var(--ink-soft); margin:.2rem 0 .8rem}
+.reader-slot-msg[data-bad="true"]{color:#c0392b}
 .shelf-row{display:flex; gap:.9rem; flex-wrap:wrap; margin:0 0 2rem; padding:0; list-style:none}
 /* the recommendations are one sideways row, so twenty of them stay one row */
 .rec-row{
@@ -1206,6 +1216,12 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .rating-input .star-row svg{width:19px; height:19px}
 .rating-input .star-row-fg svg{fill:var(--yr-color)}
 .rating-input:focus-visible .star-row{outline:2px solid var(--yr-color); outline-offset:3px; border-radius:3px}
+.rating-clear{
+  font:inherit; font-size:.72rem; color:var(--ink-soft); background:none; border:none;
+  padding:0; cursor:pointer; text-decoration:underline; display:none
+}
+.rating-clear[data-show="true"]{display:inline}
+.rating-clear:hover{color:var(--ink)}
 .rating-yours-note{font-size:.72rem; font-weight:600; color:var(--ink-soft); opacity:0; transition:opacity .2s ease}
 .rating-yours-note[data-show="true"]{opacity:1}
 .rating-yours-note[data-error="true"]{color:#c0392b}
@@ -1503,6 +1519,8 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
             <span class="star-row rating-input" id="ratingInput"
                   role="slider" tabindex="0" aria-label="Your rating"
                   aria-valuemin="0.5" aria-valuemax="5" aria-valuenow="0"></span>
+            <button type="button" class="rating-clear" id="ratingClear"
+                    title="Take your rating off this book">Remove</button>
             <span class="rating-yours-note" id="ratingNote">Saved</span>
           </div>
         </div>
@@ -1983,6 +2001,10 @@ function renderRatingUI(book, bslug){
   setStarFill(inputRow, (agg.mine || 0) / 5);
   inputRow.setAttribute('aria-valuenow', agg.mine || 0.5);
   inputRow.setAttribute('aria-valuetext', agg.mine ? `${agg.mine} stars` : 'not yet rated');
+  const clear = document.getElementById('ratingClear');
+  clear.dataset.show = agg.mine ? 'true' : 'false';
+  clear.dataset.confirm = 'false';
+  clear.textContent = 'Remove';
   const note = document.getElementById('ratingNote');
   note.dataset.show = 'false';
   note.dataset.error = 'false';
@@ -2016,6 +2038,96 @@ async function commitRating(value){
     note.dataset.error = 'true';
     note.textContent = 'Not saved — tap a star to retry';
     // left showing (no auto-hide) so a real failure is visible instead of silently vanishing
+  }
+}
+
+/* A score given by mistake has to be takeable back, and a rating row carries
+   the note as well, so a member with something written gets asked once. */
+async function removeRating(){
+  if(!currentModalSlug) return;
+  const bslug = currentModalSlug, book = currentModalBook;
+  if(!aggFor(bslug).mine) return;
+  const btn = document.getElementById('ratingClear');
+  const note = document.getElementById('ratingNote');
+
+  const hasNote = (notesCache[bslug] || []).some(n => n.mine && n.text);
+  if(hasNote && btn.dataset.confirm !== 'true'){
+    btn.dataset.confirm = 'true';
+    btn.textContent = 'Remove score and note?';
+    return;
+  }
+
+  btn.disabled = true;
+  note.dataset.error = 'false';
+  note.dataset.show = 'true';
+  note.textContent = 'Removing…';
+
+  const ok = await deleteRatingRemote(bslug);
+  btn.disabled = false;
+  if(currentModalSlug !== bslug) return;        // moved on to another book mid-flight
+
+  if(ok){
+    forgetRatingLocal(bslug);
+    renderRatingUI(book, bslug);                // this clears the line, so the word comes after
+    renderNotesUI(bslug);
+    renderFaves();
+    note.dataset.show = 'true';
+    note.textContent = 'Removed';
+    clearTimeout(commitRating._t);
+    commitRating._t = setTimeout(()=>{ note.dataset.show = 'false'; }, 1800);
+  } else {
+    btn.dataset.confirm = 'false';
+    btn.textContent = 'Remove';
+    note.dataset.error = 'true';
+    note.textContent = 'Not removed — try again';
+  }
+}
+
+function forgetRatingLocal(bookSlug){
+  const agg = aggFor(bookSlug);
+  if(agg.mine){
+    agg.sum = Math.max(0, agg.sum - agg.mine);
+    agg.count = Math.max(0, agg.count - 1);
+    agg.mine = 0;
+  }
+  notesCache[bookSlug] = (notesCache[bookSlug] || []).filter(n => !n.mine);
+  const me = getVoterId();
+  if(byVoter[me]) byVoter[me] = byVoter[me].filter(r => r.slug !== bookSlug);
+  draftRating = 0;
+  editingNote = false;
+}
+
+/* return=representation on purpose: a blocked delete comes back 204 with an
+   empty body, and saying "Removed" when nothing moved is the one thing this
+   must not do. */
+async function deleteRatingRemote(bookSlug, attempt){
+  if(!RATINGS_ENABLED) return true;
+  attempt = attempt || 1;
+  const where = `book_slug=eq.${encodeURIComponent(bookSlug)}`
+    + `&voter_id=eq.${encodeURIComponent(getVoterId())}`;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/book_ratings?${where}`, {
+      method: 'DELETE',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Prefer: 'return=representation'
+      }
+    });
+    if(!res.ok){
+      console.error('rating remove failed', res.status, await res.text().catch(()=>''));
+      return false;
+    }
+    const gone = await res.json().catch(()=> []);
+    if(!Array.isArray(gone) || !gone.length){
+      console.error('rating remove removed nothing — is the delete policy in place?');
+      return false;
+    }
+    return true;
+  } catch(e){
+    console.error('rating remove failed (network)', e);
+    if(attempt < 2) return deleteRatingRemote(bookSlug, attempt + 1);
+    return false;
   }
 }
 
@@ -2760,6 +2872,22 @@ function readerSlotsHTML(p){
 }
 
 let currentReader = null;
+let readerSlotMsg = '';
+let readerSlotBad = false;
+
+/* Signed in and looking at yourself: the picks become editable where they are,
+   rather than sending you off to the account panel to change them. */
+function readerEditHTML(p, isMe){
+  if(!isMe) return readerSlotsHTML(p);
+  if(!readerEditing){
+    return readerSlotsHTML(p)
+      + `<button type="button" class="reader-mine" id="readerEdit">${
+          hasBookSlots(p) ? 'Change what you are reading and recommending' : 'Add what you are reading and recommending'}</button>`;
+  }
+  return `<div class="slot-list reader-edit">${slotsEditorHTML(profile || {})}</div>
+    ${readerSlotMsg ? `<p class="reader-slot-msg" data-bad="${readerSlotBad}">${escHTML(readerSlotMsg)}</p>` : ''}
+    <button type="button" class="reader-mine" id="readerDone">Done</button>`;
+}
 
 function renderReaderOne(voterId){
   const p = profilesCache[voterId];
@@ -2773,6 +2901,8 @@ function renderReaderOne(voterId){
      stay behind the buttons and in the counts, off the page itself */
   const shelves = '';
   const gr = (p.goodreads_url || '').trim();
+  const isMe = !!(session && profile && profile.voter_id === voterId);
+  if(!isMe) readerEditing = false;
   readersListBlock.style.display = 'none';
   readerOneBlock.style.display = 'block';
   readerOneBlock.innerHTML = `
@@ -2784,10 +2914,10 @@ function renderReaderOne(voterId){
         ${p.about ? `<p class="faves-lede" style="margin:.3rem 0 0">${escHTML(p.about)}</p>` : ''}
       </div>
     </div>
-    ${readerSlotsHTML(p)}
+    ${readerEditHTML(p, isMe)}
     ${gr && /^https?:\/\//.test(gr)
       ? `<p class="reader-goodreads"><a href="${escHTML(gr)}" target="_blank" rel="noopener">Their Goodreads</a></p>` : ''}
-    ${shelves || (hasBookSlots(p) ? '' : '<p class="faves-lede">No shelves yet. Open a book and use Want to read, Reading now or Read.</p>')}
+    ${shelves || (hasBookSlots(p) || isMe ? '' : '<p class="faves-lede">No shelves yet. Open a book and use Want to read, Reading now or Read.</p>')}
     ${scores.length ? `<p class="shelf-sub">Scores</p>
       <ol class="fav-list">${scores.map(r=>`
         <li class="fav-row" data-slug="${escHTML(slug(r.book))}">
@@ -2810,7 +2940,17 @@ function showReaders(voterId){
   showYear('readers');
 }
 
+readersSection.addEventListener('keydown', (e)=> slotFindKey(readerOneBlock, e));
 readersSection.addEventListener('click', (e)=>{
+  /* the editor's own buttons first: they sit inside the page they edit */
+  const inSlot = e.target.closest('.slot button');
+  if(inSlot){ slotClick(readerOneBlock, inSlot); return; }
+  if(e.target.id === 'readerEdit' || e.target.id === 'readerDone'){
+    readerEditing = e.target.id === 'readerEdit';
+    acctFinding = null; acctFindHits = []; acctFindQ = ''; readerSlotMsg = '';
+    renderReaderOne(currentReader);
+    return;
+  }
   const card = e.target.closest('.reader-card');
   if(card){ renderReaderOne(card.dataset.voter); syncHash('reader-' + card.dataset.voter); return; }
   if(e.target.id === 'readerBack'){ renderReadersPage(); syncHash('readers'); return; }
@@ -3970,6 +4110,7 @@ ratingInputEl.addEventListener('mouseleave', ()=>{
   setStarFill(ratingInputEl, (aggFor(currentModalSlug).mine || 0) / 5);
 });
 ratingInputEl.addEventListener('click', (e)=> commitRating(ratingValueFromEvent(ratingInputEl, e)));
+document.getElementById('ratingClear').addEventListener('click', removeRating);
 
 // ---- club notes ----
 document.getElementById('noteText').addEventListener('input', updateNoteCount);
@@ -4341,7 +4482,9 @@ let profile = null;     // {voter_id, display_name, avatar_url, about}
 async function syncMember(){
   const live = await liveSession();
   if(!live) return;
-  const res = await memberFetch(`club_members?user_id=eq.${live.user_id}&select=voter_id,display_name,avatar_url,about`);
+  /* every column the editor writes, or a reload shows the slots empty */
+  const res = await memberFetch(`club_members?user_id=eq.${live.user_id}`
+    + '&select=voter_id,display_name,avatar_url,about,goodreads_url,now_reading,recommends');
   if(!res.ok) throw new Error('members ' + res.status);
   const rows = await res.json();
   if(rows.length){
@@ -4522,6 +4665,10 @@ let acctMode  = 'signin';     // signin | signup | forgot | sent | reset
 let acctEmail = '';
 let acctSentMsg = '';
 let acctFinding = null;     // which of the three slots is being filled
+/* The same editor appears in two places, so every bit of it asks the host it
+   was clicked in rather than assuming the panel. */
+let slotHost = null;        // the element the open editor is sitting in
+let readerEditing = false;  // the editor is showing on your own reader page
 let acctFindQ   = '';
 let acctFindHits = [];
 let acctFindMsg = '';
@@ -4835,7 +4982,7 @@ acctBody.addEventListener('submit', (e)=>{ e.preventDefault(); acctSubmit(); });
    Only the results box is repainted — re-rendering the whole panel tore out
    the very input being typed in, which is what left it stuck on "Looking". */
 function paintHits(){
-  const box = acctBody.querySelector('.slot-hits');
+  const box = (slotHost || acctBody).querySelector('.slot-hits');
   if(!box) return;
   box.innerHTML = acctFindHits.length
     ? acctFindHits.map((h,i)=>`<button type="button" data-hit="${i}">
@@ -4863,12 +5010,81 @@ async function runBookSearch(q){
   paintHits();
 }
 
-acctBody.addEventListener('keydown', (e)=>{
+function slotFindKey(root, e){
   if(!e.target.classList.contains('slot-q') || e.key !== 'Enter') return;
   e.preventDefault();
+  slotHost = root;
   const q = e.target.value.trim();
   if(q) runBookSearch(q);
-});
+}
+acctBody.addEventListener('keydown', (e)=> slotFindKey(acctBody, e));
+
+/* Choosing what you are reading belongs where you look at it, so the same
+   three controls work on your own reader page as in the account panel. The
+   host is whichever one was clicked; everything else is shared. */
+function repaintSlots(msg, bad){
+  if(slotHost === acctBody) renderAcct(msg, bad);
+  else { readerSlotMsg = msg || ''; readerSlotBad = !!bad; renderReaderOne(currentReader); }
+}
+
+async function slotClick(root, btn){
+  slotHost = root;
+  const slot = btn.closest('.slot');
+  if(!slot) return;
+
+  if(btn.dataset.act === 'find'){
+    acctFinding = acctFinding === slot.dataset.slot ? null : slot.dataset.slot;
+    repaintSlots();   // the words and the results carry across, so one search fills any slot
+    const q = slotHost.querySelector('.slot-q');
+    if(q) q.focus();
+    return;
+  }
+
+  if(btn.dataset.act === 'clear'){
+    btn.disabled = true;
+    try{
+      await saveProfile({ [slot.dataset.slot]: null });
+      await loadProfiles();
+      repaintSlots();
+    }catch(err){ console.error('slot clear failed', err); repaintSlots('Not saved. Please try again.', true); }
+    return;
+  }
+
+  if(btn.dataset.hit !== undefined){
+    const chosen = acctFindHits[Number(btn.dataset.hit)];
+    if(!chosen) return;
+    btn.disabled = true;
+    const toRecs = slot.dataset.slot === 'recommends';
+    try{
+      const kept = {
+        title: chosen.title, author: chosen.author, year: chosen.year,
+        cover: await mirrorCover(chosen.cover)
+      };
+      if(toRecs){
+        const recs = recsOf(profile).filter(b => !(b.title === chosen.title && b.author === chosen.author));
+        await saveProfile({ recommends: recs.concat([kept]) });
+        acctFindHits = []; acctFindQ = '';      // the finder stays open for the next one
+      } else {
+        await saveProfile({ [slot.dataset.slot]: kept });
+        acctFinding = null; acctFindHits = []; acctFindQ = '';
+      }
+      await loadProfiles();
+      repaintSlots();
+    }catch(err){ console.error('slot save failed', err); repaintSlots('Not saved. Please try again.', true); }
+    return;
+  }
+
+  if(btn.dataset.act === 'rmrec'){
+    btn.disabled = true;
+    try{
+      const recs = recsOf(profile);
+      recs.splice(Number(btn.dataset.i), 1);
+      await saveProfile({ recommends: recs });
+      await loadProfiles();
+      repaintSlots();
+    }catch(err){ console.error('rec remove failed', err); repaintSlots('Not saved. Please try again.', true); }
+  }
+}
 
 acctBody.addEventListener('change', async (e)=>{
   if(e.target.id !== 'acctPhoto') return;
@@ -4917,57 +5133,7 @@ acctBody.addEventListener('click', async (e)=>{
     return;
   }
 
-  const slot = btn.closest('.slot');
-  if(slot && btn.dataset.act === 'find'){
-    acctFinding = acctFinding === slot.dataset.slot ? null : slot.dataset.slot;
-    renderAcct();   // the words and the results carry across, so one search fills any slot
-    const q = acctBody.querySelector('.slot-q');
-    if(q) q.focus();
-    return;
-  }
-  if(slot && btn.dataset.act === 'clear'){
-    btn.disabled = true;
-    try{
-      await saveProfile({ [slot.dataset.slot]: null });
-      await loadProfiles();
-      renderAcct();
-    }catch(err){ console.error('slot clear failed', err); renderAcct('Not saved. Please try again.', true); }
-    return;
-  }
-  if(slot && btn.dataset.hit !== undefined){
-    const chosen = acctFindHits[Number(btn.dataset.hit)];
-    btn.disabled = true;
-    const toRecs = slot.dataset.slot === 'recommends';
-    try{
-      const kept = {
-        title: chosen.title, author: chosen.author, year: chosen.year,
-        cover: await mirrorCover(chosen.cover)
-      };
-      if(toRecs){
-        const recs = recsOf(profile).filter(b => !(b.title === chosen.title && b.author === chosen.author));
-        await saveProfile({ recommends: recs.concat([kept]) });
-        acctFindHits = []; acctFindQ = '';      // the finder stays open for the next one
-      } else {
-        await saveProfile({ [slot.dataset.slot]: kept });
-        acctFinding = null; acctFindHits = []; acctFindQ = '';
-      }
-      await loadProfiles();
-      renderAcct();
-    }catch(err){ console.error('slot save failed', err); renderAcct('Not saved. Please try again.', true); }
-    return;
-  }
-
-  if(slot && btn.dataset.act === 'rmrec'){
-    btn.disabled = true;
-    try{
-      const recs = recsOf(profile);
-      recs.splice(Number(btn.dataset.i), 1);
-      await saveProfile({ recommends: recs });
-      await loadProfiles();
-      renderAcct();
-    }catch(err){ console.error('rec remove failed', err); renderAcct('Not saved. Please try again.', true); }
-    return;
-  }
+  if(btn.closest('.slot')){ await slotClick(acctBody, btn); return; }
 
   if(btn.id === 'acctSeeMine'){
     closeAcct();
