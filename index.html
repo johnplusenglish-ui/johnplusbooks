@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Book42 — the reading diary</title>
-<meta name="description" content="Every monthly pick from Book42, our Telegram book club, since 2021 — a year-by-year gallery.">
+<title>Book42 · the reading diary</title>
+<meta name="description" content="Every monthly pick from Book42, our Telegram book club, since 2021: a year-by-year gallery.">
 <link rel="canonical" href="https://johnplusbooks.com/">
 <meta name="theme-color" content="#fbf9f5">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -16,14 +16,14 @@
      to resolve a relative one against. -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://johnplusbooks.com/">
-<meta property="og:title" content="Book42 — the reading diary">
-<meta property="og:description" content="Every monthly pick from Book42, our Telegram book club, since 2021 — a year-by-year gallery.">
+<meta property="og:title" content="Book42 · the reading diary">
+<meta property="og:description" content="Every monthly pick from Book42, our Telegram book club, since 2021: a year-by-year gallery.">
 <meta property="og:image" content="https://johnplusbooks.com/og-image.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Book42 — the reading diary">
-<meta name="twitter:description" content="Every monthly pick from Book42, our Telegram book club, since 2021 — a year-by-year gallery.">
+<meta name="twitter:title" content="Book42 · the reading diary">
+<meta name="twitter:description" content="Every monthly pick from Book42, our Telegram book club, since 2021: a year-by-year gallery.">
 <meta name="twitter:image" content="https://johnplusbooks.com/og-image.jpg">
 <style>
 /* Outfit, self-hosted — was Google Fonts, but that file is actually a single
@@ -53,13 +53,27 @@
   --ink:#1b1b1f;
   --ink-soft:#5a5a63;
   --line:#e7e3da;
-  --accent:#3159d1;
+  --accent:#1b1b1f;   /* ink: the years carry the colour, the chrome does not */
   --radius:20px;
   --shadow-lo:0 1px 2px rgba(20,20,30,.06);
   --shadow-md:0 12px 30px -12px rgba(20,20,30,.22);
   --shadow-hi:0 24px 60px -18px rgba(20,20,30,.32);
 }
 *{box-sizing:border-box}
+em, i, q, cite, blockquote, address{font-style:normal}
+/* A cover that has not arrived yet is a quiet tinted block, not a hollow box,
+   and it eases in rather than popping. The picture itself is never hidden
+   while it loads, or the tinted block would vanish with it. Ones already in
+   the cache skip the ease so re-drawing a list does not flicker. */
+img{background-color:#efebe3}
+@keyframes imgIn{from{opacity:.35} to{opacity:1}}
+.img-fade img.is-in:not(.was-cached){animation:imgIn .28s ease}
+@media (prefers-reduced-motion:reduce){
+  *, *::before, *::after{
+    transition-duration:.01ms !important; animation-duration:.01ms !important;
+    animation-iteration-count:1 !important; scroll-behavior:auto !important;
+  }
+}
 .sr-only{
   position:absolute; width:1px; height:1px; padding:0; margin:-1px;
   overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
@@ -87,12 +101,12 @@ a{color:inherit}
 }
 .brand{
   display:flex; align-items:baseline; gap:.5rem;
-  font-family:inherit; font-weight:800; font-size:1.1rem; letter-spacing:-.01em; white-space:nowrap;
+  font-family:inherit; font-weight:800; font-size:1.2rem; letter-spacing:-.01em; white-space:nowrap;
   appearance:none; background:none; border:none; padding:0; color:inherit; cursor:pointer;
 }
 .brand .brand-name{transition:opacity .15s}
 .brand:hover .brand-name{opacity:.7}
-.brand small{font-weight:500; font-size:.68rem; color:var(--ink-soft); letter-spacing:.08em; text-transform:uppercase}
+.brand small{font-weight:500; font-size:.7rem; color:var(--ink-soft); letter-spacing:.08em; text-transform:uppercase}
 .brand-42{color:#1592a8}
 /* overflow-x:auto also turns the vertical axis into a scroll box (a `visible`
    value on one axis computes to `auto` when the other isn't visible), and the
@@ -106,6 +120,22 @@ a{color:inherit}
   padding-block:.3rem; margin-block:-.3rem;
 }
 .year-nav::-webkit-scrollbar{display:none}
+/* Eleven tabs do not fit a laptop, and nothing said the row scrolled: the cut
+   edge now fades, and an arrow steps along it for anyone without a trackpad. */
+.year-nav[data-more="right"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent); mask-image:linear-gradient(to right,#000 calc(100% - 48px),transparent)}
+.year-nav[data-more="left"]{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 48px),transparent); mask-image:linear-gradient(to left,#000 calc(100% - 48px),transparent)}
+.year-nav[data-more="both"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 48px,#000 calc(100% - 48px),transparent); mask-image:linear-gradient(to right,transparent,#000 48px,#000 calc(100% - 48px),transparent)}
+.nav-step{
+  flex:none; width:30px; height:30px; border-radius:50%; padding:0;
+  border:1px solid var(--line); background:var(--bg); color:var(--ink-soft);
+  cursor:pointer; display:none; align-items:center; justify-content:center;
+  transition:border-color .15s, color .15s;
+}
+.nav-step:hover{border-color:var(--ink-soft); color:var(--ink)}
+.nav-step svg{width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+.nav-step[data-show="true"]{display:flex}
+.nav-step[data-dir="-1"] svg{transform:rotate(180deg)}
+@media (max-width:680px){ .nav-step{display:none !important} }
 .year-nav-select{display:none}
 @media (max-width:680px){
   /* On a phone nine-odd pills either wrap into a mess or force a long sideways
@@ -116,7 +146,7 @@ a{color:inherit}
   .year-nav-select{
     display:block; flex:1; min-width:0;
     appearance:none; -webkit-appearance:none;
-    font:inherit; font-size:.85rem; font-weight:600; color:var(--ink);
+    font:inherit; font-size:.8rem; font-weight:600; color:var(--ink);
     background:var(--bg)
       url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%235a5a63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>')
       no-repeat right .6rem center / 16px;
@@ -128,7 +158,7 @@ a{color:inherit}
 .year-nav button{
   flex:none;
   appearance:none; font:inherit;
-  font-size:.85rem; font-weight:600;
+  font-size:.8rem; font-weight:600;
   padding:.42rem .85rem;
   border-radius:999px;
   border:1px solid var(--line);
@@ -148,7 +178,7 @@ a{color:inherit}
 }
 .editmode-btn{
   flex:none;
-  font-size:.75rem; font-weight:600;
+  font-size:.8rem; font-weight:600;
   padding:.42rem .8rem;
   border-radius:999px;
   border:1px solid var(--line);
@@ -160,7 +190,7 @@ a{color:inherit}
 .tg-link{
   flex:none;
   display:inline-flex; align-items:center; gap:.42rem;
-  font-size:.78rem; font-weight:600;
+  font-size:.8rem; font-weight:600;
   padding:.42rem .8rem;
   border-radius:999px;
   border:1px solid var(--line);
@@ -179,16 +209,16 @@ a{color:inherit}
 /* ---------- the three book slots on a profile ---------- */
 .slot-list{display:flex; flex-direction:column; gap:.55rem; border-top:1px solid var(--line); padding-top:.7rem}
 .slot{display:flex; gap:.6rem; align-items:flex-start}
-.slot-cover{width:34px; height:51px; object-fit:cover; border-radius:3px; flex:none; background:var(--bg); border:1px solid var(--line)}
-.slot-blank{display:inline-block; width:34px; height:51px; border-radius:3px; flex:none; background:var(--bg); border:1px dashed var(--line)}
+.slot-cover{width:34px; height:51px; object-fit:cover; border-radius:4px; flex:none; background:var(--bg); border:1px solid var(--line)}
+.slot-blank{display:inline-block; width:34px; height:51px; border-radius:4px; flex:none; background:var(--bg); border:1px dashed var(--line)}
 .slot-body{flex:1; min-width:0}
-.slot-label{font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft)}
-.slot-title{font-size:.84rem; font-weight:600; line-height:1.3; margin-top:.1rem}
-.slot-author{font-size:.74rem; color:var(--ink-soft)}
+.slot-label{font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft)}
+.slot-title{font-size:.8rem; font-weight:600; line-height:1.3; margin-top:.1rem}
+.slot-author{font-size:.7rem; color:var(--ink-soft)}
 .slot-acts{display:flex; gap:.6rem; margin-top:.2rem}
-.slot-acts button{font:inherit; font-size:.74rem; color:var(--ink-soft); background:none; border:none; padding:0; cursor:pointer; text-decoration:underline}
+.slot-acts button{font:inherit; font-size:.7rem; color:var(--ink-soft); background:none; border:none; padding:0; cursor:pointer; text-decoration:underline}
 .slot-find input{width:100%; margin-top:.3rem}
-.slot-hits{display:flex; flex-direction:column; margin-top:.35rem; border:1px solid var(--line); border-radius:8px; overflow:hidden}
+.slot-hits{display:flex; flex-direction:column; margin-top:.35rem; border:1px solid var(--line); border-radius:10px; overflow:hidden}
 .slot-hits button{
   display:flex; gap:.5rem; align-items:center; text-align:left;
   font:inherit; background:#fff; border:none; border-bottom:1px solid var(--line);
@@ -196,46 +226,58 @@ a{color:inherit}
 }
 .slot-hits button:last-child{border-bottom:none}
 .slot-hits button:hover{background:var(--bg)}
-.slot-hits img, .slot-hits .slot-blank{width:22px; height:33px; border-radius:2px}
-.slot-hits span{font-size:.76rem; line-height:1.25}
+.slot-hits img, .slot-hits .slot-blank{width:22px; height:33px; border-radius:4px}
+.slot-hits span{font-size:.8rem; line-height:1.25}
 .slot-hits small{display:block; color:var(--ink-soft); font-size:.7rem}
 
 .reader-slots{display:flex; gap:1.6rem; flex-wrap:wrap; margin:0 0 2.2rem}
 .rec-list{list-style:none; margin:.45rem 0 .2rem; padding:0; display:flex; flex-direction:column; gap:.5rem}
 .rec-list li{display:flex; gap:.5rem; align-items:center}
-.rec-list img, .rec-list .slot-blank{width:26px; height:39px; object-fit:cover; border-radius:2px; flex:none}
+.rec-list img, .rec-list .slot-blank{width:26px; height:39px; object-fit:cover; border-radius:4px; flex:none}
 .rec-list span{min-width:0}
-.rec-list button{font:inherit; font-size:.72rem; color:var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline; margin-left:auto}
+.rec-list button{font:inherit; font-size:.7rem; color:var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline; margin-left:auto}
 .reader-slots .rs-one{display:flex; gap:.9rem; align-items:center; min-width:180px}
-.reader-slots img{width:104px; height:156px; object-fit:cover; border-radius:5px; background:var(--bg); border:1px solid var(--line)}
-.reader-slots .slot-title{font-size:1.05rem; font-weight:700}
-.reader-slots .slot-author{font-size:.85rem}
+.reader-slots img{width:104px; height:156px; object-fit:cover; border-radius:4px; background:var(--bg); border:1px solid var(--line)}
+.reader-slots .slot-title{font-size:1rem; font-weight:700}
+.reader-slots .slot-author{font-size:.8rem}
 
 /* ---------- shelves and reader profiles ---------- */
 .m-shelf{display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.9rem}
 .m-shelf button{
-  font:inherit; font-size:.75rem; font-weight:600;
+  font:inherit; font-size:.8rem; font-weight:600;
   border:1px solid var(--line); background:#fff; color:var(--ink-soft);
   border-radius:999px; padding:.3rem .8rem; cursor:pointer;
 }
 .m-shelf button:hover{border-color:var(--ink-soft); color:var(--ink)}
 .m-shelf button[data-on="true"]{background:var(--yr-color); border-color:var(--yr-color); color:#fff}
-.m-shelf .shelf-hint{font-size:.74rem; color:var(--ink-soft); align-self:center}
+.m-shelf .shelf-hint{font-size:.7rem; color:var(--ink-soft); align-self:center}
 
 .readers-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:.9rem; margin:0; padding:0; list-style:none}
 .reader-card{
   display:flex; gap:.7rem; align-items:center; width:100%; text-align:left;
   font:inherit; color:inherit; cursor:pointer;
-  background:var(--bg); border:1px solid var(--line); border-radius:11px; padding:.75rem .85rem;
+  background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:.75rem .85rem;
 }
 .reader-card:hover{border-color:var(--yr-color)}
 .reader-card{flex-direction:column; align-items:stretch; gap:.55rem}
 .reader-top{display:flex; gap:.7rem; align-items:center}
-.reader-card .rc-name{font-size:.88rem; font-weight:700}
+.reader-card .rc-name{display:block; font-size:.9rem; font-weight:700; line-height:1.25}
+.reader-card .rc-meta{display:block}
+.readers-grid > li{display:flex}
+/* people with a profile and nothing on it yet: names in a row, not a wall of
+   empty cards */
+.readers-new{margin-top:2.4rem}
+.readers-new-list{display:flex; flex-wrap:wrap; gap:.5rem; margin:0; padding:0; list-style:none}
+.readers-new-list .reader-card{
+  flex-direction:row; align-items:center; gap:.5rem; width:auto;
+  padding:.3rem .8rem .3rem .3rem; border-radius:999px;
+}
+.readers-new-list .rc-avatar, .readers-new-list .rc-initial{width:28px; height:28px; font-size:.8rem}
+.readers-new-list .rc-name{font-size:.8rem; font-weight:600}
 .rc-strip{display:flex; gap:.25rem}
-.rc-strip img{width:26px; height:39px; object-fit:cover; border-radius:2px; background:var(--bg); border:1px solid var(--line)}
-.rc-strip .rc-more{font-size:.68rem; color:var(--ink-soft); align-self:flex-end; padding-bottom:.15rem}
-.reader-card .rc-meta{font-size:.73rem; color:var(--ink-soft); margin-top:.1rem}
+.rc-strip img{width:26px; height:39px; object-fit:cover; border-radius:4px; background:var(--bg); border:1px solid var(--line)}
+.rc-strip .rc-more{font-size:.7rem; color:var(--ink-soft); align-self:flex-end; padding-bottom:.15rem}
+.reader-card .rc-meta{font-size:.7rem; color:var(--ink-soft); margin-top:.1rem}
 .rc-avatar{width:42px; height:42px; border-radius:999px; object-fit:cover; flex:none; background:#fff; border:1px solid var(--line)}
 .rc-initial{
   width:42px; height:42px; border-radius:999px; flex:none;
@@ -252,19 +294,19 @@ a{color:inherit}
   font-size:1.6rem; font-weight:800; color:var(--ink-soft);
 }
 .reader-back{
-  font:inherit; font-size:.78rem; color:var(--ink-soft);
+  font:inherit; font-size:.8rem; color:var(--ink-soft);
   background:none; border:none; padding:0 0 .9rem; cursor:pointer; text-decoration:underline;
 }
 /* your own picks, edited on the page they appear on */
 .reader-edit{max-width:430px; margin:0 0 1.5rem; gap:1.1rem}
 .reader-edit .slot-label{margin-bottom:.15rem}
 .reader-mine{
-  font:inherit; font-size:.78rem; color:var(--ink-soft);
+  font:inherit; font-size:.8rem; color:var(--ink-soft);
   background:none; border:none; padding:0; margin:0 0 2rem; cursor:pointer; text-decoration:underline;
 }
 .reader-mine:hover{color:var(--ink)}
 .reader-edit + .reader-mine{margin-top:-.4rem}
-.reader-slot-msg{font-size:.76rem; font-weight:600; color:var(--ink-soft); margin:.2rem 0 .8rem}
+.reader-slot-msg{font-size:.8rem; font-weight:600; color:var(--ink-soft); margin:.2rem 0 .8rem}
 .reader-slot-msg[data-bad="true"]{color:#c0392b}
 .shelf-row{display:flex; gap:.9rem; flex-wrap:wrap; margin:0 0 2rem; padding:0; list-style:none}
 /* the recommendations are one sideways row, so twenty of them stay one row */
@@ -287,8 +329,8 @@ a{color:inherit}
 .shelf-row li{width:72px}
 .shelf-row .slot-blank{display:block; width:72px; height:108px; border-radius:4px}
 .shelf-row img{width:72px; height:108px; object-fit:cover; border-radius:4px; display:block; background:var(--bg); border:1px solid var(--line); cursor:pointer}
-.shelf-row .sr-title{font-size:.68rem; line-height:1.3; color:var(--ink-soft); margin-top:.3rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
-.shelf-sub{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); margin:2rem 0 .8rem}
+.shelf-row .sr-title{font-size:.7rem; line-height:1.3; color:var(--ink-soft); margin-top:.3rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.shelf-sub{font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); margin:2rem 0 .8rem}
 .reader-goodreads{font-size:.8rem}
 
 /* ---------- member account ----------
@@ -309,7 +351,7 @@ a{color:inherit}
 .acct-panel{
   position:absolute; top:calc(100% + .5rem); right:0; z-index:60;
   width:min(340px, calc(100vw - 1.5rem));
-  background:#fff; border:1px solid var(--line); border-radius:12px;
+  background:#fff; border:1px solid var(--line); border-radius:10px;
   box-shadow:0 14px 40px rgba(0,0,0,.14);
   display:none; overflow:hidden;
 }
@@ -328,29 +370,29 @@ a{color:inherit}
 .acct-gate-back[data-show="true"]{display:block}
 .acct-head{
   padding:.7rem .85rem; border-bottom:1px solid var(--line);
-  font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
+  font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
 }
 .acct-body{padding:.85rem; display:flex; flex-direction:column; gap:.6rem; max-height:min(70vh,520px); overflow-y:auto}
 .acct-lede{margin:0; font-size:.8rem; line-height:1.5; color:var(--ink-soft)}
-.acct-body label{font-size:.72rem; font-weight:600; color:var(--ink-soft)}
+.acct-body label{font-size:.7rem; font-weight:600; color:var(--ink-soft)}
 .acct-body input{
-  width:100%; font:inherit; font-size:.88rem; color:var(--ink);
-  border:1px solid var(--line); border-radius:8px; padding:.45rem .6rem; background:#fff;
+  width:100%; font:inherit; font-size:.9rem; color:var(--ink);
+  border:1px solid var(--line); border-radius:10px; padding:.45rem .6rem; background:#fff;
 }
 .acct-body input:focus{outline:none; border-color:var(--ink-soft)}
 .acct-go{
-  align-self:flex-start; font:inherit; font-size:.82rem; font-weight:600;
+  align-self:flex-start; font:inherit; font-size:.8rem; font-weight:600;
   border:1px solid var(--accent); background:var(--accent); color:#fff;
   border-radius:999px; padding:.42rem 1rem; cursor:pointer;
 }
 .acct-go[disabled]{opacity:.55; cursor:default}
 .acct-quiet{
-  align-self:flex-start; font:inherit; font-size:.78rem; color:var(--ink-soft);
+  align-self:flex-start; font:inherit; font-size:.8rem; color:var(--ink-soft);
   background:none; border:none; padding:0; cursor:pointer; text-decoration:underline;
 }
-.acct-msg{margin:0; font-size:.78rem; line-height:1.45; color:var(--ink-soft)}
-.acct-msg[data-bad="true"]{color:var(--accent)}
-.acct-who{font-size:.85rem; font-weight:700; word-break:break-all}
+.acct-msg{margin:0; font-size:.8rem; line-height:1.45; color:var(--ink-soft)}
+.acct-msg[data-bad="true"]{color:#c0392b}
+.acct-who{font-size:.8rem; font-weight:700; word-break:break-all}
 .acct-form{display:flex; flex-direction:column; gap:.6rem}
 .acct-switch{display:flex; gap:.9rem; border-bottom:1px solid var(--line); margin:-.2rem 0 .2rem}
 .acct-switch button{
@@ -375,10 +417,10 @@ a{color:inherit}
   width:22px; height:22px; border-radius:999px; flex:none;
   display:flex; align-items:center; justify-content:center;
   background:var(--bg); border:1px solid var(--line);
-  font-size:.62rem; font-weight:800; color:var(--ink-soft);
+  font-size:.7rem; font-weight:800; color:var(--ink-soft);
 }
 .acct-stats{display:flex; gap:1.2rem; padding:.2rem 0 .1rem}
-.acct-stat b{display:block; font-size:1.15rem; font-weight:800; line-height:1.1}
+.acct-stat b{display:block; font-size:1.2rem; font-weight:800; line-height:1.1}
 .acct-stat span{font-size:.7rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em}
 .acct-mine{display:flex; flex-direction:column; border-top:1px solid var(--line); margin-top:.2rem}
 .acct-mine button{
@@ -388,12 +430,12 @@ a{color:inherit}
 }
 .acct-mine button:last-child{border-bottom:none}
 .acct-mine button:hover{color:var(--accent)}
-.acct-mine .am-title{flex:1; min-width:0; font-size:.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.acct-mine .am-title{flex:1; min-width:0; font-size:.8rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .acct-mine .am-score{font-size:.8rem; font-weight:700; color:var(--accent)}
 @media (max-width:680px){
   .faves-scroll{padding-top:0}
-  .faves-head{font-size:1.35rem}
-  .faves-lede{font-size:.82rem; margin-bottom:1rem}
+  .faves-head{font-size:1.2rem}
+  .faves-lede{font-size:.8rem; margin-bottom:1rem}
   .faves-block + .faves-block{margin-top:1.8rem; padding-top:1.5rem}
   .readers-grid{gap:.6rem}
   .reader-card{padding:.65rem .7rem}
@@ -430,7 +472,7 @@ a{color:inherit}
 .search-panel{
   position:absolute; top:calc(100% + .5rem); right:0; z-index:60;
   width:min(360px, calc(100vw - 1.5rem));
-  background:#fff; border:1px solid var(--line); border-radius:12px;
+  background:#fff; border:1px solid var(--line); border-radius:10px;
   box-shadow:0 14px 40px rgba(0,0,0,.14);
   display:none; overflow:hidden;
 }
@@ -448,10 +490,10 @@ a{color:inherit}
 }
 .search-item:last-child{border-bottom:none}
 .search-item:hover, .search-item[data-cursor="true"]{background:var(--bg)}
-.search-thumb{width:30px; height:42px; object-fit:cover; border-radius:3px; flex:none; background:#eee}
+.search-thumb{width:30px; height:42px; object-fit:cover; border-radius:4px; flex:none; background:#eee}
 .search-body{min-width:0; flex:1}
-.search-title{display:block; font-size:.82rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.search-meta{display:block; font-size:.72rem; color:var(--ink-soft); margin-top:.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.search-title{display:block; font-size:.8rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.search-meta{display:block; font-size:.7rem; color:var(--ink-soft); margin-top:.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .search-empty{padding:1.2rem 1rem; text-align:center; font-size:.8rem; color:var(--ink-soft)}
 @media (max-width:680px){
   .search-wrap{position:static}
@@ -477,13 +519,13 @@ a{color:inherit}
   position:absolute; top:-3px; right:-3px;
   min-width:16px; height:16px; padding:0 4px;
   border-radius:999px; background:#c0392b; color:#fff;
-  font-size:.62rem; font-weight:700; line-height:16px; text-align:center;
+  font-size:.7rem; font-weight:700; line-height:16px; text-align:center;
   box-shadow:0 0 0 2px var(--bg);
 }
 .notif-panel{
   position:absolute; top:calc(100% + .6rem); right:0;
   width:min(360px, calc(100vw - 2rem));
-  background:var(--card-bg); border:1px solid var(--line); border-radius:14px;
+  background:var(--card-bg); border:1px solid var(--line); border-radius:16px;
   box-shadow:var(--shadow-md);
   z-index:40;
   display:none;
@@ -491,7 +533,7 @@ a{color:inherit}
 }
 .notif-panel[data-open="true"]{display:block}
 .notif-panel-head{
-  padding:.75rem 1rem .55rem; font-size:.72rem; font-weight:700;
+  padding:.75rem 1rem .55rem; font-size:.7rem; font-weight:700;
   text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft);
   border-bottom:1px solid var(--line);
 }
@@ -504,11 +546,11 @@ a{color:inherit}
 .notif-item:last-child{border-bottom:none}
 .notif-item:hover{background:var(--bg)}
 .notif-item[data-unread="true"]{background:color-mix(in srgb, var(--accent) 6%, transparent)}
-.notif-thumb{width:30px; height:42px; object-fit:cover; border-radius:3px; flex:none; background:#eee}
+.notif-thumb{width:30px; height:42px; object-fit:cover; border-radius:4px; flex:none; background:#eee}
 .notif-body{min-width:0; flex:1}
-.notif-title{font-size:.82rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.notif-meta{font-size:.72rem; color:var(--ink-soft); margin-top:.15rem}
-.notif-note{font-size:.76rem; color:var(--ink); margin-top:.3rem; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.notif-title{font-size:.8rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.notif-meta{font-size:.7rem; color:var(--ink-soft); margin-top:.15rem}
+.notif-note{font-size:.8rem; color:var(--ink); margin-top:.3rem; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
 .notif-empty{padding:1.4rem 1rem; text-align:center; font-size:.8rem; color:var(--ink-soft)}
 @media (max-width:680px){
   /* The bell sits well right of centre on a narrow header, so a panel anchored
@@ -525,7 +567,7 @@ main#years{flex:1 1 auto; min-height:0; overflow:hidden}
 .year-section.active{display:flex}
 .year-head{flex:none; max-width:1180px; width:100%; margin:0 auto; display:flex; align-items:baseline; gap:1rem; margin-bottom:.6rem}
 .year-head .num{font-size:clamp(2rem,5vw,3.2rem); font-weight:900; letter-spacing:-.03em; color:var(--yr-color); line-height:1}
-.year-head .meta{font-size:.85rem; color:var(--ink-soft); font-weight:500}
+.year-head .meta{font-size:.8rem; color:var(--ink-soft); font-weight:500}
 .year-head .meta b{color:var(--ink); font-weight:700}
 
 /* ---------- carousel ---------- */
@@ -544,7 +586,7 @@ main#years{flex:1 1 auto; min-height:0; overflow:hidden}
   position:absolute;
   /* width/height are set explicitly in px by layout() in JS, not derived
      here — see that function for why aspect-ratio + max-width isn't safe */
-  border-radius:5px;
+  border-radius:4px;
   overflow:hidden;
   background:var(--card-bg);
   box-shadow:var(--shadow-md);
@@ -560,7 +602,7 @@ main#years{flex:1 1 auto; min-height:0; overflow:hidden}
 .card:focus-visible{outline:2px solid var(--yr-color); outline-offset:3px}
 .strip .card{outline:none}
 .strip .card:focus-visible .cover-img,
-.strip .card:focus-visible .placeholder{outline:2px solid var(--yr-color); outline-offset:3px; border-radius:5px}
+.strip .card:focus-visible .placeholder{outline:2px solid var(--yr-color); outline-offset:3px; border-radius:4px}
 .card .cover-img{width:100%; height:100%; object-fit:cover; background:#eee}
 .card .placeholder{
   width:100%; height:100%;
@@ -571,16 +613,16 @@ main#years{flex:1 1 auto; min-height:0; overflow:hidden}
 }
 .card .placeholder .p-icon{opacity:.5; margin-bottom:auto}
 .card .placeholder .p-title{font-weight:800; font-size:1rem; line-height:1.25}
-.card .placeholder .p-author{font-size:.78rem; opacity:.8; margin-top:.3rem}
+.card .placeholder .p-author{font-size:.8rem; opacity:.8; margin-top:.3rem}
 .card .badge{
   position:absolute; top:.6rem; left:.6rem;
-  font-size:.62rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
+  font-size:.7rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase;
   background:rgba(255,255,255,.92); color:var(--ink);
   padding:.32rem .6rem; border-radius:999px;
 }
 .card .nf-badge{
   position:absolute; top:.6rem; right:.6rem;
-  font-size:.62rem; font-weight:700;
+  font-size:.7rem; font-weight:700;
   background:rgba(20,20,25,.75); color:#fff;
   padding:.32rem .55rem; border-radius:999px;
 }
@@ -607,8 +649,8 @@ main#years{flex:1 1 auto; min-height:0; overflow:hidden}
   position:absolute; left:0; right:0; bottom:0; padding:.85rem;
   color:#fff;
 }
-.card .card-foot .t{font-weight:700; font-size:.85rem; line-height:1.2}
-.card .card-foot .a{font-size:.72rem; opacity:.85; margin-top:.15rem; font-style:italic}
+.card .card-foot .t{font-weight:700; font-size:.8rem; line-height:1.2}
+.card .card-foot .a{font-size:.7rem; opacity:.85; margin-top:.15rem}
 .card.is-break{cursor:default}
 .card .edit-btn{
   position:absolute; bottom:.6rem; right:.6rem;
@@ -650,7 +692,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .click-hint{
   flex:none;
   text-align:center;
-  font-size:.68rem; font-weight:500; letter-spacing:.09em;
+  font-size:.7rem; font-weight:500; letter-spacing:.09em;
   color:var(--ink-soft); opacity:.5;
   margin-top:.5rem;
   pointer-events:none;
@@ -663,12 +705,12 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   padding:0 1.5rem 1.6rem;   /* room to breathe under the Goodreads link */
   text-align:center;
 }
-.book-detail .d-period{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--yr-color)}
-.book-detail h3{font-size:1.25rem; font-weight:800; letter-spacing:-.01em; margin:.3rem 0 .15rem}
-.book-detail .d-author{font-size:.9rem; color:var(--ink-soft); font-style:italic}
-.book-detail .d-sub{font-size:.78rem; color:var(--ink-soft); margin-top:.35rem}
+.book-detail .d-period{font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--yr-color)}
+.book-detail h3{font-size:1.2rem; font-weight:800; letter-spacing:-.01em; margin:.3rem 0 .15rem}
+.book-detail .d-author{font-size:.9rem; color:var(--ink-soft)}
+.book-detail .d-sub{font-size:.8rem; color:var(--ink-soft); margin-top:.35rem}
 .book-detail .d-link{
-  display:inline-block; margin-top:.5rem; font-size:.76rem; font-weight:600;
+  display:inline-block; margin-top:.5rem; font-size:.8rem; font-weight:600;
   color:var(--yr-color); text-decoration:none; border-bottom:1px solid currentColor; padding-bottom:1px;
 }
 
@@ -682,34 +724,34 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .now-section{justify-content:center; overflow-y:auto}
 .now-inner{width:100%; max-width:940px; margin:auto; padding:.5rem 0 1rem}
 .now-kicker{
-  font-size:.72rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  font-size:.7rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
   color:var(--yr-color); margin-bottom:1.1rem;
 }
 .now-grid{display:flex; gap:2.4rem; align-items:center}
 .now-cover{
   flex:none; width:220px; padding:0; border:none; background:none;
-  border-radius:5px; overflow:hidden; box-shadow:var(--shadow-hi);
+  border-radius:4px; overflow:hidden; box-shadow:var(--shadow-hi);
   cursor:zoom-in; transition:transform .25s cubic-bezier(.22,1,.36,1);
 }
 .now-cover:hover{transform:translateY(-4px)}
 .now-cover img{display:block; width:100%; aspect-ratio:2/3; object-fit:cover; background:#eee}
 .now-info{min-width:0}
-.now-period{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--yr-color)}
+.now-period{font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--yr-color)}
 .now-title{font-size:2rem; font-weight:800; letter-spacing:-.02em; margin:.3rem 0 .2rem; line-height:1.1}
-.now-author{font-size:1rem; color:var(--ink-soft); font-style:italic}
+.now-author{font-size:1rem; color:var(--ink-soft)}
 .now-sub{font-size:.8rem; color:var(--ink-soft); margin-top:.4rem}
-.now-teaser{font-size:.92rem; line-height:1.6; color:var(--ink); margin:1rem 0 0; max-width:52ch}
+.now-teaser{font-size:.9rem; line-height:1.6; color:var(--ink); margin:1rem 0 0; max-width:52ch}
 .now-meta-row{display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; margin-top:1.2rem}
 .now-pill{
   display:inline-block; padding:.42rem .85rem; border-radius:999px;
   background:color-mix(in srgb, var(--yr-color) 12%, transparent);
-  color:var(--yr-color); font-size:.78rem; font-weight:700;
+  color:var(--yr-color); font-size:.8rem; font-weight:700;
 }
 .now-date{font-size:.8rem; color:var(--ink-soft)}
 .now-open{
   margin-top:1.2rem; padding:.6rem 1.1rem; border-radius:999px;
   border:1px solid var(--yr-color); background:none; color:var(--yr-color);
-  font-family:inherit; font-size:.82rem; font-weight:600; cursor:pointer;
+  font-family:inherit; font-size:.8rem; font-weight:600; cursor:pointer;
   transition:background .15s, color .15s;
 }
 .now-open:hover{background:color-mix(in srgb, var(--yr-color) 80%, black); color:#fff}
@@ -718,7 +760,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .now-map{
   display:inline-flex; align-items:center; gap:.4rem; padding:.6rem 1.1rem; border-radius:999px;
   border:1px solid var(--yr-color); background:var(--yr-color); color:#fff;
-  font-family:inherit; font-size:.82rem; font-weight:600; cursor:pointer; text-decoration:none;
+  font-family:inherit; font-size:.8rem; font-weight:600; cursor:pointer; text-decoration:none;
   transition:background .15s;
 }
 .now-map:hover{background:color-mix(in srgb, var(--yr-color) 80%, black)}
@@ -728,23 +770,23 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   margin-top:2rem; padding-top:1.4rem; border-top:1px solid var(--line);
 }
 .now-next-label{
-  font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
   color:var(--ink-soft);
 }
-.now-next img{width:34px; height:51px; object-fit:cover; border-radius:3px; background:#eee}
-.now-next-title{font-size:.88rem; font-weight:700}
-.now-next-title span{font-weight:400; font-style:italic; color:var(--ink-soft)}
+.now-next img{width:34px; height:51px; object-fit:cover; border-radius:4px; background:#eee}
+.now-next-title{font-size:.9rem; font-weight:700}
+.now-next-title span{font-weight:400; color:var(--ink-soft)}
 .now-zoom{
   display:flex; align-items:center; gap:1rem; flex-wrap:wrap; justify-content:space-between;
-  margin-top:2rem; padding:.9rem 1.1rem; border:1px solid var(--line, #e3e0d8); border-radius:12px;
+  margin-top:2rem; padding:.9rem 1.1rem; border:1px solid var(--line, #e3e0d8); border-radius:10px;
   background:color-mix(in srgb, var(--yr-color) 7%, #fff);
 }
 .now-zoom-text{font-size:.9rem; line-height:1.4; min-width:0}
 .now-zoom-text b{font-weight:700}
-.now-zoom-text span{display:block; font-size:.78rem; color:var(--ink-soft); margin-top:.15rem}
+.now-zoom-text span{display:block; font-size:.8rem; color:var(--ink-soft); margin-top:.15rem}
 .now-zoom-btn{
   flex:none; border:0; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:.45rem; padding:.55rem 1.1rem; border-radius:999px;
-  background:var(--yr-color); color:#fff; font-size:.85rem; font-weight:700; text-decoration:none;
+  background:var(--yr-color); color:#fff; font-size:.8rem; font-weight:700; text-decoration:none;
 }
 .now-zoom-btn:hover{background:color-mix(in srgb, var(--yr-color) 80%, black)}
 .now-zoom-btn svg{width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
@@ -757,7 +799,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 @media (max-width:760px){
   .now-grid{flex-direction:column; align-items:flex-start; gap:1.4rem}
   .now-cover{width:150px}
-  .now-title{font-size:1.5rem}
+  .now-title{font-size:1.6rem}
 }
 
 /* ---------- favourites tab ---------- */
@@ -769,11 +811,11 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .faves-inner{width:100%; max-width:860px; margin:0 auto}
 .faves-block + .faves-block{margin-top:2.6rem; padding-top:2.2rem; border-top:1px solid var(--line)}
 .faves-kicker{
-  font-size:.72rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
+  font-size:.7rem; font-weight:700; letter-spacing:.13em; text-transform:uppercase;
   color:var(--yr-color);
 }
 .faves-head{font-size:1.6rem; font-weight:800; letter-spacing:-.02em; margin:.4rem 0 .35rem; line-height:1.15}
-.faves-lede{font-size:.84rem; line-height:1.6; color:var(--ink-soft); margin:0 0 1.5rem; max-width:58ch}
+.faves-lede{font-size:.8rem; line-height:1.6; color:var(--ink-soft); margin:0 0 1.5rem; max-width:58ch}
 
 /* John's shelf */
 .shelf-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1.6rem}
@@ -782,7 +824,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 button.shelf-item{cursor:pointer}
 .shelf-rank{
   flex:none; width:1.6rem; padding-top:.1rem; text-align:right;
-  font-size:1rem; font-weight:800; color:var(--c); font-variant-numeric:tabular-nums;
+  font-size:1rem; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums;
 }
 .shelf-cover{flex:none; width:66px; border-radius:4px; overflow:hidden; box-shadow:var(--shadow-md); background:#eee}
 .shelf-cover img{display:block; width:100%; aspect-ratio:2/3; object-fit:cover;
@@ -791,12 +833,12 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .shelf-body{min-width:0; flex:1 1 auto}
 /* these are spans (a <button> may not contain block-level children in valid
    HTML), so each one has to be told to behave like a line of its own */
-.shelf-title{display:block; font-size:1.02rem; font-weight:800; letter-spacing:-.01em; line-height:1.2}
-.shelf-author{display:block; font-size:.8rem; color:var(--ink-soft); font-style:italic; margin-top:.15rem}
-.shelf-note{display:block; font-size:.88rem; line-height:1.6; margin:.55rem 0 0; max-width:52ch}
+.shelf-title{display:block; font-size:1rem; font-weight:800; letter-spacing:-.01em; line-height:1.2}
+.shelf-author{display:block; font-size:.8rem; color:var(--ink-soft); margin-top:.15rem}
+.shelf-note{display:block; font-size:.9rem; line-height:1.6; margin:.55rem 0 0; max-width:52ch}
 .shelf-tag{
   display:inline-block; margin-top:.6rem; padding:.25rem .55rem; border-radius:4px;
-  font-size:.68rem; font-weight:700; letter-spacing:.02em;
+  font-size:.7rem; font-weight:700; letter-spacing:.02em;
   color:var(--c); background:color-mix(in srgb, var(--c) 10%, var(--card-bg));
 }
 
@@ -805,47 +847,47 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .fav-row{
   display:flex; align-items:center; gap:.95rem; width:100%; text-align:left;
   padding:.65rem .55rem; border:none; border-bottom:1px solid var(--line);
-  background:none; font-family:inherit; color:inherit; cursor:pointer; border-radius:8px;
+  background:none; font-family:inherit; color:inherit; cursor:pointer; border-radius:10px;
   transition:background .15s;
 }
 .fav-row:hover{background:color-mix(in srgb, var(--c) 7%, transparent)}
 .fav-rank{
   flex:none; width:1.5rem; text-align:right;
-  font-size:.95rem; font-weight:800; color:var(--c); font-variant-numeric:tabular-nums;
+  font-size:.9rem; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums;
 }
-.fav-cover{flex:none; width:38px; height:57px; object-fit:cover; border-radius:3px;
+.fav-cover{flex:none; width:38px; height:57px; object-fit:cover; border-radius:4px;
   background:#eee; box-shadow:var(--shadow-lo)}
 .fav-main{flex:1 1 auto; min-width:0}
-.fav-title{display:block; font-size:.93rem; font-weight:700; line-height:1.25}
-.fav-author{display:block; font-size:.74rem; color:var(--ink-soft); margin-top:.12rem}
+.fav-title{display:block; font-size:.9rem; font-weight:700; line-height:1.25}
+.fav-author{display:block; font-size:.7rem; color:var(--ink-soft); margin-top:.12rem}
 .fav-score{flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:.22rem}
-.fav-num{font-size:.76rem; font-weight:700; white-space:nowrap}
-.fav-num small{font-weight:500; font-size:.72rem; color:var(--ink-soft)}
-.fav-empty{font-size:.85rem; color:var(--ink-soft)}
+.fav-num{font-size:.8rem; font-weight:700; white-space:nowrap}
+.fav-num small{font-weight:500; font-size:.7rem; color:var(--ink-soft)}
+.fav-empty{font-size:.8rem; color:var(--ink-soft)}
 
 /* what the club said — the same notes that live inside each book modal,
    gathered in one place so they're actually findable */
 .cnote-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.9rem}
 .cnote-card{
   display:flex; gap:1rem; align-items:flex-start; width:100%; text-align:left;
-  padding:1rem 1.15rem; border:1px solid var(--line); border-radius:9px;
+  padding:1rem 1.15rem; border:1px solid var(--line); border-radius:10px;
   background:var(--card-bg); font-family:inherit; color:inherit; cursor:pointer;
   transition:border-color .15s, background .15s;
 }
 .cnote-card:hover{border-color:color-mix(in srgb, var(--c) 45%, var(--line));
   background:color-mix(in srgb, var(--c) 4%, var(--card-bg))}
-.cnote-cover{flex:none; width:44px; height:66px; object-fit:cover; border-radius:3px;
+.cnote-cover{flex:none; width:44px; height:66px; object-fit:cover; border-radius:4px;
   background:#eee; box-shadow:var(--shadow-lo)}
 .cnote-body{min-width:0; flex:1 1 auto}
-.cnote-text{display:block; font-size:.9rem; line-height:1.6; font-style:italic}
-.cnote-by{display:block; margin-top:.55rem; font-size:.75rem; color:var(--ink-soft)}
+.cnote-text{display:block; font-size:.9rem; line-height:1.6}
+.cnote-by{display:block; margin-top:.55rem; font-size:.8rem; color:var(--ink-soft)}
 .cnote-by b{color:var(--ink); font-weight:700; font-style:normal}
 .cnote-by .cnote-book{color:var(--c); font-weight:600}
 .cnote-by .cnote-score{font-weight:700; color:var(--ink)}
 .faves-more{
   margin-top:1.3rem; padding:.5rem 1rem; border-radius:999px;
   border:1px solid var(--line); background:none; color:var(--ink-soft);
-  font-family:inherit; font-size:.78rem; font-weight:600; cursor:pointer;
+  font-family:inherit; font-size:.8rem; font-weight:600; cursor:pointer;
   transition:border-color .15s, color .15s;
 }
 .faves-more:hover{border-color:var(--ink-soft); color:var(--ink)}
@@ -870,7 +912,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   font-family:inherit; color:inherit; cursor:pointer;
 }
 .nob-cover{
-  position:relative; border-radius:5px; overflow:hidden; background:#eee;
+  position:relative; border-radius:4px; overflow:hidden; background:#eee;
   box-shadow:var(--shadow-md); transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s;
 }
 .nob-card:hover .nob-cover{transform:translateY(-5px); box-shadow:var(--shadow-hi)}
@@ -879,7 +921,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   position:absolute; top:.45rem; left:.45rem;
   padding:.2rem .45rem; border-radius:4px;
   background:rgba(20,20,25,.72); color:#fff;
-  font-size:.66rem; font-weight:700; letter-spacing:.02em;
+  font-size:.7rem; font-weight:700; letter-spacing:.02em;
   backdrop-filter:blur(2px);
 }
 .nob-flag{
@@ -887,13 +929,13 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   background:var(--bc); box-shadow:0 0 0 2px rgba(255,255,255,.85);
 }
 .nob-who{display:block; margin-top:.55rem; font-size:.8rem; font-weight:700; line-height:1.25}
-.nob-work{display:block; margin-top:.1rem; font-size:.72rem; color:var(--ink-soft); font-style:italic; line-height:1.3}
+.nob-work{display:block; margin-top:.1rem; font-size:.7rem; color:var(--ink-soft); line-height:1.3}
 
 /* prize toggle */
 .prz-switch{display:inline-flex; gap:.35rem; margin-bottom:1.4rem; padding:.25rem;
   border:1px solid var(--line); border-radius:999px; background:var(--card-bg)}
 .prz-tab{
-  appearance:none; font:inherit; font-size:.82rem; font-weight:700;
+  appearance:none; font:inherit; font-size:.8rem; font-weight:700;
   padding:.4rem 1rem; border-radius:999px; border:none; background:none;
   color:var(--ink-soft); cursor:pointer; transition:background .15s, color .15s;
 }
@@ -902,28 +944,28 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .nob-foot:empty{display:none}
 
 /* detail panel — same shell as the book modal, different innards */
-.nm-kicker{font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--yr-color)}
-.nm-name{font-size:1.7rem; font-weight:800; letter-spacing:-.02em; margin:.35rem 0 .2rem; line-height:1.15}
+.nm-kicker{font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--yr-color)}
+.nm-name{font-size:1.6rem; font-weight:800; letter-spacing:-.02em; margin:.35rem 0 .2rem; line-height:1.15}
 .nm-sub{font-size:.8rem; color:var(--ink-soft)}
 .nm-cite{
-  margin:1.1rem 0 0; padding:.9rem 1.1rem; border-radius:9px;
+  margin:1.1rem 0 0; padding:.9rem 1.1rem; border-radius:10px;
   background:color-mix(in srgb, var(--yr-color) 7%, var(--bg));
-  font-size:.9rem; line-height:1.6; font-style:italic;
+  font-size:.9rem; line-height:1.6;
 }
-.nm-cite cite{display:block; margin-top:.5rem; font-style:normal; font-size:.72rem; color:var(--ink-soft)}
+.nm-cite cite{display:block; margin-top:.5rem; font-style:normal; font-size:.7rem; color:var(--ink-soft)}
 .nm-work{margin-top:1.4rem; padding-top:1.2rem; border-top:1px solid var(--line)}
-.nm-work-head{font-size:.68rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft)}
-.nm-work-title{font-size:1.05rem; font-weight:800; margin-top:.35rem}
-.nm-teaser{font-size:.92rem; line-height:1.6; margin:.5rem 0 0}
+.nm-work-head{font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft)}
+.nm-work-title{font-size:1rem; font-weight:800; margin-top:.35rem}
+.nm-teaser{font-size:.9rem; line-height:1.6; margin:.5rem 0 0}
 .nm-links{display:flex; flex-wrap:wrap; gap:1.2rem; margin-top:1.4rem}
 .nm-links a{
   font-size:.8rem; font-weight:600; color:var(--yr-color); text-decoration:none;
   border-bottom:1px solid currentColor; padding-bottom:1px;
 }
 .nm-read{
-  display:inline-block; margin-top:1.2rem; padding:.5rem .8rem; border-radius:6px; border:none;
+  display:inline-block; margin-top:1.2rem; padding:.5rem .8rem; border-radius:10px; border:none;
   background:color-mix(in srgb, var(--bc) 12%, var(--card-bg)); color:var(--bc);
-  font-family:inherit; font-size:.75rem; font-weight:700; cursor:pointer;
+  font-family:inherit; font-size:.8rem; font-weight:700; cursor:pointer;
 }
 .nm-read:hover{background:color-mix(in srgb, var(--bc) 22%, var(--card-bg))}
 .nob-foot{
@@ -938,7 +980,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 @media (max-width:680px){
   .nobel-inner{padding:0 .1rem}
   .nob-grid{grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:1.2rem .9rem}
-  .nm-name{font-size:1.35rem}
+  .nm-name{font-size:1.2rem}
 }
 
 /* ---------- sideways year gallery (opt-in with ?strip) ----------
@@ -977,7 +1019,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .strip .card .cover-img,
 .strip .card .placeholder{
   height:auto; aspect-ratio:2/3; display:block;
-  border-radius:5px; box-shadow:var(--shadow-md);
+  border-radius:4px; box-shadow:var(--shadow-md);
   transition:box-shadow .38s ease;
 }
 .strip .card.is-active .cover-img,
@@ -992,10 +1034,13 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   height:3.9rem; overflow:hidden;
 }
 .strip .card .card-foot .t{
-  font-size:.88rem; line-height:1.25;
+  font-size:.9rem; line-height:1.25;
   display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
 }
-.strip .card .card-foot .a{color:var(--ink-soft); opacity:1; font-size:.76rem}
+.strip .card .card-foot .a{color:var(--ink-soft); opacity:1; font-size:.8rem}
+/* the selected book is spelled out in full under the row, so its own caption
+   steps aside (kept in the layout, or the covers would stop lining up) */
+.strip .card.is-active .card-foot{visibility:hidden}
 .strip .card .edit-btn{top:.5rem; bottom:auto}
 @media (max-width:680px){
   .strip{--cw:clamp(150px, 62vw, 260px); gap:.5rem}
@@ -1007,25 +1052,25 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .pod-inner{width:100%; max-width:760px; margin:0 auto}
 .pod-head{display:flex; gap:1.4rem; align-items:flex-start; margin-bottom:1.8rem}
 .pod-cover{
-  flex:none; width:110px; border-radius:8px; overflow:hidden; box-shadow:var(--shadow-md);
+  flex:none; width:110px; border-radius:10px; overflow:hidden; box-shadow:var(--shadow-md);
 }
 .pod-cover img{display:block; width:100%; aspect-ratio:1/1; object-fit:cover}
 .pod-headtext{min-width:0}
 .pod-title{font-size:1.6rem; font-weight:800; letter-spacing:-.02em; margin:.35rem 0 .2rem; line-height:1.15}
-.pod-by{font-size:.86rem; color:var(--ink-soft); font-style:italic}
-.pod-lede{font-size:.86rem; line-height:1.6; color:var(--ink-soft); margin:.7rem 0 0; max-width:56ch}
+.pod-by{font-size:.9rem; color:var(--ink-soft)}
+.pod-lede{font-size:.9rem; line-height:1.6; color:var(--ink-soft); margin:.7rem 0 0; max-width:56ch}
 .pod-links{display:flex; flex-wrap:wrap; gap:.7rem; margin-top:1rem}
 .pod-link{
   display:inline-flex; align-items:center; gap:.45rem;
   padding:.5rem .9rem; border-radius:999px; border:1px solid var(--yr-color);
-  color:var(--yr-color); text-decoration:none; font-size:.82rem; font-weight:700;
+  color:var(--yr-color); text-decoration:none; font-size:.8rem; font-weight:700;
   transition:background .15s, color .15s;
 }
 .pod-link:hover{background:var(--yr-color); color:#fff}
 .pod-link svg{width:15px; height:15px; fill:currentColor}
 
 .pod-eps-head{
-  font-size:.72rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+  font-size:.7rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
   color:var(--ink-soft); margin:2rem 0 .9rem;
 }
 .pod-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.7rem}
@@ -1033,12 +1078,12 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .pod-ep:last-child{border-bottom:none}
 .pod-num{
   flex:none; width:1.7rem; padding-top:.1rem; text-align:right;
-  font-size:.82rem; font-weight:700; color:var(--ink-faint, var(--ink-soft)); font-variant-numeric:tabular-nums;
+  font-size:.8rem; font-weight:700; color:var(--ink-faint, var(--ink-soft)); font-variant-numeric:tabular-nums;
 }
 .pod-ep-body{min-width:0; flex:1 1 auto}
-.pod-ep-title{font-size:.92rem; font-weight:700; line-height:1.3}
+.pod-ep-title{font-size:.9rem; font-weight:700; line-height:1.3}
 .pod-ep-date{font-size:.7rem; color:var(--ink-soft); font-weight:600; letter-spacing:.02em; margin-left:.5rem}
-.pod-ep-teaser{font-size:.84rem; line-height:1.55; color:var(--ink-soft); margin:.3rem 0 0; max-width:56ch}
+.pod-ep-teaser{font-size:.8rem; line-height:1.55; color:var(--ink-soft); margin:.3rem 0 0; max-width:56ch}
 .pod-thumb{
   flex:none; width:48px; aspect-ratio:2/3; object-fit:cover; border-radius:4px;
   background:#eee; box-shadow:var(--shadow-lo);
@@ -1046,20 +1091,20 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .pod-thumb-blank{background:var(--card-bg); border:1px dashed var(--line)}
 .pod-ep-listen{display:flex; gap:1rem; margin-top:.45rem}
 .pod-ep-listen a{
-  font-size:.76rem; font-weight:700; color:var(--yr-color); text-decoration:none;
+  font-size:.8rem; font-weight:700; color:var(--yr-color); text-decoration:none;
   border-bottom:1px solid currentColor; padding-bottom:1px;
 }
 .pod-ep-listen a:hover{opacity:.75}
 .pod-ep-read{
-  display:inline-block; margin-top:.5rem; padding:.28rem .6rem; border-radius:5px; border:none;
+  display:inline-block; margin-top:.5rem; padding:.28rem .6rem; border-radius:4px; border:none;
   background:color-mix(in srgb, var(--yr-color, var(--ink)) 12%, var(--card-bg)); color:var(--yr-color, var(--ink));
-  font-family:inherit; font-size:.71rem; font-weight:700; cursor:pointer;
+  font-family:inherit; font-size:.7rem; font-weight:700; cursor:pointer;
 }
 .pod-ep-read:hover{background:color-mix(in srgb, var(--yr-color, var(--ink)) 22%, var(--card-bg))}
 
 .pod-archive{
   margin-top:2.2rem; padding-top:1.4rem; border-top:1px solid var(--line);
-  font-size:.82rem; line-height:1.7; color:var(--ink-soft);
+  font-size:.8rem; line-height:1.7; color:var(--ink-soft);
 }
 .pod-archive b{color:var(--ink); font-weight:700}
 .pod-archive button{
@@ -1080,41 +1125,41 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 }
 .modal-backdrop[data-show="true"]{display:flex}
 .modal-box{background:#fff; border-radius:16px; padding:1.4rem; width:100%; max-width:480px; box-shadow:var(--shadow-hi)}
-.modal-box .modal-title{font-weight:700; font-size:.95rem; margin-bottom:.6rem}
+.modal-box .modal-title{font-weight:700; font-size:.9rem; margin-bottom:.6rem}
 .modal-box textarea{
-  width:100%; height:140px; font-family:monospace; font-size:.72rem;
+  width:100%; height:140px; font-family:monospace; font-size:.7rem;
   padding:.7rem; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink);
   resize:vertical;
 }
 .modal-actions{display:flex; gap:.5rem; margin-top:.7rem; justify-content:flex-end}
 .modal-actions button{
-  font-size:.75rem; font-weight:600; padding:.5rem 1rem;
-  border-radius:8px; border:1px solid var(--line); background:var(--card-bg); cursor:pointer;
+  font-size:.8rem; font-weight:600; padding:.5rem 1rem;
+  border-radius:10px; border:1px solid var(--line); background:var(--card-bg); cursor:pointer;
 }
 .modal-actions button.primary{background:var(--ink); color:#fff; border-color:var(--ink)}
 
 /* ---------- zoom sign-up modal ---------- */
 .zoom-box{max-width:440px}
-.zoom-lead{font-size:.82rem; color:var(--ink-soft); line-height:1.5; margin:0 0 .9rem}
+.zoom-lead{font-size:.8rem; color:var(--ink-soft); line-height:1.5; margin:0 0 .9rem}
 .zoom-form{display:flex; flex-direction:column; gap:.7rem}
-.zoom-form label{display:flex; flex-direction:column; gap:.25rem; font-size:.74rem; font-weight:600; color:var(--ink-soft)}
+.zoom-form label{display:flex; flex-direction:column; gap:.25rem; font-size:.7rem; font-weight:600; color:var(--ink-soft)}
 .zoom-form input[type=text]{
   font:inherit; font-size:.9rem; font-weight:400; color:var(--ink); padding:.55rem .7rem;
-  border-radius:9px; border:1px solid var(--line); background:var(--bg);
+  border-radius:10px; border:1px solid var(--line); background:var(--bg);
 }
 .zoom-form input[type=text]:focus{outline:none; border-color:var(--ink)}
 .zoom-attend{border:0; padding:0; margin:0; display:flex; flex-direction:column; gap:.35rem}
-.zoom-attend legend{font-size:.74rem; font-weight:600; color:var(--ink-soft); padding:0; margin-bottom:.25rem}
+.zoom-attend legend{font-size:.7rem; font-weight:600; color:var(--ink-soft); padding:0; margin-bottom:.25rem}
 .zoom-attend div{display:flex; gap:.5rem}
 .zoom-attend label{
-  flex-direction:row; align-items:center; gap:.45rem; flex:1; font-size:.85rem; font-weight:600; color:var(--ink);
-  padding:.55rem .7rem; border:1px solid var(--line); border-radius:9px; cursor:pointer; background:var(--bg);
+  flex-direction:row; align-items:center; gap:.45rem; flex:1; font-size:.8rem; font-weight:600; color:var(--ink);
+  padding:.55rem .7rem; border:1px solid var(--line); border-radius:10px; cursor:pointer; background:var(--bg);
 }
 .zoom-attend label:has(input:checked){border-color:var(--ink); background:#fff}
-.zoom-hint{font-size:.76rem; color:var(--ink-soft); margin-top:.1rem}
+.zoom-hint{font-size:.8rem; color:var(--ink-soft); margin-top:.1rem}
 .zoom-form input[type=email]{
   font:inherit; font-size:.9rem; font-weight:400; color:var(--ink); padding:.55rem .7rem;
-  border-radius:9px; border:1px solid var(--line); background:var(--bg);
+  border-radius:10px; border:1px solid var(--line); background:var(--bg);
 }
 .zoom-form input[type=email]:focus{outline:none; border-color:var(--ink)}
 .zoom-msg{font-size:.8rem; line-height:1.45; min-height:1.1em}
@@ -1123,12 +1168,12 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .zoom-done p{margin:0; font-size:.9rem; line-height:1.5}
 .zoom-go-row{display:flex; gap:.6rem; flex-wrap:wrap; align-items:center}
 .zoom-copy{
-  font:inherit; font-size:.85rem; font-weight:700; padding:.55rem 1.1rem; border-radius:999px;
+  font:inherit; font-size:.8rem; font-weight:700; padding:.55rem 1.1rem; border-radius:999px;
   border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer;
 }
 .zoom-done .zoom-go{
   display:inline-block; padding:.6rem 1.2rem; border-radius:999px; background:var(--ink); color:#fff;
-  font-size:.88rem; font-weight:700; text-decoration:none;
+  font-size:.9rem; font-weight:700; text-decoration:none;
 }
 
 /* ---------- book detail modal ---------- */
@@ -1159,7 +1204,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   position:absolute; top:.9rem; right:.9rem;
   width:34px; height:34px; border-radius:50%;
   border:1px solid var(--line); background:var(--card-bg);
-  font-size:1.15rem; line-height:1; color:var(--ink-soft);
+  font-size:1.2rem; line-height:1; color:var(--ink-soft);
   cursor:pointer; display:flex; align-items:center; justify-content:center;
 }
 /* step through the year's other books without leaving the modal — and without
@@ -1186,14 +1231,19 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .book-grid{display:flex; gap:2rem; align-items:flex-start}
 .book-grid .m-cover{
   flex:none; width:230px; aspect-ratio:2/3;
-  border-radius:5px; overflow:hidden; background:#eee;
+  border-radius:4px; overflow:hidden; background:#eee;
   box-shadow:var(--shadow-md);
 }
 .book-grid .m-cover img{width:100%; height:100%; object-fit:cover}
+@media (min-width:681px){
+  /* notes and questions run long; the cover stays put beside them instead of
+     leaving a third of the panel blank */
+  .book-grid .m-cover{position:sticky; top:0}
+}
 .book-info{flex:1 1 auto; min-width:0}
-.book-info .m-period{font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--yr-color)}
-.book-info h2{font-size:1.7rem; font-weight:900; letter-spacing:-.015em; line-height:1.15; margin:.35rem 0 .25rem}
-.book-info .m-author{font-size:1rem; color:var(--ink-soft); font-style:italic}
+.book-info .m-period{font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--yr-color)}
+.book-info h2{font-size:1.6rem; font-weight:900; letter-spacing:-.015em; line-height:1.15; margin:.35rem 0 .25rem}
+.book-info .m-author{font-size:1rem; color:var(--ink-soft)}
 .book-info .m-sub{font-size:.8rem; color:var(--ink-soft); margin-top:.45rem}
 
 /* ---------- star ratings ----------
@@ -1204,9 +1254,9 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .m-rating{display:none; align-items:center; gap:.9rem; flex-wrap:wrap; margin-top:.85rem}
 .m-rating[data-ready="true"]{display:flex}
 .rating-avg{display:flex; align-items:center; gap:.5rem}
-.rating-avg-text{font-size:.78rem; color:var(--ink-soft)}
+.rating-avg-text{font-size:.8rem; color:var(--ink-soft)}
 .rating-yours{display:flex; align-items:center; gap:.5rem; padding-left:.9rem; border-left:1px solid var(--line)}
-.rating-yours-label{font-size:.72rem; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em}
+.rating-yours-label{font-size:.7rem; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.05em}
 .star-row{position:relative; display:inline-block; line-height:0}
 .star-row-bg, .star-row-fg{display:flex; gap:1px}
 .star-row-fg{position:absolute; inset:0 auto 0 0; overflow:hidden; white-space:nowrap}
@@ -1216,14 +1266,14 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .rating-input .star-row{cursor:pointer}
 .rating-input .star-row svg{width:19px; height:19px}
 .rating-input .star-row-fg svg{fill:var(--yr-color)}
-.rating-input:focus-visible .star-row{outline:2px solid var(--yr-color); outline-offset:3px; border-radius:3px}
+.rating-input:focus-visible .star-row{outline:2px solid var(--yr-color); outline-offset:3px; border-radius:4px}
 .rating-clear{
-  font:inherit; font-size:.72rem; color:var(--ink-soft); background:none; border:none;
+  font:inherit; font-size:.7rem; color:var(--ink-soft); background:none; border:none;
   padding:0; cursor:pointer; text-decoration:underline; display:none
 }
 .rating-clear[data-show="true"]{display:inline}
 .rating-clear:hover{color:var(--ink)}
-.rating-yours-note{font-size:.72rem; font-weight:600; color:var(--ink-soft); opacity:0; transition:opacity .2s ease}
+.rating-yours-note{font-size:.7rem; font-weight:600; color:var(--ink-soft); opacity:0; transition:opacity .2s ease}
 .rating-yours-note[data-show="true"]{opacity:1}
 .rating-yours-note[data-error="true"]{color:#c0392b}
 
@@ -1245,7 +1295,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 
 .m-teaser{
   margin:1.1rem 0 0;
-  font-size:.95rem; line-height:1.6; color:var(--ink);
+  font-size:.9rem; line-height:1.6; color:var(--ink);
   padding-left:.9rem; border-left:2px solid var(--yr-color);
 }
 .m-teaser:empty{display:none}
@@ -1258,26 +1308,26 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
    unboxed so the panel doesn't turn into a stack of cards. */
 .m-audio{margin-top:1.9rem; padding-top:1.35rem; border-top:1px solid var(--line)}
 .m-audio:empty{display:none}
-.m-audio .audio-head{font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft)}
-.m-audio .audio-title{margin:.5rem 0 .15rem; font-size:.95rem; font-weight:600; color:var(--ink)}
+.m-audio .audio-head{font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft)}
+.m-audio .audio-title{margin:.5rem 0 .15rem; font-size:.9rem; font-weight:600; color:var(--ink)}
 .m-audio .audio-note{margin:0 0 .7rem; font-size:.8rem; color:var(--ink-soft)}
 .m-audio audio{display:block; width:100%; max-width:420px}
 .m-audio details, .m-talk details{margin-top:.9rem; max-width:560px}
-.m-audio summary, .m-talk summary{cursor:pointer; font-size:.82rem; font-weight:600; color:var(--ink); padding:.35rem 0; list-style:none; display:inline-flex; align-items:center; gap:.45rem}
+.m-audio summary, .m-talk summary{cursor:pointer; font-size:.8rem; font-weight:600; color:var(--ink); padding:.35rem 0; list-style:none; display:inline-flex; align-items:center; gap:.45rem}
 .m-audio summary::-webkit-details-marker, .m-talk summary::-webkit-details-marker{display:none}
 .m-audio summary::after, .m-talk summary::after{content:''; width:.45rem; height:.45rem; border-right:2px solid currentColor; border-bottom:2px solid currentColor; transform:rotate(45deg) translateY(-2px); transition:transform .15s}
 .m-audio details[open] summary::after, .m-talk details[open] summary::after{transform:rotate(-135deg) translateY(-2px)}
 .m-audio .dlg{margin-top:.5rem; display:flex; flex-direction:column; gap:.7rem}
-.m-audio .dlg p{margin:0; font-size:.88rem; line-height:1.55; color:var(--ink)}
+.m-audio .dlg p{margin:0; font-size:.9rem; line-height:1.55; color:var(--ink)}
 .m-audio .dlg b{display:block; font-size:.7rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; margin-bottom:.1rem}
 .m-audio .dlg .s0 b{color:var(--yr-color)}
 .m-audio .dlg .s1 b{color:var(--ink-soft)}
 /* ---------- talking points (pair work, folded away until asked for) ---------- */
 .m-talk{margin-top:1.9rem; padding-top:1.35rem; border-top:1px solid var(--line)}
 .m-talk:empty{display:none}
-.m-talk .talk-head{font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft)}
+.m-talk .talk-head{font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft)}
 .m-talk ol{margin:.5rem 0 0; padding:0; list-style:none; counter-reset:q; display:flex; flex-direction:column; gap:.65rem}
-.m-talk li{counter-increment:q; position:relative; padding-left:1.6rem; font-size:.88rem; line-height:1.55; color:var(--ink)}
+.m-talk li{counter-increment:q; position:relative; padding-left:1.6rem; font-size:.9rem; line-height:1.55; color:var(--ink)}
 .m-talk li::before{
   content:counter(q); position:absolute; left:0; top:.05rem;
   font-size:.7rem; font-weight:700; color:var(--yr-color);
@@ -1288,13 +1338,13 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   display:flex; flex-direction:column; gap:1.2rem;
 }
 .m-blurbs .blurbs-head{
-  font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
+  font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
 }
 .blurb{margin:0}
-.blurb q{font-size:.92rem; line-height:1.5; color:var(--ink); font-style:italic; quotes:'"' '"'}
+.blurb q{font-size:.9rem; line-height:1.5; color:var(--ink); quotes:'"' '"'}
 .blurb cite{
   display:block; margin-top:.3rem;
-  font-size:.75rem; font-style:normal; font-weight:600; color:var(--ink-soft);
+  font-size:.8rem; font-style:normal; font-weight:600; color:var(--ink-soft);
 }
 /* ---------- club notes (one line per member, alongside their star rating) ---------- */
 .m-notes{
@@ -1305,7 +1355,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 }
 .m-notes[data-ready="true"]{display:flex}
 .notes-head{
-  font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
+  font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft);
 }
 .notes-list{display:flex; flex-direction:column; gap:.6rem}
 .notes-list:empty{display:none}
@@ -1319,7 +1369,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   padding:1rem 1.15rem;
   background:var(--bg);
   border:1px solid var(--line);
-  border-radius:9px;
+  border-radius:10px;
 }
 /* Your own note is edited in place from this pencil rather than by leaving the
    write-form permanently open underneath, which just repeated the note you had
@@ -1342,51 +1392,51 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   border-color:color-mix(in srgb, var(--yr-color) 30%, var(--line));
 }
 /* italic to match the press quotes above — both are someone being quoted */
-.club-note .cn-text{font-size:.92rem; line-height:1.6; color:var(--ink); font-style:italic}
+.club-note .cn-text{font-size:.9rem; line-height:1.6; color:var(--ink)}
 /* the byline used to be one run of text ("John 5.0 · yours") sitting .3rem under
    the note, which read as cramped. Now three separately-weighted tokens spaced
    by flex gap, with real room above them. */
 .club-note .cn-by{
   display:flex; align-items:center; gap:.55rem; flex-wrap:wrap;
-  font-size:.74rem; font-weight:700; color:var(--ink-soft);
+  font-size:.7rem; font-weight:700; color:var(--ink-soft);
 }
 .club-note .cn-by .cn-score{color:var(--yr-color)}
 .club-note .cn-by .cn-mine{font-weight:500; opacity:.6}
-.notes-empty{font-size:.85rem; color:var(--ink-soft); font-style:italic}
+.notes-empty{font-size:.8rem; color:var(--ink-soft)}
 .note-form{display:flex; flex-direction:column; gap:.5rem; margin-top:.2rem}
 /* the score lives in the edit form too, so the pencil edits the whole review —
    score and note together — rather than only the words */
 .note-rating-row{display:flex; align-items:center; gap:.7rem; margin-bottom:.15rem}
 .note-rating-label{
-  font-size:.72rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft);
+  font-size:.7rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-soft);
 }
 .note-form input, .note-form textarea{
-  font-family:inherit; font-size:.88rem; color:var(--ink);
-  border:1px solid var(--line); border-radius:7px; padding:.55rem .7rem;
+  font-family:inherit; font-size:.9rem; color:var(--ink);
+  border:1px solid var(--line); border-radius:10px; padding:.55rem .7rem;
   background:var(--card-bg); resize:none; width:100%;
 }
 .note-form input:focus, .note-form textarea:focus{outline:none; border-color:var(--yr-color)}
 .note-form input{max-width:220px}
-.note-name-hint{font-size:.68rem; color:var(--ink-soft); margin-top:-.3rem}
+.note-name-hint{font-size:.7rem; color:var(--ink-soft); margin-top:-.3rem}
 .note-actions{display:flex; align-items:center; gap:.7rem; flex-wrap:wrap}
-.note-count{font-size:.72rem; color:var(--ink-soft); margin-right:auto}
-.note-state{font-size:.72rem; font-weight:600; color:var(--ink-soft); opacity:0; transition:opacity .2s}
+.note-count{font-size:.7rem; color:var(--ink-soft); margin-right:auto}
+.note-state{font-size:.7rem; font-weight:600; color:var(--ink-soft); opacity:0; transition:opacity .2s}
 .note-state[data-show="true"]{opacity:1}
 .note-state[data-error="true"]{color:#c0392b}
 .note-save{
   padding:.45rem .9rem; border-radius:999px; border:1px solid var(--yr-color);
   background:color-mix(in srgb, var(--yr-color) 80%, black); color:#fff;
-  font-family:inherit; font-size:.78rem; font-weight:600; cursor:pointer;
+  font-family:inherit; font-size:.8rem; font-weight:600; cursor:pointer;
   transition:opacity .15s;
 }
 .note-save[disabled]{opacity:.4; cursor:not-allowed}
 .note-cancel{
   border:none; background:none; padding:.45rem .2rem;
-  font-family:inherit; font-size:.78rem; font-weight:600; color:var(--ink-soft);
+  font-family:inherit; font-size:.8rem; font-weight:600; color:var(--ink-soft);
   cursor:pointer;
 }
 .note-cancel:hover{color:var(--ink)}
-.note-hint{font-size:.76rem; color:var(--ink-soft); font-style:italic}
+.note-hint{font-size:.8rem; color:var(--ink-soft)}
 
 .m-link{
   display:inline-block; margin-top:1.4rem; font-size:.8rem; font-weight:600;
@@ -1406,13 +1456,13 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 /* ---------- edit popover ---------- */
 .edit-pop{
   position:absolute; z-index:540; width:220px;
-  background:#fff; border-radius:12px; box-shadow:var(--shadow-hi);
-  padding:.8rem; font-size:.75rem; display:none;
+  background:#fff; border-radius:10px; box-shadow:var(--shadow-hi);
+  padding:.8rem; font-size:.8rem; display:none;
 }
 .edit-pop[data-show="true"]{display:block}
-.edit-pop input{width:100%; font-size:.75rem; padding:.4rem .5rem; border-radius:6px; border:1px solid var(--line); margin-bottom:.4rem}
+.edit-pop input{width:100%; font-size:.8rem; padding:.4rem .5rem; border-radius:10px; border:1px solid var(--line); margin-bottom:.4rem}
 .edit-pop .row{display:flex; gap:.4rem}
-.edit-pop button{flex:1; font-size:.7rem; font-weight:600; padding:.4rem; border-radius:6px; border:1px solid var(--line); background:var(--bg); cursor:pointer}
+.edit-pop button{flex:1; font-size:.7rem; font-weight:600; padding:.4rem; border-radius:10px; border:1px solid var(--line); background:var(--bg); cursor:pointer}
 .edit-pop button.primary{background:var(--ink); color:#fff; border-color:var(--ink)}
 
 @media (max-width:560px){
@@ -1420,15 +1470,22 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   .tg-link span{display:none}          /* icon only once space is tight */
   .tg-link{padding:.42rem .55rem}
 }
+/* waiting covers, wherever they sit, share the one tint (declared last so it
+   wins over the older per-list backgrounds) */
+.rc-strip img, .slot-cover, .reader-slots img, .rec-row img, .rec-list img,
+.slot-hits img, .fav-cover, .shelf-cover, .search-thumb{background:#efebe3}
 </style>
 <link rel="preconnect" href="https://covers.openlibrary.org" crossorigin>
 </head>
 <body>
 
 <header class="topbar">
-  <h1 class="sr-only">Book42 — the reading diary</h1>
+  <h1 class="sr-only">Book42 · the reading diary</h1>
   <button type="button" class="brand" id="brandHome" aria-label="Back to what we're reading now"><span class="brand-name">book<span class="brand-42">42</span></span> <small>reading diary</small></button>
   <nav class="year-nav" id="yearNav"></nav>
+  <button type="button" class="nav-step" id="navStep" aria-label="More sections">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
   <select class="year-nav-select" id="yearNavSelect" aria-label="Jump to a section"></select>
   <div class="acct-wrap">
     <button type="button" class="acct-btn" id="acctBtn" aria-haspopup="true" aria-expanded="false" aria-label="Your account">
@@ -1480,7 +1537,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 
 <div class="modal-backdrop" id="exportBackdrop">
   <div class="modal-box">
-    <div class="modal-title">Your cover edits — paste this back to me to make permanent</div>
+    <div class="modal-title">Your cover edits: paste this back to me to make permanent</div>
     <textarea id="exportText" readonly></textarea>
     <div class="modal-actions">
       <button type="button" id="closeExportBtn">Close</button>
@@ -1568,6 +1625,22 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 </div>
 
 <script>
+/* "click" is the wrong word on a phone */
+const MORE_HINT = matchMedia('(hover: none)').matches ? 'tap for more' : 'click for more';
+
+/* Covers fade in as they arrive. The class goes on <html> from here, so if
+   this script never ran nothing would be left invisible. */
+document.documentElement.classList.add('img-fade');
+document.addEventListener('load', (e)=>{
+  if(e.target.tagName === 'IMG') e.target.classList.add('is-in');
+}, true);
+new MutationObserver((muts)=>{
+  for(const m of muts) for(const n of m.addedNodes){
+    if(n.nodeType !== 1) continue;
+    const imgs = n.tagName === 'IMG' ? [n] : n.querySelectorAll('img');
+    for(const im of imgs) if(im.complete && im.naturalWidth) im.classList.add('is-in', 'was-cached');
+  }
+}).observe(document.documentElement, { childList:true, subtree:true });
 const DATA = [{"year": 2021, "period": "January", "title": "The Devotion of Suspect X", "author": "Keigo Higashino", "country": "Japanese author", "published": 2005, "cover": "covers/2021-january-the-devotion-of-suspect-x.jpg"}, {"year": 2021, "period": "February", "title": "Replay", "author": "Ken Grimwood", "country": "American author", "published": 1986, "cover": "covers/2021-february-replay.jpg"}, {"year": 2021, "period": "March", "title": "My Sweet Orange Tree", "author": "José Mauro de Vasconcelos", "country": "Brazilian writer", "published": 1968, "cover": "covers/2021-march-my-sweet-orange-tree.jpg"}, {"year": 2021, "period": "April", "title": "Brave New World", "author": "Aldous Huxley", "country": "English writer and philosopher", "published": 1932, "cover": "covers/2021-april-brave-new-world.jpg"}, {"year": 2021, "period": "May", "title": "Force of Nature", "author": "Jane Harper", "country": "British-Australian writer", "published": 2017, "cover": "covers/2021-may-force-of-nature.jpg"}, {"year": 2021, "period": "June", "title": "The Murder of Roger Ackroyd", "author": "Agatha Christie", "country": "British author", "published": 1926, "cover": "covers/2021-june-the-murder-of-roger-ackroyd.jpg"}, {"year": 2021, "period": "July", "title": "Flowers for Algernon", "author": "Daniel Keyes", "country": "American writer", "published": 1966, "cover": "covers/2021-july-flowers-for-algernon.jpg"}, {"year": 2021, "period": "August", "title": "The Princess Bride", "author": "William Goldman", "country": "American novelist and playwright", "published": 1973, "cover": "covers/2021-august-the-princess-bride.jpg"}, {"year": 2021, "period": "September", "title": "A Thousand Splendid Suns", "author": "Khaled Hosseini", "country": "Afghan-American novelist", "published": 2007, "cover": "covers/2021-september-a-thousand-splendid-suns.jpg"}, {"year": 2021, "period": "October", "title": "I'm Not Scared", "author": "Niccolò Ammaniti", "country": "Italian writer", "published": 2001, "cover": "covers/2021-october-i-m-not-scared.jpg"}, {"year": 2021, "period": "November", "title": "Man's Search for Meaning", "author": "Viktor E. Frankl", "country": "Austrian neurologist and psychologist", "published": 1946, "nonfiction": true, "cover": "covers/2021-november-man-s-search-for-meaning.jpg"}, {"year": 2021, "period": "December", "title": "Guards! Guards!", "author": "Terry Pratchett", "country": "English author, humorist, and satirist", "published": 1989, "cover": "covers/2021-december-guards-guards.jpg"}, {"year": 2022, "period": "January", "title": "A Gentleman in Moscow", "author": "Amor Towles", "country": "American novelist", "published": 2016, "cover": "covers/2022-january-a-gentleman-in-moscow.jpg"}, {"year": 2022, "period": "February", "title": "Contact", "author": "Carl Sagan", "country": "American astronomer and planetary scientist", "published": 1985, "cover": "covers/2022-february-contact.jpg"}, {"year": 2022, "period": "March", "title": "My Brilliant Friend", "author": "Elena Ferrante", "country": "Italian novelist", "published": 2011, "cover": "covers/2022-march-my-brilliant-friend.jpg"}, {"year": 2022, "period": "April", "title": "The House in the Cerulean Sea", "author": "T.J. Klune", "country": "American writer", "published": 2020, "cover": "covers/2022-april-the-house-in-the-cerulean-sea.jpg"}, {"year": 2022, "period": "May", "title": "The Story of a New Name", "author": "Elena Ferrante", "country": "Italian novelist", "published": 2012, "cover": "covers/2022-may-the-story-of-a-new-name.jpg"}, {"year": 2022, "period": "May", "title": "The Pleasures of Reading in an Age of Distraction", "author": "Alan Jacobs", "country": "American literary critic", "published": 2011, "nonfiction": true, "cover": "covers/2022-may-the-pleasures-of-reading-in-an-age-of-distraction.jpg"}, {"year": 2022, "period": "June", "title": "Billy Summers", "author": "Stephen King", "country": "American author", "published": 2021, "cover": "covers/2022-june-billy-summers.jpg"}, {"year": 2022, "period": "July", "title": "Moby-Dick", "author": "Herman Melville", "country": "American novelist", "published": 1851, "cover": "covers/2022-july-moby-dick.jpg"}, {"year": 2022, "period": "August", "title": "Beach Read", "author": "Emily Henry", "country": "American author", "published": 2020, "cover": "covers/2022-august-beach-read.jpg"}, {"year": 2022, "period": "September", "title": "The Silent Patient", "author": "Alex Michaelides", "country": "British-Cypriot author and screenwriter", "published": 2019, "cover": "covers/2022-september-the-silent-patient.jpg"}, {"year": 2022, "period": "October", "title": "Rock Paper Scissors", "author": "Alice Feeney", "country": "British novelist", "published": 2021, "cover": "covers/2022-october-rock-paper-scissors.jpg"}, {"year": 2022, "period": "November", "title": "Rebecca", "author": "Daphne du Maurier", "country": "English novelist, biographer and playwright", "published": 1938, "cover": "covers/2022-november-rebecca.jpg"}, {"year": 2022, "period": "December", "title": "The Book Thief", "author": "Markus Zusak", "country": "Australian writer", "published": 2005, "cover": "covers/2022-december-the-book-thief.jpg"}, {"year": 2023, "period": "January", "title": "Call For The Dead", "author": "John le Carré", "country": "British author", "published": 1961, "cover": "covers/2023-january-call-for-the-dead.jpg"}, {"year": 2023, "period": "February", "title": "The First Fifteen Lives of Harry August", "author": "Claire North", "country": "British author", "published": 2014, "cover": "covers/2023-february-the-first-fifteen-lives-of-harry-august.jpg"}, {"year": 2023, "period": "March", "title": "One Hundred Years of Solitude", "author": "Gabriel García Márquez", "country": "Colombian writer and journalist", "published": 1967, "cover": "covers/2023-march-one-hundred-years-of-solitude.jpg"}, {"year": 2023, "period": "March", "title": "The Wind-Up Bird Chronicle", "author": "Haruki Murakami", "country": "Japanese writer", "published": 1994, "cover": "covers/2023-march-the-wind-up-bird-chronicle.jpg"}, {"year": 2023, "period": "April", "title": "East of Eden", "author": "John Steinbeck", "country": "American writer", "published": 1952, "cover": "covers/2023-april-east-of-eden.jpg"}, {"year": 2023, "period": "April", "title": "Of Mice and Men", "author": "John Steinbeck", "country": "American writer", "published": 1937, "cover": "covers/2023-april-of-mice-and-men.jpg"}, {"year": 2023, "period": "May", "title": "The Seven Husbands of Evelyn Hugo", "author": "Taylor Jenkins Reid", "country": "American author", "published": 2017, "cover": "covers/2023-may-the-seven-husbands-of-evelyn-hugo.jpg"}, {"year": 2023, "period": "May", "title": "The Boy, the Mole, the Fox and the Horse", "author": "Charlie Mackesy", "country": "British artist and illustrator", "published": 2019, "cover": "covers/2023-may-the-boy-the-mole-the-fox-and-the-horse.jpg"}, {"year": 2023, "period": "June", "title": "Happy Place", "author": "Emily Henry", "country": "American author", "published": 2023, "cover": "covers/2023-june-happy-place.jpg"}, {"year": 2023, "period": "July", "title": "The Bitch", "author": "Pilar Quintana", "country": "Colombian writer", "published": 2017, "cover": "covers/2023-july-the-bitch.jpg"}, {"year": 2023, "period": "August", "title": "The Paper Menagerie and Other Stories", "author": "Ken Liu", "country": "American writer", "published": 2016, "cover": "covers/2023-august-the-paper-menagerie-and-other-stories.jpg"}, {"year": 2023, "period": "September", "title": "A Man Called Ove", "author": "Fredrik Backman", "country": "Swedish author", "published": 2012, "cover": "covers/2023-september-a-man-called-ove.jpg"}, {"year": 2023, "period": "October", "title": "We Have Always Lived in the Castle", "author": "Shirley Jackson", "country": "American writer", "published": 1962, "cover": "covers/2023-october-we-have-always-lived-in-the-castle.jpg"}, {"year": 2023, "period": "November", "title": "How to Know a Person", "author": "David Brooks", "country": "Canadian-American author", "published": 2023, "nonfiction": true, "cover": "covers/2023-november-how-to-know-a-person.jpg"}, {"year": 2023, "period": "December", "title": "The Secret History", "author": "Donna Tartt", "country": "American novelist and essayist", "published": 1992, "cover": "covers/2023-december-the-secret-history.jpg"}, {"year": 2024, "period": "January", "title": "The Stranger", "author": "Albert Camus", "country": "French philosopher and author", "published": 1942, "cover": "covers/2024-january-the-stranger.jpg"}, {"year": 2024, "period": "January", "title": "The Remains of the Day", "author": "Kazuo Ishiguro", "country": "Japanese-British novelist and screenwriter", "published": 1989, "cover": "covers/2024-january-the-remains-of-the-day.jpg"}, {"year": 2024, "period": "February", "title": "Solaris", "author": "Stanisław Lem", "country": "Polish writer", "published": 1961, "cover": "covers/2024-february-solaris.jpg"}, {"year": 2024, "period": "March", "title": "Piranesi", "author": "Susanna Clarke", "country": "English writer", "published": 2020, "cover": "covers/2024-march-piranesi.jpg"}, {"year": 2024, "period": "April", "title": "The Nightingale", "author": "Kristin Hannah", "country": "American writer", "published": 2015, "cover": "covers/2024-april-the-nightingale.jpg"}, {"year": 2024, "period": "May", "title": "Spring Snow", "author": "Yukio Mishima", "country": "Japanese author and poet", "published": 1969, "cover": "covers/2024-may-spring-snow.jpg"}, {"year": 2024, "period": "June–August", "title": null, "break": true, "note": "Summer break"}, {"year": 2024, "period": "September", "title": "I Who Have Never Known Men", "author": "Jacqueline Harpman", "country": "Belgian writer", "published": 1995, "cover": "covers/2024-september-i-who-have-never-known-men.jpg"}, {"year": 2024, "period": "October", "title": "Journey by Moonlight", "author": "Antal Szerb", "country": "Hungarian writer", "published": 1937, "cover": "covers/2024-october-journey-by-moonlight.jpg"}, {"year": 2024, "period": "November", "title": "The Mountains Sing", "author": "Nguyễn Phan Quế Mai", "country": "Vietnamese poet", "published": 2020, "cover": "covers/2024-november-the-mountains-sing.jpg"}, {"year": 2024, "period": "December", "title": "Circe", "author": "Madeline Miller", "country": "American novelist and author", "published": 2018, "cover": "covers/2024-december-circe.jpg"}, {"year": 2025, "period": "Quarter 1", "title": "The Count of Monte Cristo", "author": "Alexandre Dumas", "country": "French author", "published": 1844, "cover": "covers/2025-quarter-1-the-count-of-monte-cristo.jpg"}, {"year": 2025, "period": "Quarter 2", "title": "Wuthering Heights", "author": "Emily Brontë", "country": "English novelist", "published": 1847, "cover": "covers/2025-quarter-2-wuthering-heights.jpg"}, {"year": 2025, "period": "October", "title": "The Tokyo Zodiac Murders", "author": "Soji Shimada", "country": "Japanese author", "published": 1981, "cover": "covers/2025-october-the-tokyo-zodiac-murders.jpg"}, {"year": 2025, "period": "December", "title": "Stoner", "author": "John Williams", "country": "American novelist", "published": 1965, "cover": "covers/2025-december-stoner.jpg"}, {"year": 2026, "period": "January", "title": "The Dispossessed", "author": "Ursula K. Le Guin", "country": "American author", "published": 1974, "cover": "covers/2026-january-the-dispossessed.jpg"}, {"year": 2026, "period": "September", "title": "The Song of Achilles", "author": "Madeline Miller", "country": "American novelist and author", "published": 2011, "cover": "covers/2026-september-the-song-of-achilles.jpg"}, {"year": 2026, "period": "October", "title": "Foster", "author": "Claire Keegan", "country": "Irish author", "published": 2010, "cover": "covers/2026-october-foster.jpg"}, {"year": 2026, "period": "November", "title": "Whistler", "author": "Ann Patchett", "country": "American author", "published": 2026, "cover": "covers/2026-november-whistler.jpg"}];
 
 const YEAR_COLORS = {
@@ -2037,7 +2110,7 @@ async function commitRating(value){
     commitRating._t = setTimeout(()=>{ note.dataset.show = 'false'; }, 1800);
   } else {
     note.dataset.error = 'true';
-    note.textContent = 'Not saved — tap a star to retry';
+    note.textContent = 'Not saved. Tap a star to retry';
     // left showing (no auto-hide) so a real failure is visible instead of silently vanishing
   }
 }
@@ -2080,7 +2153,7 @@ async function removeRating(){
     btn.dataset.confirm = 'false';
     btn.textContent = 'Remove';
     note.dataset.error = 'true';
-    note.textContent = 'Not removed — try again';
+    note.textContent = 'Not removed. Try again';
   }
 }
 
@@ -2282,7 +2355,7 @@ async function commitNote(){
     commitNote._t = setTimeout(()=>{ state.dataset.show = 'false'; }, 1800);
   } else {
     state.dataset.error = 'true';
-    state.textContent = 'Not saved — try again';
+    state.textContent = 'Not saved. Try again';
   }
 }
 
@@ -2477,7 +2550,7 @@ favBtn.addEventListener('click', ()=>{ showYear('faves'); syncHash('faves'); });
 yearNav.appendChild(favBtn);
 
 // Readers sits beside Favourites: both are ways into the club rather than a year
-const READERS_COLOR = '#2f6f5e';
+const READERS_COLOR = '#1b1b1f';
 const readersBtn = document.createElement('button');
 readersBtn.type = 'button';
 readersBtn.textContent = 'Readers';
@@ -2507,7 +2580,7 @@ prizeBtn.style.setProperty('--yr-color', PRIZE_COLORS.nobel);
 prizeBtn.addEventListener('click', ()=>{ showYear('prizes'); syncHash('prizes-' + activePrize); });
 yearNav.appendChild(prizeBtn);
 
-const PODCAST_COLOR = '#b5502e';
+const PODCAST_COLOR = '#1b1b1f';
 const podcastBtn = document.createElement('button');
 podcastBtn.type = 'button';
 podcastBtn.textContent = 'Podcast';
@@ -2515,6 +2588,26 @@ podcastBtn.dataset.year = 'podcast';
 podcastBtn.style.setProperty('--yr-color', PODCAST_COLOR);
 podcastBtn.addEventListener('click', ()=>{ showYear('podcast'); syncHash('podcast'); });
 yearNav.appendChild(podcastBtn);
+
+/* The row scrolls when it does not fit; this keeps the faded edge and the
+   arrow honest about which way there is more. */
+const navStep = document.getElementById('navStep');
+function syncNavMore(){
+  const max = yearNav.scrollWidth - yearNav.clientWidth;
+  const left = yearNav.scrollLeft > 4, right = yearNav.scrollLeft < max - 4;
+  if(max <= 4){ yearNav.removeAttribute('data-more'); navStep.dataset.show = 'false'; return; }
+  yearNav.dataset.more = left && right ? 'both' : right ? 'right' : 'left';
+  navStep.dataset.show = 'true';
+  navStep.dataset.dir = right ? '1' : '-1';
+  navStep.setAttribute('aria-label', right ? 'More sections' : 'Back to the first sections');
+}
+navStep.addEventListener('click', ()=>{
+  const dir = navStep.dataset.dir === '-1' ? -1 : 1;
+  yearNav.scrollBy({ left: dir * Math.max(180, yearNav.clientWidth * .7), behavior:'smooth' });
+});
+yearNav.addEventListener('scroll', syncNavMore, { passive:true });
+window.addEventListener('resize', syncNavMore);
+requestAnimationFrame(syncNavMore);
 
 /* The dropdown mirrors the pill nav exactly rather than keeping its own list —
    built once the pills exist, by reading straight off them, so the two can
@@ -2752,6 +2845,10 @@ readersSection.innerHTML = `
         <h2 class="faves-head">Readers</h2>
         <p class="faves-lede" id="readersLede">Everyone who has made a profile. Open one to see their shelves and their scores.</p>
         <ul class="readers-grid" id="readersGrid"></ul>
+        <div class="readers-new" id="readersNew" style="display:none">
+          <p class="shelf-sub" style="margin-top:0">Just joined</p>
+          <ul class="readers-new-list" id="readersNewList"></ul>
+        </div>
       </div>
       <div class="faves-block" id="readerOneBlock" style="display:none"></div>
     </div>
@@ -2804,7 +2901,21 @@ function renderReaders(){
   readersLede.textContent = rows.length
     ? 'Everyone who has made a profile. Open one to see their shelves and their scores.'
     : 'Nobody has made a profile yet. Be the first, from the person icon up at the top.';
-  readersGrid.innerHTML = rows.map(p=>{
+  /* Somebody with scores, shelves or a book on the go gets a card. A profile
+     with nothing on it yet is a name in the row underneath. */
+  const isActive = p => {
+    const c = readerCounts(p.voter_id);
+    return c.scored || c.read || c.want || c.reading || hasBookSlots(p);
+  };
+  const fresh = rows.filter(p => !isActive(p) && (p.display_name || '').trim());
+  const newBox = readersSection.querySelector('#readersNew');
+  newBox.style.display = fresh.length ? 'block' : 'none';
+  readersSection.querySelector('#readersNewList').innerHTML = fresh.map(p=>
+    `<li><button type="button" class="reader-card" data-voter="${escHTML(p.voter_id)}">
+      ${avatarHTML(p.avatar_url, readerName(p), 'rc')}
+      <span class="rc-name">${escHTML(readerName(p))}</span>
+    </button></li>`).join('');
+  readersGrid.innerHTML = rows.filter(isActive).map(p=>{
     const c = readerCounts(p.voter_id);
     const counts = [c.scored ? c.scored + ' scored' : '', c.read ? c.read + ' read' : '', c.want ? c.want + ' to read' : '']
       .filter(Boolean).join(' · ');
@@ -3459,7 +3570,7 @@ function podEpisodeRow(e){
 }
 
 const archiveHTML = PODCAST_ARCHIVE.length ? `<div class="pod-archive">
-  <b>Book42 has come up on the show before, too</b> — episode ${PODCAST_ARCHIVE.map(e=>e.num).join(', ')}:
+  <b>Book42 has come up on the show before, too</b>: episode ${PODCAST_ARCHIVE.map(e=>e.num).join(', ')}:
   ${PODCAST_ARCHIVE.map(e=>{
     const book = findBook42(e.book42);
     const link = book ? `<button type="button" data-slug="${slug(book)}">${escHTML(e.book42)}</button>` : escHTML(e.book42);
@@ -3568,7 +3679,7 @@ years.forEach(y=>{
       <div class="strip-wrap">
         <div class="strip">${items.map(cardHTML).join('')}</div>
       </div>
-      <div class="click-hint">click for more</div>
+      <div class="click-hint">${MORE_HINT}</div>
       <div class="carousel-nav">
         <button class="nav-btn" data-strip="${y}" data-dir="-1">${ICON_CHEV_L}</button>
         <div class="dots"></div>
@@ -3675,7 +3786,7 @@ years.forEach(y=>{
     <div class="carousel-wrap">
       <div class="carousel" data-year="${y}"></div>
     </div>
-    <div class="click-hint">click for more</div>
+    <div class="click-hint">${MORE_HINT}</div>
     <div class="carousel-nav">
       <button class="nav-btn" data-dir="-1" data-year="${y}">${ICON_CHEV_L}</button>
       <div class="dots" data-year="${y}"></div>
@@ -3875,7 +3986,7 @@ years.forEach(y=>{
 
   // keyboard: left/right arrows step through the year's books
   carouselEl.setAttribute('tabindex', '0');
-  carouselEl.setAttribute('aria-label', `${y} carousel — left and right arrow keys browse, Enter opens the centred book`);
+  carouselEl.setAttribute('aria-label', `${y} carousel: left and right arrow keys browse, Enter opens the centred book`);
   carouselEl.addEventListener('keydown', (e)=>{
     if(e.key === 'ArrowLeft'){ e.preventDefault(); shift(y, -1); }
     else if(e.key === 'ArrowRight'){ e.preventDefault(); shift(y, 1); }
@@ -3967,7 +4078,7 @@ function openBookModal(b, y, opts){
     mBlurbs.innerHTML =
       '<div class="blurbs-head">What the reviews said</div>' +
       blurbs.map(bl=>
-        `<blockquote class="blurb"><q>${bl.quote}</q><cite>— ${bl.attribution}</cite></blockquote>`
+        `<blockquote class="blurb"><q>${bl.quote}</q><cite>${bl.attribution}</cite></blockquote>`
       ).join('');
     mBlurbs.style.display = 'flex';
   } else {
@@ -4315,7 +4426,7 @@ document.getElementById('restoreFile').addEventListener('change', async (e)=>{
   let rows;
   try{ rows = JSON.parse(await file.text()); }
   catch(err){ alert('That file is not valid JSON.'); return; }
-  if(!Array.isArray(rows) || !rows.length){ alert('Nothing to restore — the file has no rows.'); return; }
+  if(!Array.isArray(rows) || !rows.length){ alert('Nothing to restore: the file has no rows.'); return; }
   if(!confirm(`Restore ${rows.length} row(s) from this file?\n\nAny existing row with the same book + voter will be overwritten with the file's values.`)) return;
 
   const btn = document.getElementById('restoreBtn');
@@ -4716,7 +4827,7 @@ function renderAcct(msg, bad){
       <div class="acct-who">${escHTML(session.email || '')}</div>
       <div class="acct-stats">
         <span class="acct-stat"><b>${mine.length}</b><span>rated</span></span>
-        <span class="acct-stat"><b>${mine.length ? avg.toFixed(1) : '—'}</b><span>average</span></span>
+        <span class="acct-stat"><b>${mine.length ? avg.toFixed(1) : '·'}</b><span>average</span></span>
       </div>
       <label for="acctName">Your name, as it appears on your notes</label>
       <input type="text" id="acctName" maxlength="40" autocomplete="name" value="${escHTML(name)}">
