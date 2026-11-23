@@ -67,7 +67,7 @@ em, i, q, cite, blockquote, address{font-style:normal}
    the cache skip the ease so re-drawing a list does not flicker. */
 img{background-color:#efebe3}
 @keyframes imgIn{from{opacity:.35} to{opacity:1}}
-.img-fade img.is-in:not(.was-cached){animation:imgIn .28s ease}
+.img-fade img.is-in:not(.was-cached){animation:imgIn .3s ease}
 @media (prefers-reduced-motion:reduce){
   *, *::before, *::after{
     transition-duration:.01ms !important; animation-duration:.01ms !important;
@@ -590,7 +590,7 @@ main#years{flex:1 1 auto; min-height:0; overflow:hidden}
   overflow:hidden;
   background:var(--card-bg);
   box-shadow:var(--shadow-md);
-  transition:transform .38s cubic-bezier(.22,1,.36,1), opacity .38s ease, box-shadow .38s ease;
+  transition:transform .3s cubic-bezier(.22,1,.36,1), opacity .3s ease, box-shadow .3s ease;
   will-change:transform;
   cursor:pointer;
 }
@@ -672,7 +672,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
   width:38px; height:38px; border-radius:50%;
   border:1px solid var(--line); background:var(--card-bg);
   display:flex; align-items:center; justify-content:center;
-  cursor:pointer; transition:border-color .15s, transform .1s;
+  cursor:pointer; transition:border-color .15s, transform .12s;
 }
 .nav-btn:hover{border-color:var(--yr-color)}
 .nav-btn:active{transform:scale(.92)}
@@ -731,7 +731,7 @@ body.edit-mode .card.is-active .edit-btn{opacity:1}
 .now-cover{
   flex:none; width:220px; padding:0; border:none; background:none;
   border-radius:4px; overflow:hidden; box-shadow:var(--shadow-hi);
-  cursor:zoom-in; transition:transform .25s cubic-bezier(.22,1,.36,1);
+  cursor:zoom-in; transition:transform .2s cubic-bezier(.22,1,.36,1);
 }
 .now-cover:hover{transform:translateY(-4px)}
 .now-cover img{display:block; width:100%; aspect-ratio:2/3; object-fit:cover; background:#eee}
@@ -828,7 +828,7 @@ button.shelf-item{cursor:pointer}
 }
 .shelf-cover{flex:none; width:66px; border-radius:4px; overflow:hidden; box-shadow:var(--shadow-md); background:#eee}
 .shelf-cover img{display:block; width:100%; aspect-ratio:2/3; object-fit:cover;
-  transition:transform .25s cubic-bezier(.22,1,.36,1)}
+  transition:transform .2s cubic-bezier(.22,1,.36,1)}
 button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .shelf-body{min-width:0; flex:1 1 auto}
 /* these are spans (a <button> may not contain block-level children in valid
@@ -913,7 +913,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 }
 .nob-cover{
   position:relative; border-radius:4px; overflow:hidden; background:#eee;
-  box-shadow:var(--shadow-md); transition:transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s;
+  box-shadow:var(--shadow-md); transition:transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s;
 }
 .nob-card:hover .nob-cover{transform:translateY(-5px); box-shadow:var(--shadow-hi)}
 .nob-cover img{display:block; width:100%; aspect-ratio:2/3; object-fit:cover}
@@ -1020,7 +1020,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 .strip .card .placeholder{
   height:auto; aspect-ratio:2/3; display:block;
   border-radius:4px; box-shadow:var(--shadow-md);
-  transition:box-shadow .38s ease;
+  transition:box-shadow .3s ease;
 }
 .strip .card.is-active .cover-img,
 .strip .card.is-active .placeholder{box-shadow:var(--shadow-hi)}
@@ -1184,7 +1184,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   backdrop-filter:blur(3px);
   display:none; align-items:center; justify-content:center;
   padding:1.5rem;
-  opacity:0; transition:opacity .18s ease;
+  opacity:0; transition:opacity .2s ease;
 }
 .book-modal[data-show="true"]{display:flex; opacity:1}
 .book-panel{
@@ -1197,7 +1197,7 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   box-shadow:var(--shadow-hi);
   padding:2rem;
   transform:translateY(8px) scale(.985);
-  transition:transform .22s cubic-bezier(.22,1,.36,1);
+  transition:transform .3s cubic-bezier(.22,1,.36,1);
 }
 .book-modal[data-show="true"] .book-panel{transform:none}
 .book-close{
@@ -1493,6 +1493,80 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 /* episode covers were being stretched to the height of their row */
 .pod-thumb{align-self:flex-start; height:auto}
 
+/* ---------- readers: the card ----------
+   A reader is a face, a line, the covers they rated highest and how far
+   through the club's list they are. Bigger covers than before, because the
+   covers are the interesting part. */
+.readers-grid{grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:1rem}
+.reader-card{
+  position:relative; gap:.9rem; padding:1.05rem 1.1rem 1rem;
+  background:var(--card-bg); border-radius:10px;
+  transition:transform .15s cubic-bezier(.22,1,.36,1), border-color .12s ease-out;
+}
+/* the lift is a second shadow faded in, so no shadow is redrawn per frame */
+.readers-grid .reader-card::after{
+  content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  box-shadow:var(--shadow-md); opacity:0; transition:opacity .15s ease-out;
+}
+.readers-grid .reader-card:hover{transform:translateY(-2px); border-color:color-mix(in srgb, var(--ink) 22%, var(--line))}
+.readers-grid .reader-card:hover::after{opacity:1}
+.readers-grid .reader-card:active{transform:scale(.99)}
+.reader-card:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+.reader-top{gap:.85rem}
+.readers-grid .rc-avatar, .readers-grid .rc-initial{width:52px; height:52px}
+.readers-grid .rc-initial{font-size:1.2rem; background:var(--bg)}
+.rc-id{min-width:0}
+.readers-grid .rc-name{font-size:1rem; letter-spacing:-.01em}
+.readers-grid .rc-meta{
+  font-size:.8rem; margin-top:.2rem; line-height:1.35;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.readers-grid .rc-strip{gap:.4rem; align-items:flex-end}
+.readers-grid .rc-strip img{width:44px; height:66px; border:none; box-shadow:var(--shadow-lo)}
+.readers-grid .rc-strip .rc-more{font-size:.7rem; font-weight:600; padding:0 0 .2rem .15rem}
+.rc-tally{display:flex; flex-direction:column; gap:.4rem; margin-top:auto}
+.rc-meter{display:block; height:4px; border-radius:999px; background:var(--line); overflow:hidden}
+.rc-meter > span{display:block; height:100%; border-radius:inherit; background:var(--ink)}
+.rc-tally-text{font-size:.7rem; color:var(--ink-soft); font-weight:500}
+.readers-new-list .reader-card{background:var(--card-bg); transition:border-color .12s ease-out}
+.readers-new-list .reader-card:hover{border-color:var(--ink-soft)}
+
+/* ---------- motion ----------
+   Quick and quiet. Tabs, panels and the book page ease in; nothing moves on
+   the first paint, and nothing loops. */
+@keyframes fade{from{opacity:0} to{opacity:1}}
+@keyframes fadeUp{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+@keyframes dropIn{from{opacity:0; transform:translateY(-8px)} to{opacity:1; transform:none}}
+.tabs-live .year-section.active{animation:fade .2s ease-out}
+.tabs-live .active :is(.now-inner, .faves-inner, .nobel-inner, .pod-inner){animation:fadeUp .3s cubic-bezier(.22,1,.36,1)}
+.tabs-live :is(#readerOneBlock, #readersListBlock){animation:fadeUp .3s cubic-bezier(.22,1,.36,1)}
+.book-modal[data-show="true"]{animation:fade .2s ease-out}
+.book-modal[data-show="true"] .book-panel{animation:fadeUp .3s cubic-bezier(.22,1,.36,1)}
+:is(.acct-panel, .search-panel, .notif-panel)[data-open="true"]{animation:dropIn .2s cubic-bezier(.22,1,.36,1)}
+/* the landing card is centred with a transform of its own, so it only fades */
+.acct-panel[data-gate="true"][data-open="true"]{animation:fade .2s ease-out}
+.acct-gate-back[data-show="true"]{animation:fade .2s ease-out}
+
+/* ---------- scrolling ----------
+   The scrollbar sits against the window edge instead of floating a gutter in
+   from it, it is thin and quiet, and a list that reaches its end does not
+   start dragging the page behind it. */
+:is(.faves-scroll, .nobel-scroll, .pod-scroll){
+  width:auto; margin-right:-1.5rem; padding-right:1.5rem;
+  scrollbar-width:thin; scrollbar-color:#d6d0c3 transparent;
+  overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
+}
+:is(.book-panel, .acct-panel, .notif-panel, .search-panel, .now-section){
+  scrollbar-width:thin; scrollbar-color:#d6d0c3 transparent; overscroll-behavior:contain;
+}
+/* positioned but with no z-index of its own: a stacking context here would
+   trap the dropdowns and the landing card underneath the covers */
+.topbar{position:relative; transition:box-shadow .2s ease-out}
+.topbar[data-lifted="true"]{box-shadow:0 8px 20px -14px rgba(20,20,30,.3)}
+@media (prefers-reduced-motion:reduce){
+  .readers-grid .reader-card:hover, .now-cover:hover{transform:none}
+}
+
 /* waiting covers, wherever they sit, share the one tint (declared last so it
    wins over the older per-list backgrounds) */
 .rc-strip img, .slot-cover, .reader-slots img, .rec-row img, .rec-list img,
@@ -1648,6 +1722,9 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 </div>
 
 <script>
+/* a stylesheet cannot reach a scripted smooth scroll, so those ask this */
+const CALM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 /* "click" is the wrong word on a phone */
 const MORE_HINT = matchMedia('(hover: none)').matches ? 'tap for more' : 'click for more';
 
@@ -2626,7 +2703,7 @@ function syncNavMore(){
 }
 navStep.addEventListener('click', ()=>{
   const dir = navStep.dataset.dir === '-1' ? -1 : 1;
-  yearNav.scrollBy({ left: dir * Math.max(180, yearNav.clientWidth * .7), behavior:'smooth' });
+  yearNav.scrollBy({ left: dir * Math.max(180, yearNav.clientWidth * .7), behavior: CALM ? 'auto' : 'smooth' });
 });
 yearNav.addEventListener('scroll', syncNavMore, { passive:true });
 window.addEventListener('resize', syncNavMore);
@@ -2656,6 +2733,12 @@ function showYear(y){
   document.querySelectorAll('.year-section').forEach(s=> s.classList.toggle('active', s.id === 'y'+key));
   [...yearNav.children].forEach(btn=> btn.dataset.active = (btn.dataset.year === key));
   yearNavSelect.value = key;
+  {
+    const sc = document.querySelector(`#y${CSS.escape(key)} :is(.faves-scroll, .nobel-scroll, .pod-scroll)`)
+      || document.querySelector(`#y${CSS.escape(key)}.now-section`);
+    const bar = document.querySelector('.topbar');
+    if(bar) bar.dataset.lifted = String(!!sc && sc.scrollTop > 4);
+  }
   // every year's layout() ran once already, but only while its section was
   // still display:none during construction — .carousel had zero height
   // then, so the explicit-pixel-height card sizing above was a no-op. Now
@@ -2922,7 +3005,7 @@ function renderReaders(){
     .sort((a,b)=> readerCounts(b.voter_id).scored - readerCounts(a.voter_id).scored
                 || readerName(a).localeCompare(readerName(b)));
   readersLede.textContent = rows.length
-    ? 'Everyone who has made a profile. Open one to see their shelves and their scores.'
+    ? `${rows.length} readers so far. Open one to see what they are reading and how they scored each book.`
     : 'Nobody has made a profile yet. Be the first, from the person icon up at the top.';
   /* Somebody with scores, shelves or a book on the go gets a card. A profile
      with nothing on it yet is a name in the row underneath. */
@@ -2938,20 +3021,29 @@ function renderReaders(){
       ${avatarHTML(p.avatar_url, readerName(p), 'rc')}
       <span class="rc-name">${escHTML(readerName(p))}</span>
     </button></li>`).join('');
+  const clubTotal = DATA.filter(b => !b.break).length;
   readersGrid.innerHTML = rows.filter(isActive).map(p=>{
     const c = readerCounts(p.voter_id);
-    const counts = [c.scored ? c.scored + ' scored' : '', c.read ? c.read + ' read' : '', c.want ? c.want + ' to read' : '']
+    const now = p.now_reading && p.now_reading.title ? p.now_reading.title : '';
+    /* one line under the name: what they are on if they said, else their own
+       line about themselves, else nothing (the bar below carries the numbers) */
+    const line = now ? 'Reading ' + now : (p.about || '').trim();
+    const tally = [c.scored ? `${c.scored} of ${clubTotal} scored` : '', c.read ? c.read + ' read' : '', c.want ? c.want + ' to read' : '']
       .filter(Boolean).join(' · ');
-    const bits = counts || (p.now_reading && p.now_reading.title ? 'Reading ' + p.now_reading.title : 'Just joined');
+    const pct = Math.min(100, Math.round(c.scored / clubTotal * 100));
     return `<li><button type="button" class="reader-card" data-voter="${escHTML(p.voter_id)}">
       <span class="reader-top">
         ${avatarHTML(p.avatar_url, readerName(p), 'rc')}
-        <span>
+        <span class="rc-id">
           <span class="rc-name">${escHTML(readerName(p))}</span>
-          <span class="rc-meta">${escHTML(bits)}</span>
+          ${line ? `<span class="rc-meta">${escHTML(line)}</span>` : ''}
         </span>
       </span>
       ${readerStripHTML(p)}
+      ${tally ? `<span class="rc-tally">
+        ${c.scored ? `<span class="rc-meter" aria-hidden="true"><span style="width:${pct}%"></span></span>` : ''}
+        <span class="rc-tally-text">${escHTML(tally)}</span>
+      </span>` : ''}
     </button></li>`;
   }).join('');
 }
@@ -3040,8 +3132,12 @@ function renderReaderOne(voterId){
   const gr = (p.goodreads_url || '').trim();
   const isMe = !!(session && profile && profile.voter_id === voterId);
   if(!isMe) readerEditing = false;
+  const fromList = readerOneBlock.style.display !== 'block';
+  if(fromList) readersListScroll = readersScroller.scrollTop;
   readersListBlock.style.display = 'none';
   readerOneBlock.style.display = 'block';
+  if(fromList || currentReaderShown !== voterId) readersScroller.scrollTop = 0;
+  currentReaderShown = voterId;
   readerOneBlock.innerHTML = `
     <button type="button" class="reader-back" id="readerBack">Back to all readers</button>
     <div class="reader-head">
@@ -3066,10 +3162,18 @@ function renderReaderOne(voterId){
         </li>`).join('')}</ol>` : ''}`;
 }
 
+/* Opening a profile starts it at the top; coming back puts the list where
+   you left it, instead of both sharing whatever the scroll happened to be. */
+let readersListScroll = 0;
+let currentReaderShown = null;
+const readersScroller = readersSection.querySelector('.faves-scroll');
+
 function renderReadersPage(){
+  const wasProfile = readerOneBlock.style.display === 'block';
   readersListBlock.style.display = 'block';
   readerOneBlock.style.display = 'none';
   renderReaders();
+  readersScroller.scrollTop = wasProfile ? readersListScroll : 0;
 }
 
 function showReaders(voterId){
@@ -3772,7 +3876,7 @@ years.forEach(y=>{
            scroll does nothing and would otherwise burn the instant pass. */
         const visible = stripEl.clientWidth > 0;
         if(el) el.scrollIntoView({ block:'nearest', inline:'center',
-                                   behavior: (visible && this._positioned) ? 'smooth' : 'auto' });
+                                   behavior: (visible && this._positioned && !CALM) ? 'smooth' : 'auto' });
         if(visible) this._positioned = true;
         dotsEl.querySelectorAll('.dot').forEach(d=>{ d.dataset.active = (+d.dataset.index === this.active); });
         const b = items[this.active];
@@ -5459,11 +5563,19 @@ document.addEventListener('error', (e)=>{
   img.replaceWith(blank);
 }, true);
 
+const topbarEl = document.querySelector('.topbar');
+const SCROLLERS = '.faves-scroll, .nobel-scroll, .pod-scroll, .now-section';
+document.addEventListener('scroll', (e)=>{
+  const t = e.target;
+  if(t && t.matches && t.matches(SCROLLERS)) topbarEl.dataset.lifted = String(t.scrollTop > 4);
+}, true);
+
 window.addEventListener('hashchange', openFromHash);
 /* Last, not where it used to be: a link straight to a book ran this before the
    account code below had declared `session`, which threw and left the rest of
    the page (panel, search, readers) unbuilt. */
 openFromHash();
+requestAnimationFrame(()=> requestAnimationFrame(()=> document.body.classList.add('tabs-live')));
 </script>
 </body>
 </html>
