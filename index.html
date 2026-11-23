@@ -1653,6 +1653,37 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
 }
 @media (prefers-reduced-motion:reduce){ .bk-card:hover .bk-cover{transform:none} }
 
+/* ---------- the book page ----------
+   What the book is comes first: title, score, then the paragraph about it.
+   The things you do with it (shelve it, look it up) sit under the cover, in
+   the column that used to be empty, and stay with it as the notes scroll. */
+.m-side{flex:none; width:230px; display:flex; flex-direction:column; gap:.9rem}
+.book-grid .m-side .m-cover{width:100%; position:static}
+@media (min-width:681px){ .m-side{position:sticky; top:0} }
+.m-side .m-shelf{flex-direction:column; flex-wrap:nowrap; gap:.4rem; margin-top:.3rem}
+.m-side .m-shelf button{width:100%; padding:.5rem .9rem; text-align:center; transition:background .12s ease-out, color .12s ease-out, border-color .12s ease-out}
+.m-side .m-shelf .shelf-hint{align-self:stretch; text-align:center; font-size:.8rem; line-height:1.4}
+.m-side .m-link{margin-top:0; align-self:center}
+.book-info h2{font-size:2rem; letter-spacing:-.02em; line-height:1.1}
+.m-teaser{font-size:1rem; line-height:1.65; margin-top:1.3rem}
+.m-genres{margin-top:1.1rem}
+/* real quotation marks, not typewriter ones */
+.blurb q{quotes:'\201C' '\201D'; font-size:1rem; line-height:1.55}
+/* the ring round a focused button was the browser's blue */
+:is(.book-close, .book-step button):focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+@media (max-width:680px){
+  .m-side{width:100%; align-items:center}
+  .book-grid .m-side .m-cover{width:170px}
+  /* one compact row under the cover, so the title is not pushed off the screen */
+  .m-side{gap:.7rem}
+  .m-side .m-shelf{flex-direction:row; flex-wrap:nowrap; justify-content:center; margin-top:0}
+  .m-side .m-shelf button{width:auto; padding:.4rem .7rem; white-space:nowrap}
+  .book-info h2{font-size:1.6rem}
+  .m-genres{justify-content:center}
+  /* the two arrows float over the text down here, so they need to look it */
+  .book-step button{box-shadow:var(--shadow-md)}
+}
+
 /* waiting covers, wherever they sit, share the one tint (declared last so it
    wins over the older per-list backgrounds) */
 .rc-strip img, .slot-cover, .reader-slots img, .rec-row img, .rec-list img,
@@ -1747,7 +1778,11 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
       <button type="button" id="bookNext" aria-label="Next book this year"></button>
     </div>
     <div class="book-grid">
-      <div class="m-cover"><img id="mCover" alt=""></div>
+      <div class="m-side">
+        <div class="m-cover"><img id="mCover" alt=""></div>
+        <div class="m-shelf" id="mShelf"></div>
+        <a class="m-link" id="mLink" target="_blank" rel="noopener">View on Goodreads &#8599;</a>
+      </div>
       <div class="book-info">
         <div class="m-period" id="mPeriod"></div>
         <h2 id="mTitle"></h2>
@@ -1768,9 +1803,8 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
             <span class="rating-yours-note" id="ratingNote">Saved</span>
           </div>
         </div>
-        <div class="m-genres" id="mGenres"></div>
-        <div class="m-shelf" id="mShelf"></div>
         <p class="m-teaser" id="mTeaser"></p>
+        <div class="m-genres" id="mGenres"></div>
         <div class="m-audio" id="mAudio"></div>
         <div class="m-talk" id="mTalk"></div>
         <div class="m-blurbs" id="mBlurbs"></div>
@@ -1796,7 +1830,6 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
           </div>
           <div class="note-hint" id="noteHint">Rate the book above to leave a note.</div>
         </div>
-        <a class="m-link" id="mLink" target="_blank" rel="noopener">View on Goodreads &#8599;</a>
       </div>
     </div>
   </div>
