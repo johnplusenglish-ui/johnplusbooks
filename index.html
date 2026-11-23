@@ -1684,6 +1684,26 @@ button.shelf-item:hover .shelf-cover img{transform:scale(1.04)}
   .book-step button{box-shadow:var(--shadow-md)}
 }
 
+/* ---------- the pick nobody has been told yet ---------- */
+.now-mystery{gap:1.1rem; align-items:center}
+.now-mystery-cover, .bk-mystery .bk-cover{position:relative}
+.now-mystery-cover{
+  flex:none; width:64px; aspect-ratio:2/3; border-radius:4px; overflow:hidden;
+  box-shadow:var(--shadow-md); background:#efebe3;
+}
+.now-next .now-mystery-cover img{display:block; width:100%; height:100%; object-fit:cover; border-radius:0}
+.now-mystery-cover b, .bk-q{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  color:#fff; font-weight:800; text-shadow:0 1px 10px rgba(20,20,30,.45);
+}
+.now-mystery-cover b{font-size:1.6rem}
+.bk-q{font-size:2rem}
+.now-mystery-text{display:flex; flex-direction:column; gap:.2rem; min-width:0}
+.now-mystery-title{font-size:1.2rem; font-weight:800; letter-spacing:-.01em; line-height:1.2}
+.now-mystery-hint{font-size:.8rem; color:var(--ink-soft)}
+.bk-mystery{cursor:default}
+.bk-card.bk-mystery:hover .bk-cover{transform:none}
+
 /* waiting covers, wherever they sit, share the one tint (declared last so it
    wins over the older per-list backgrounds) */
 .rc-strip img, .slot-cover, .reader-slots img, .rec-row img, .rec-list img,
@@ -1881,6 +1901,16 @@ const NOW = {
   discussion: null,
   nextTitle: null,
   note: 'Discussion Friday 4 December, 19:00 CET',
+  /* A pick that is chosen but not announced. The cover file is blurred in the
+     file itself, and neither the title nor the author is anywhere in this
+     page, so there is nothing to peek at. Set to null once it is revealed and
+     the book has gone into DATA. */
+  mystery: {
+    period: 'December 2026',
+    cover: 'covers/next-up.jpg',
+    line: 'To be revealed',
+    hint: 'Something short for a winter evening.'
+  },
   /* Zoom bar across the bottom of the Now tab; hides itself the day after `date`.
        book — the title being discussed, date — 'YYYY-MM-DD', time — 'HH:MM' shown as written.
      The join link is NOT in this file: it lives in Supabase (site_secrets, key
@@ -2986,6 +3016,14 @@ if(nowBook){
         </div>
       </div>
       ${zoomBar}
+      ${(!nowNext && NOW.mystery) ? `<div class="now-next now-mystery">
+        <span class="now-mystery-cover"><img src="${escHTML(NOW.mystery.cover)}" alt=""><b aria-hidden="true">?</b></span>
+        <span class="now-mystery-text">
+          <span class="now-next-label">Next up · ${escHTML(NOW.mystery.period)}</span>
+          <span class="now-mystery-title">${escHTML(NOW.mystery.line)}</span>
+          ${NOW.mystery.hint ? `<span class="now-mystery-hint">${escHTML(NOW.mystery.hint)}</span>` : ''}
+        </span>
+      </div>` : ''}
       ${nowNext ? `<div class="now-next">
         <span class="now-next-label">Next up</span>
         ${nextCover ? `<img src="${nextCover}" alt="">` : ''}
@@ -4764,7 +4802,16 @@ function renderBooksGrid(){
           <span class="bk-count">${items.length} book${items.length === 1 ? '' : 's'}</span>
         </button>
       </div>
-      <ul class="bk-grid" style="--yr-color:${YEAR_COLORS[y] || '#1b1b1f'}">${items.map(b=>{
+      <ul class="bk-grid" style="--yr-color:${YEAR_COLORS[y] || '#1b1b1f'}">${
+        (NOW.mystery && String(NOW.mystery.period).endsWith(String(y))) ? `<li><div class="bk-card bk-mystery">
+          <span class="bk-cover">
+            <img src="${escHTML(NOW.mystery.cover)}" alt="" loading="lazy" decoding="async">
+            <span class="bk-badge">${escHTML(NOW.mystery.period.split(' ')[0])}</span>
+            <b class="bk-q" aria-hidden="true">?</b>
+          </span>
+          <span class="bk-title">${escHTML(NOW.mystery.line)}</span>
+          <span class="bk-author">Next up</span>
+        </div></li>` : ''}${items.map(b=>{
         const agg = aggFor(slug(b));
         const avg = agg.count ? (agg.sum / agg.count).toFixed(1) : '';
         return `<li><button type="button" class="bk-card" data-slug="${escHTML(slug(b))}">
